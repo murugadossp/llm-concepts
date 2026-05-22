@@ -1,0 +1,2683 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="color-scheme" content="light dark" />
+<title>Architecture — LLM to Agent</title>
+<meta name="description" content="Interactive technical architecture for the LLM to Agent learning platform. Companion to BLUEPRINT.md and ARCHITECTURE.md." />
+
+<!-- Theme flash-prevention: set data-theme BEFORE first paint -->
+<script>
+  (function () {
+    try {
+      var stored = localStorage.getItem('theme');
+      var pref = stored || 'system';
+      var resolved = pref;
+      if (pref === 'system') {
+        resolved = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      }
+      document.documentElement.setAttribute('data-theme', resolved);
+      document.documentElement.setAttribute('data-theme-pref', pref);
+    } catch (e) {
+      document.documentElement.setAttribute('data-theme', 'light');
+      document.documentElement.setAttribute('data-theme-pref', 'system');
+    }
+  })();
+</script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Caveat:wght@500;700&display=swap" rel="stylesheet" />
+
+<style>
+/* ============================================================
+   Tokens — Daybreak (light) + Midnight (dark)
+   ============================================================ */
+:root[data-theme="light"] {
+  --bg-base: #F4F6FB;
+  --bg-mesh-1: #E0DCFF;
+  --bg-mesh-2: #D1F0EC;
+  --bg-mesh-3: #FFE4D6;
+  --surface: rgba(255,255,255,0.55);
+  --surface-strong: rgba(255,255,255,0.75);
+  --surface-flat: rgba(255,255,255,0.92);
+  --border: rgba(255,255,255,0.65);
+  --border-strong: rgba(15,18,38,0.10);
+  --ring: rgba(91,63,255,0.35);
+  --ink: #0F1226;
+  --ink-soft: #3D3F62;
+  --ink-mute: #6B6E8E;
+  --accent: #5B3FFF;
+  --accent-2: #1FB5A8;
+  --warn: #E5484D;
+  --sun: #F5B945;
+  --shadow-card: 0 8px 24px rgba(15,18,38,0.06), 0 1px 2px rgba(15,18,38,0.04);
+  --shadow-elevated: 0 24px 48px rgba(15,18,38,0.12);
+  --code-bg: rgba(15,18,38,0.85);
+  --code-ink: #F2F3FB;
+  --code-mute: #8B8FAD;
+  --code-key: #FFD56B;
+  --code-str: #4DDBCB;
+  --code-comment: #6B6E8E;
+}
+:root[data-theme="dark"] {
+  --bg-base: #0A0B1A;
+  --bg-mesh-1: #3B2A78;
+  --bg-mesh-2: #0F4D49;
+  --bg-mesh-3: #6B2A2A;
+  --surface: rgba(255,255,255,0.06);
+  --surface-strong: rgba(255,255,255,0.10);
+  --surface-flat: rgba(20,22,42,0.85);
+  --border: rgba(255,255,255,0.12);
+  --border-strong: rgba(255,255,255,0.18);
+  --ring: rgba(141,121,255,0.55);
+  --ink: #F2F3FB;
+  --ink-soft: #C2C5DC;
+  --ink-mute: #8B8FAD;
+  --accent: #8D79FF;
+  --accent-2: #4DDBCB;
+  --warn: #FF6B6B;
+  --sun: #FFD56B;
+  --shadow-card: 0 8px 24px rgba(0,0,0,0.35), 0 1px 2px rgba(0,0,0,0.25);
+  --shadow-elevated: 0 24px 48px rgba(0,0,0,0.55);
+  --code-bg: rgba(0,0,0,0.45);
+  --code-ink: #F2F3FB;
+  --code-mute: #8B8FAD;
+  --code-key: #FFD56B;
+  --code-str: #4DDBCB;
+  --code-comment: #6B6E8E;
+}
+:root {
+  --blur-soft: 16px;
+  --blur-strong: 28px;
+  --r-sm: 10px;
+  --r-md: 16px;
+  --r-lg: 24px;
+  --r-pill: 999px;
+  --maxw-content: 760px;
+  --maxw-wide: 1100px;
+  --space-section: 96px;
+  --serif: "Instrument Serif", "Iowan Old Style", Georgia, serif;
+  --sans: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, "Cascadia Code", Menlo, monospace;
+  --hand: "Caveat", "Patrick Hand", cursive;
+}
+
+/* ============================================================
+   Reset & base
+   ============================================================ */
+*, *::before, *::after { box-sizing: border-box; }
+html { scroll-behavior: smooth; scroll-padding-top: 88px; }
+body {
+  margin: 0;
+  font-family: var(--sans);
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--ink);
+  background: var(--bg-base);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+::selection { background: var(--accent); color: white; }
+
+a {
+  color: var(--accent);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: border-color 0.2s ease, color 0.2s ease;
+}
+a:hover { border-bottom-color: var(--accent); }
+a:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+button {
+  font-family: inherit;
+  font-size: inherit;
+  cursor: pointer;
+  border: none;
+  background: none;
+  color: inherit;
+}
+button:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+  border-radius: 8px;
+}
+
+h1, h2, h3, h4 {
+  margin: 0;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+}
+
+p { margin: 0 0 1em; color: var(--ink-soft); }
+ul, ol { margin: 0 0 1em; padding-left: 1.25em; color: var(--ink-soft); }
+li { margin-bottom: 0.4em; }
+
+code, pre { font-family: var(--mono); font-size: 0.9em; }
+
+/* ============================================================
+   Mesh background
+   ============================================================ */
+.mesh {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background:
+    radial-gradient(60vw 60vw at 8% 12%, var(--bg-mesh-1), transparent 70%),
+    radial-gradient(55vw 55vw at 92% 30%, var(--bg-mesh-2), transparent 70%),
+    radial-gradient(70vw 70vw at 60% 95%, var(--bg-mesh-3), transparent 70%),
+    var(--bg-base);
+  filter: saturate(115%);
+  animation: meshDrift 40s ease-in-out infinite alternate;
+  will-change: background-position;
+}
+@keyframes meshDrift {
+  0%   { background-position: 0 0, 0 0, 0 0, 0 0; transform: scale(1); }
+  100% { background-position: -8% 6%, 6% -4%, -4% 8%, 0 0; transform: scale(1.04); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mesh { animation: none; }
+  html { scroll-behavior: auto; }
+}
+.mesh.is-paused { animation-play-state: paused; }
+
+/* ============================================================
+   Glass utilities
+   ============================================================ */
+.glass {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  backdrop-filter: blur(var(--blur-soft)) saturate(140%);
+  -webkit-backdrop-filter: blur(var(--blur-soft)) saturate(140%);
+  box-shadow: var(--shadow-card);
+  border-radius: var(--r-md);
+}
+.glass-strong {
+  background: var(--surface-strong);
+  border: 1px solid var(--border-strong);
+  backdrop-filter: blur(var(--blur-strong)) saturate(140%);
+  -webkit-backdrop-filter: blur(var(--blur-strong)) saturate(140%);
+  box-shadow: var(--shadow-elevated);
+  border-radius: var(--r-lg);
+}
+
+/* ============================================================
+   Header
+   ============================================================ */
+.site-header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  padding: 14px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  backdrop-filter: blur(var(--blur-strong)) saturate(140%);
+  -webkit-backdrop-filter: blur(var(--blur-strong)) saturate(140%);
+}
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 600;
+  color: var(--ink);
+}
+.brand-mark {
+  width: 32px; height: 32px; flex: none;
+  border-radius: 10px;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  display: grid; place-items: center;
+  box-shadow: 0 4px 14px var(--ring);
+}
+.brand-mark svg { width: 18px; height: 18px; color: white; }
+.brand-text { display: flex; flex-direction: column; line-height: 1.1; }
+.brand-text small { color: var(--ink-mute); font-size: 11px; font-weight: 500; }
+
+.section-nav {
+  display: none;
+  gap: 4px;
+  align-items: center;
+  overflow-x: auto;
+  max-width: 50vw;
+}
+.section-nav a {
+  font-size: 13px;
+  color: var(--ink-soft);
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: none;
+  white-space: nowrap;
+}
+.section-nav a:hover {
+  background: var(--surface-strong);
+  color: var(--ink);
+}
+@media (min-width: 1024px) {
+  .section-nav { display: flex; }
+}
+
+.theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  background: var(--surface-strong);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-pill);
+  padding: 3px;
+  gap: 2px;
+}
+.theme-toggle button {
+  border-radius: var(--r-pill);
+  padding: 6px 10px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--ink-mute);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: background 0.18s ease, color 0.18s ease;
+}
+.theme-toggle button:hover { color: var(--ink); }
+.theme-toggle button[aria-pressed="true"] {
+  background: var(--accent);
+  color: white;
+  box-shadow: 0 2px 8px var(--ring);
+}
+.theme-toggle svg { width: 14px; height: 14px; }
+
+/* ============================================================
+   Layout
+   ============================================================ */
+main { position: relative; }
+.container {
+  max-width: var(--maxw-wide);
+  margin: 0 auto;
+  padding: 0 24px;
+}
+section.block {
+  padding-top: var(--space-section);
+  scroll-margin-top: 88px;
+}
+section.block > .container > .eyebrow {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+section.block > .container > .eyebrow .ref {
+  font-weight: 500;
+  color: var(--ink-mute);
+  text-transform: none;
+  letter-spacing: 0;
+  font-size: 12px;
+}
+section.block > .container > h2 {
+  font-family: var(--serif);
+  font-weight: 400;
+  font-size: clamp(28px, 4vw, 44px);
+  line-height: 1.1;
+  margin-bottom: 12px;
+  letter-spacing: -0.02em;
+}
+section.block > .container > .lede {
+  color: var(--ink-soft);
+  font-size: 17px;
+  max-width: 640px;
+  margin-bottom: 32px;
+}
+
+footer.site-footer {
+  margin-top: var(--space-section);
+  padding: 48px 24px;
+  border-top: 1px solid var(--border);
+  text-align: center;
+  color: var(--ink-mute);
+  font-size: 13px;
+}
+
+/* ============================================================
+   Hero
+   ============================================================ */
+.hero {
+  padding: 80px 24px 24px;
+}
+.hero .container { max-width: var(--maxw-wide); }
+.hero-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--accent);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-pill);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  margin-bottom: 20px;
+}
+.hero-eyebrow .dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--accent-2);
+  box-shadow: 0 0 8px var(--accent-2);
+}
+.hero h1 {
+  font-family: var(--serif);
+  font-weight: 400;
+  font-size: clamp(48px, 8vw, 96px);
+  line-height: 0.95;
+  letter-spacing: -0.03em;
+  margin-bottom: 16px;
+}
+.hero h1 em {
+  font-style: italic;
+  color: var(--accent);
+}
+.hero-sub {
+  font-size: clamp(17px, 2vw, 20px);
+  color: var(--ink-soft);
+  max-width: 640px;
+  margin-bottom: 28px;
+}
+.hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 36px;
+}
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 16px;
+  border-radius: var(--r-pill);
+  font-weight: 500;
+  font-size: 14px;
+  transition: all 0.2s ease;
+  border: 1px solid transparent;
+}
+.btn-primary {
+  background: var(--ink);
+  color: var(--bg-base);
+}
+.btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 20px var(--ring);
+}
+.btn-ghost {
+  background: var(--surface);
+  border-color: var(--border);
+  color: var(--ink);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+.btn-ghost:hover {
+  background: var(--surface-strong);
+  border-color: var(--border-strong);
+}
+.btn svg { width: 16px; height: 16px; }
+
+.hero-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px;
+  font-size: 13px;
+  color: var(--ink-mute);
+}
+.hero-meta strong { color: var(--ink); font-weight: 600; }
+
+/* ============================================================
+   Goals & non-goals
+   ============================================================ */
+.goal-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 20px;
+}
+@media (min-width: 720px) {
+  .goal-grid { grid-template-columns: 1fr 1fr; }
+}
+.goal-card {
+  padding: 28px;
+}
+.goal-card h3 {
+  font-size: 18px;
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.goal-card h3 .pill {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: var(--r-pill);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.goal-card.do h3 .pill { background: rgba(31,181,168,0.18); color: var(--accent-2); }
+.goal-card.dont h3 .pill { background: rgba(229,72,77,0.15); color: var(--warn); }
+.goal-card ul { list-style: none; padding: 0; margin: 0; }
+.goal-card li {
+  padding: 10px 0;
+  border-top: 1px solid var(--border-strong);
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  color: var(--ink-soft);
+  font-size: 14px;
+}
+.goal-card li:first-child { border-top: none; padding-top: 0; }
+.goal-card .check, .goal-card .cross {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  margin-top: 2px;
+}
+.goal-card .check { background: rgba(31,181,168,0.18); color: var(--accent-2); }
+.goal-card .cross { background: rgba(229,72,77,0.15); color: var(--warn); }
+.goal-card .check svg, .goal-card .cross svg { width: 10px; height: 10px; }
+
+/* ============================================================
+   Stack grid
+   ============================================================ */
+.stack-grid {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+}
+.stack-card {
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.stack-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-elevated);
+}
+.stack-card .row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.stack-card .icon {
+  width: 32px; height: 32px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  display: grid; place-items: center;
+  color: white;
+  flex: none;
+}
+.stack-card .icon svg { width: 16px; height: 16px; }
+.stack-card .cat {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--ink-mute);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.stack-card .ver {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--ink-mute);
+  padding: 2px 6px;
+  background: var(--surface-strong);
+  border-radius: 4px;
+}
+.stack-card h4 {
+  font-size: 16px;
+  font-weight: 600;
+}
+.stack-card .note {
+  font-size: 13px;
+  color: var(--ink-soft);
+  line-height: 1.45;
+  margin: 0;
+}
+
+/* ============================================================
+   Repo tree
+   ============================================================ */
+.tree {
+  padding: 24px;
+  font-family: var(--mono);
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--ink-soft);
+  overflow-x: auto;
+}
+.tree details { margin: 0; }
+.tree summary {
+  list-style: none;
+  cursor: pointer;
+  padding: 2px 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--ink);
+  border-radius: 4px;
+}
+.tree summary::-webkit-details-marker { display: none; }
+.tree summary:hover { background: var(--surface-strong); }
+.tree summary::before {
+  content: "";
+  display: inline-block;
+  width: 0; height: 0;
+  border-top: 4px solid transparent;
+  border-bottom: 4px solid transparent;
+  border-left: 5px solid var(--ink-mute);
+  transition: transform 0.15s ease;
+  margin-right: 2px;
+}
+.tree details[open] > summary::before { transform: rotate(90deg); }
+.tree .folder { color: var(--accent); font-weight: 500; }
+.tree .file { padding-left: 20px; display: flex; gap: 8px; }
+.tree .file .name { color: var(--ink); }
+.tree .file .comment { color: var(--code-comment); font-style: italic; }
+.tree details > .indent { padding-left: 18px; border-left: 1px dashed var(--border-strong); margin-left: 5px; }
+
+/* ============================================================
+   Theme demo cards
+   ============================================================ */
+.theme-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 20px;
+  margin-bottom: 24px;
+}
+@media (min-width: 720px) {
+  .theme-grid { grid-template-columns: 1fr 1fr; }
+}
+.palette {
+  padding: 24px;
+}
+.palette h3 {
+  font-size: 16px;
+  margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.palette .tag {
+  font-size: 11px;
+  font-family: var(--mono);
+  color: var(--ink-mute);
+  margin-bottom: 18px;
+  display: block;
+}
+.swatch-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+.swatch {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px;
+  border-radius: 8px;
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+}
+.swatch .chip {
+  width: 32px; height: 32px;
+  border-radius: 8px;
+  flex: none;
+  border: 1px solid rgba(0,0,0,0.08);
+}
+.swatch .meta { min-width: 0; }
+.swatch .name {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--ink);
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.swatch .hex {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--ink-mute);
+}
+
+.theme-preview {
+  padding: 28px;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+  align-items: center;
+}
+@media (min-width: 720px) {
+  .theme-preview { grid-template-columns: 1.2fr 1fr; }
+}
+.theme-preview h4 {
+  font-family: var(--serif);
+  font-weight: 400;
+  font-size: 28px;
+  margin-bottom: 8px;
+}
+.theme-preview p { font-size: 14px; }
+.theme-preview .preview-card {
+  padding: 24px;
+  border-radius: var(--r-md);
+  background: var(--surface-strong);
+  border: 1px solid var(--border-strong);
+  position: relative;
+  overflow: hidden;
+}
+.theme-preview .preview-card::before {
+  content: "";
+  position: absolute;
+  inset: -50%;
+  background: radial-gradient(circle, var(--bg-mesh-1) 0%, transparent 60%);
+  opacity: 0.4;
+  pointer-events: none;
+}
+.theme-preview .preview-card > * { position: relative; z-index: 1; }
+.preview-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: var(--r-pill);
+  background: var(--accent);
+  color: white;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+/* ============================================================
+   Code block + annotated YAML
+   ============================================================ */
+.code-block {
+  position: relative;
+  padding: 22px 22px 22px 70px;
+  background: var(--code-bg);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-md);
+  font-family: var(--mono);
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--code-ink);
+  overflow-x: auto;
+  counter-reset: line;
+}
+.code-block .ln {
+  display: block;
+  counter-increment: line;
+  white-space: pre;
+}
+.code-block .ln::before {
+  content: counter(line);
+  position: absolute;
+  left: 0;
+  width: 48px;
+  text-align: right;
+  color: var(--code-mute);
+  padding-right: 8px;
+  user-select: none;
+}
+.code-block .k { color: var(--code-key); }
+.code-block .s { color: var(--code-str); }
+.code-block .c { color: var(--code-comment); font-style: italic; }
+.code-block .n { color: #FF9F8B; }
+
+.annotated-wrap {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+}
+@media (min-width: 900px) {
+  .annotated-wrap { grid-template-columns: 1.5fr 1fr; }
+}
+.annotations {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.annotation {
+  padding: 12px 14px;
+  border-radius: var(--r-sm);
+  background: var(--surface);
+  border-left: 3px solid var(--accent);
+  font-size: 13px;
+  color: var(--ink-soft);
+}
+.annotation strong { color: var(--ink); font-family: var(--mono); font-size: 12px; }
+
+/* ============================================================
+   ER diagram
+   ============================================================ */
+.diagram-wrap {
+  padding: 16px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scroll-snap-type: x mandatory;
+}
+.diagram-wrap svg {
+  display: block;
+  min-width: 720px;
+  max-width: 100%;
+  height: auto;
+}
+.diagram-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 16px;
+  font-size: 12px;
+  color: var(--ink-mute);
+}
+.diagram-legend .lg {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.diagram-legend .dot {
+  width: 10px; height: 10px; border-radius: 3px;
+}
+
+/* ============================================================
+   Phased timeline
+   ============================================================ */
+.phases {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: 1fr;
+}
+@media (min-width: 720px) {
+  .phases { grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+}
+.phase {
+  padding: 20px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.phase .badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.phase .num {
+  width: 24px; height: 24px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: white;
+  display: grid;
+  place-items: center;
+  font-size: 11px;
+  font-weight: 700;
+}
+.phase h4 {
+  font-family: var(--serif);
+  font-weight: 400;
+  font-size: 22px;
+  line-height: 1.1;
+}
+.phase .weeks {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--ink-mute);
+}
+.phase p { font-size: 13px; margin: 0; color: var(--ink-soft); }
+.phase details summary {
+  list-style: none;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--accent);
+  margin-top: auto;
+  padding: 6px 0;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.phase details summary::-webkit-details-marker { display: none; }
+.phase details summary::after {
+  content: "+";
+  font-size: 16px;
+  line-height: 1;
+}
+.phase details[open] summary::after { content: "−"; }
+.phase details ul {
+  list-style: none;
+  padding: 8px 0 0;
+  margin: 0;
+  font-size: 12px;
+}
+.phase details li {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 4px 0;
+  color: var(--ink-soft);
+}
+.phase details li::before {
+  content: "";
+  width: 12px; height: 12px;
+  border-radius: 3px;
+  border: 1.5px solid var(--accent-2);
+  flex: none;
+  margin-top: 3px;
+}
+.phase-timeline {
+  margin-bottom: 24px;
+  padding: 18px;
+  overflow-x: auto;
+}
+.phase-timeline svg {
+  min-width: 720px;
+  width: 100%;
+  height: auto;
+}
+
+/* ============================================================
+   Cost table
+   ============================================================ */
+.cost-table {
+  padding: 12px;
+  overflow: hidden;
+}
+.cost-table table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+.cost-table thead th {
+  text-align: left;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ink-mute);
+  font-weight: 600;
+  padding: 12px;
+  border-bottom: 1px solid var(--border-strong);
+}
+.cost-table tbody td {
+  padding: 14px 12px;
+  border-bottom: 1px solid var(--border-strong);
+  color: var(--ink-soft);
+}
+.cost-table tbody tr:last-child td { border-bottom: none; }
+.cost-table tbody td:first-child {
+  font-weight: 600;
+  color: var(--ink);
+}
+.cost-table .cost-cell {
+  position: relative;
+  font-family: var(--mono);
+  color: var(--ink);
+}
+.cost-table .bar {
+  position: relative;
+  display: block;
+  height: 6px;
+  background: var(--surface);
+  border-radius: 3px;
+  overflow: hidden;
+  margin-top: 6px;
+  border: 1px solid var(--border-strong);
+}
+.cost-table .bar-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: linear-gradient(90deg, var(--accent), var(--accent-2));
+  border-radius: 3px;
+}
+
+/* ============================================================
+   ADR accordion
+   ============================================================ */
+.adr-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.adr {
+  padding: 0;
+  overflow: hidden;
+}
+.adr summary {
+  list-style: none;
+  cursor: pointer;
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.adr summary::-webkit-details-marker { display: none; }
+.adr summary::after {
+  content: "+";
+  margin-left: auto;
+  font-size: 20px;
+  line-height: 1;
+  color: var(--ink-mute);
+  transition: transform 0.2s ease;
+}
+.adr[open] summary::after { content: "−"; }
+.adr .adr-num {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--accent);
+  padding: 4px 8px;
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-sm);
+  flex: none;
+}
+.adr .adr-title {
+  font-weight: 600;
+  color: var(--ink);
+  font-size: 14px;
+}
+.adr .adr-body {
+  padding: 0 20px 20px 20px;
+  border-top: 1px solid var(--border-strong);
+  margin-top: 8px;
+  padding-top: 16px;
+}
+.adr .adr-body p { font-size: 14px; }
+.adr .adr-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  font-size: 11px;
+}
+.adr .adr-meta .m {
+  padding: 3px 8px;
+  border-radius: var(--r-pill);
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  color: var(--ink-mute);
+}
+.adr .adr-meta .m strong { color: var(--ink); }
+
+/* ============================================================
+   Misc utilities
+   ============================================================ */
+.section-card { padding: 28px; }
+
+.callout {
+  margin-top: 18px;
+  padding: 16px 20px;
+  border-left: 3px solid var(--sun);
+  background: var(--surface);
+  border-radius: var(--r-sm);
+  font-size: 13px;
+  color: var(--ink-soft);
+}
+.callout strong { color: var(--ink); }
+
+.sr-only {
+  position: absolute;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden;
+  clip: rect(0,0,0,0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* SVG node styles */
+.node-rect {
+  fill: var(--surface-strong);
+  stroke: var(--border-strong);
+  stroke-width: 1;
+}
+.node-label {
+  fill: var(--ink);
+  font-family: var(--sans);
+  font-size: 12px;
+  font-weight: 600;
+}
+.node-sub {
+  fill: var(--ink-mute);
+  font-family: var(--mono);
+  font-size: 10px;
+}
+.node-line {
+  stroke: var(--ink-mute);
+  stroke-width: 1.4;
+  fill: none;
+}
+.node-line-active {
+  stroke: var(--accent);
+  stroke-width: 2;
+  fill: none;
+}
+.lane-label {
+  fill: var(--ink);
+  font-family: var(--sans);
+  font-size: 13px;
+  font-weight: 600;
+}
+.flow-label {
+  fill: var(--ink-soft);
+  font-family: var(--sans);
+  font-size: 11px;
+}
+
+.speech-bubble {
+  font-family: var(--hand);
+  font-size: 16px;
+  fill: var(--ink);
+}
+
+/* horizontal scroll on small screens for diagrams */
+@media (max-width: 720px) {
+  .diagram-wrap {
+    scroll-snap-type: x mandatory;
+  }
+  .diagram-wrap svg {
+    scroll-snap-align: start;
+  }
+}
+</style>
+</head>
+<body>
+
+<div class="mesh" aria-hidden="true"></div>
+
+<header class="site-header" role="banner">
+  <a href="#top" class="brand" aria-label="LLM to Agent home">
+    <span class="brand-mark" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg>
+    </span>
+    <span class="brand-text">
+      <span>LLM <small style="display:inline">→</small> Agent</span>
+      <small>Architecture</small>
+    </span>
+  </a>
+
+  <nav class="section-nav" aria-label="Sections">
+    <a href="#goals">Goals</a>
+    <a href="#stack">Stack</a>
+    <a href="#repo">Repo</a>
+    <a href="#theme">Theme</a>
+    <a href="#schema">Schema</a>
+    <a href="#data">Data</a>
+    <a href="#auth">Auth</a>
+    <a href="#payments">Payments</a>
+    <a href="#tutor">AI Tutor</a>
+    <a href="#phases">Phases</a>
+    <a href="#cost">Cost</a>
+    <a href="#adrs">ADRs</a>
+  </nav>
+
+  <div class="theme-toggle" role="group" aria-label="Theme">
+    <button type="button" data-theme-set="light" aria-pressed="false" title="Light theme">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
+      <span>Light</span>
+    </button>
+    <button type="button" data-theme-set="dark" aria-pressed="false" title="Dark theme">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+      <span>Dark</span>
+    </button>
+    <button type="button" data-theme-set="system" aria-pressed="false" title="System theme">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8"/><path d="M12 17v4"/></svg>
+      <span>Auto</span>
+    </button>
+  </div>
+</header>
+
+<main id="top">
+
+  <!-- ===================== Hero ===================== -->
+  <section class="hero" aria-labelledby="hero-title">
+    <div class="container">
+      <span class="hero-eyebrow"><span class="dot"></span> Pre-build spec • Locked • Updated 2026-05-22</span>
+      <h1 id="hero-title">Architecture.<br/><em>Where the comic meets the cloud.</em></h1>
+      <p class="hero-sub">A visual companion to <code>ARCHITECTURE.md</code>. Eleven illustrated chapters become a multi-tenant SaaS: glassmorphism design system, Next.js 15 + MDX content, Clerk organizations, Neon Postgres, Lemon Squeezy payments, and a Claude-streamed AI tutor in every chapter.</p>
+      <div class="hero-actions">
+        <a class="btn btn-primary" href="#stack">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 5 7 7-7 7"/><path d="M5 12h14"/></svg>
+          Explore the stack
+        </a>
+        <a class="btn btn-ghost" href="BLUEPRINT.md">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
+          Companion to BLUEPRINT.md
+        </a>
+      </div>
+      <div class="hero-meta">
+        <span><strong>13</strong> sections</span>
+        <span><strong>10</strong> ADRs</span>
+        <span><strong>5</strong> phases · ~14 weeks</span>
+        <span><strong>2</strong> themes · light + dark</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== Goals & Non-goals ===================== -->
+  <section class="block" id="goals" aria-labelledby="goals-title">
+    <div class="container">
+      <div class="eyebrow">01 · Scope <span class="ref">§1</span></div>
+      <h2 id="goals-title">Goals &amp; non-goals</h2>
+      <p class="lede">Six months to ship eleven chapters, paid tier, multi-tenant teams, and an AI tutor. What we will <em>not</em> ship is just as load-bearing.</p>
+
+      <div class="goal-grid">
+        <article class="glass goal-card do" aria-labelledby="goals-do">
+          <h3 id="goals-do">In scope <span class="pill">v1 goals</span></h3>
+          <ul>
+            <li><span class="check"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="m2 6 3 3 5-6"/></svg></span>Ship 11 illustrated chapters as the content product</li>
+            <li><span class="check"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="m2 6 3 3 5-6"/></svg></span>Authenticated accounts with progress, bookmarks, notes</li>
+            <li><span class="check"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="m2 6 3 3 5-6"/></svg></span>Paid Pro tier — gated chapters + AI tutor</li>
+            <li><span class="check"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="m2 6 3 3 5-6"/></svg></span>Multi-tenant organizations with team seats &amp; invoiced billing</li>
+            <li><span class="check"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="m2 6 3 3 5-6"/></svg></span>In-page AI tutor — Claude streaming, chapter-aware, rate-limited by tier</li>
+            <li><span class="check"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="m2 6 3 3 5-6"/></svg></span>Glassmorphism design system — light + dark, system-preference, persisted</li>
+            <li><span class="check"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="m2 6 3 3 5-6"/></svg></span>MDX-driven authoring — drop a file in <code>/content/chapters</code>, lesson appears</li>
+          </ul>
+        </article>
+
+        <article class="glass goal-card dont" aria-labelledby="goals-dont">
+          <h3 id="goals-dont">Out of scope <span class="pill">non-goals</span></h3>
+          <ul>
+            <li><span class="cross"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M3 3l6 6M9 3l-6 6"/></svg></span>Native mobile app — web is mobile-responsive</li>
+            <li><span class="cross"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M3 3l6 6M9 3l-6 6"/></svg></span>Live model demos with user-supplied API keys (CORS + key pain)</li>
+            <li><span class="cross"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M3 3l6 6M9 3l-6 6"/></svg></span>Translations / i18n — English only at v1</li>
+            <li><span class="cross"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M3 3l6 6M9 3l-6 6"/></svg></span>User-generated courses (UGC instructor mode)</li>
+            <li><span class="cross"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M3 3l6 6M9 3l-6 6"/></svg></span>Built-in live chat / community — Discord covers v1</li>
+            <li><span class="cross"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M3 3l6 6M9 3l-6 6"/></svg></span>Self-hosted on-prem deploy — cloud-only</li>
+          </ul>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== Stack ===================== -->
+  <section class="block" id="stack" aria-labelledby="stack-title">
+    <div class="container">
+      <div class="eyebrow">02 · Foundations <span class="ref">§2</span></div>
+      <h2 id="stack-title">Stack overview</h2>
+      <p class="lede">Modern, version-pinned, opinionated. Each choice was made to keep a solo founder fast through the first 10k MAU.</p>
+
+      <div class="stack-grid">
+        <!-- Runtime -->
+        <article class="glass stack-card">
+          <div class="row">
+            <span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 2 8 4v6c0 5-3.5 8-8 10-4.5-2-8-5-8-10V6z"/></svg></span>
+            <span class="ver">22 LTS</span>
+          </div>
+          <span class="cat">Runtime</span>
+          <h4>Node.js</h4>
+          <p class="note">App Router + React Server Components need modern Node.</p>
+        </article>
+
+        <article class="glass stack-card">
+          <div class="row">
+            <span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg></span>
+            <span class="ver">9.x</span>
+          </div>
+          <span class="cat">Package mgr</span>
+          <h4>pnpm</h4>
+          <p class="note">Faster, content-addressed, monorepo-friendly later.</p>
+        </article>
+
+        <article class="glass stack-card">
+          <div class="row">
+            <span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m4 7 8 5 8-5"/><path d="M4 7v10l8 5 8-5V7"/><path d="m12 12 8-5"/><path d="m12 12-8-5"/><path d="M12 12v10"/></svg></span>
+            <span class="ver">15.x</span>
+          </div>
+          <span class="cat">Framework</span>
+          <h4>Next.js</h4>
+          <p class="note">App Router, RSC, server actions, partial prerendering.</p>
+        </article>
+
+        <article class="glass stack-card">
+          <div class="row">
+            <span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="2"/><ellipse cx="12" cy="12" rx="10" ry="4"/><ellipse cx="12" cy="12" rx="10" ry="4" transform="rotate(60 12 12)"/><ellipse cx="12" cy="12" rx="10" ry="4" transform="rotate(120 12 12)"/></svg></span>
+            <span class="ver">19.x</span>
+          </div>
+          <span class="cat">UI runtime</span>
+          <h4>React</h4>
+          <p class="note">Required by Next 15. Hooks, suspense, server components.</p>
+        </article>
+
+        <article class="glass stack-card">
+          <div class="row">
+            <span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3v4a1 1 0 0 0 1 1h4"/><path d="M17 21H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2Z"/><path d="M9 13h2"/><path d="M9 17h6"/></svg></span>
+            <span class="ver">3.x</span>
+          </div>
+          <span class="cat">Content</span>
+          <h4>MDX</h4>
+          <p class="note">Author chapters as <code>.mdx</code> + JSX components.</p>
+        </article>
+
+        <article class="glass stack-card">
+          <div class="row">
+            <span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12c0-5.5 4.5-10 10-10 4 0 7.5 2.5 9 6"/><path d="M22 12c0 5.5-4.5 10-10 10-4 0-7.5-2.5-9-6"/></svg></span>
+            <span class="ver">4.x</span>
+          </div>
+          <span class="cat">Styling</span>
+          <h4>Tailwind CSS</h4>
+          <p class="note">CSS-first config aligns with BLUEPRINT design tokens.</p>
+        </article>
+
+        <article class="glass stack-card">
+          <div class="row">
+            <span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></span>
+            <span class="ver">latest</span>
+          </div>
+          <span class="cat">Components</span>
+          <h4>shadcn/ui</h4>
+          <p class="note">Copy-paste primitives, owned in the repo.</p>
+        </article>
+
+        <article class="glass stack-card">
+          <div class="row">
+            <span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span>
+            <span class="ver">latest</span>
+          </div>
+          <span class="cat">Auth</span>
+          <h4>Clerk</h4>
+          <p class="note">Organizations built in. Free up to 10k MAU.</p>
+        </article>
+
+        <article class="glass stack-card">
+          <div class="row">
+            <span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/><path d="M3 12c0 1.66 4 3 9 3s9-1.34 9-3"/></svg></span>
+            <span class="ver">latest</span>
+          </div>
+          <span class="cat">Database</span>
+          <h4>Neon Postgres</h4>
+          <p class="note">Serverless, branchable per PR, scales to zero.</p>
+        </article>
+
+        <article class="glass stack-card">
+          <div class="row">
+            <span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m18 16 4-4-4-4"/><path d="m6 8-4 4 4 4"/><path d="m14.5 4-5 16"/></svg></span>
+            <span class="ver">latest</span>
+          </div>
+          <span class="cat">ORM</span>
+          <h4>Drizzle</h4>
+          <p class="note">TypeScript-first, edge-friendly, small bundle.</p>
+        </article>
+
+        <article class="glass stack-card">
+          <div class="row">
+            <span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 4H8l-7 8 7 8h13a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z"/><path d="m15 9-6 6"/><path d="m9 9 6 6"/></svg></span>
+            <span class="ver">latest</span>
+          </div>
+          <span class="cat">Payments</span>
+          <h4>Lemon Squeezy</h4>
+          <p class="note">Merchant of record — handles global tax for you.</p>
+        </article>
+
+        <article class="glass stack-card">
+          <div class="row">
+            <span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 5L2 7"/></svg></span>
+            <span class="ver">latest</span>
+          </div>
+          <span class="cat">Email</span>
+          <h4>Resend + React Email</h4>
+          <p class="note">Modern API, React component templates.</p>
+        </article>
+
+        <article class="glass stack-card">
+          <div class="row">
+            <span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12c0 4.97-4.03 9-9 9s-9-4.03-9-9 4.03-9 9-9c.85 0 1.67.12 2.45.33"/><path d="M12 7v6l3 2"/><circle cx="18" cy="6" r="3"/></svg></span>
+            <span class="ver">latest</span>
+          </div>
+          <span class="cat">AI</span>
+          <h4>Anthropic SDK</h4>
+          <p class="note">Claude streaming for the in-page tutor.</p>
+        </article>
+
+        <article class="glass stack-card">
+          <div class="row">
+            <span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.5 19a4.5 4.5 0 1 0 0-9 6 6 0 0 0-11.5 1.5A4 4 0 0 0 6 19z"/></svg></span>
+            <span class="ver">R2</span>
+          </div>
+          <span class="cat">Object storage</span>
+          <h4>Cloudflare R2</h4>
+          <p class="note">S3-compatible, zero egress fees.</p>
+        </article>
+
+        <article class="glass stack-card">
+          <div class="row">
+            <span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg></span>
+            <span class="ver">latest</span>
+          </div>
+          <span class="cat">Search</span>
+          <h4>Pagefind</h4>
+          <p class="note">Static index, built at deploy, zero infra.</p>
+        </article>
+
+        <article class="glass stack-card">
+          <div class="row">
+            <span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 2 8 14H4z"/></svg></span>
+            <span class="ver">Vercel</span>
+          </div>
+          <span class="cat">Hosting</span>
+          <h4>Vercel</h4>
+          <p class="note">Preview deploys per PR. Edge-ready.</p>
+        </article>
+
+        <article class="glass stack-card">
+          <div class="row">
+            <span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m7 14 4-4 4 4 6-6"/></svg></span>
+            <span class="ver">latest</span>
+          </div>
+          <span class="cat">Analytics</span>
+          <h4>PostHog Cloud</h4>
+          <p class="note">Events, flags, session replay (consent-gated).</p>
+        </article>
+
+        <article class="glass stack-card">
+          <div class="row">
+            <span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4"/><path d="M12 17h.01"/><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z"/></svg></span>
+            <span class="ver">latest</span>
+          </div>
+          <span class="cat">Errors</span>
+          <h4>Sentry</h4>
+          <p class="note">Source-mapped, alerts to Slack/email.</p>
+        </article>
+
+        <article class="glass stack-card">
+          <div class="row">
+            <span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m9 11 3 3 8-8"/></svg></span>
+            <span class="ver">latest</span>
+          </div>
+          <span class="cat">Uptime</span>
+          <h4>BetterStack</h4>
+          <p class="note">Heartbeats + public status page.</p>
+        </article>
+
+        <article class="glass stack-card">
+          <div class="row">
+            <span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22V8"/><path d="m5 12 7-4 7 4"/><path d="m5 16 7-4 7 4"/><path d="m5 20 7-4 7 4"/><path d="M12 2v3"/></svg></span>
+            <span class="ver">latest</span>
+          </div>
+          <span class="cat">Lint / format</span>
+          <h4>Biome</h4>
+          <p class="note">One tool. ~10× faster than ESLint+Prettier.</p>
+        </article>
+
+        <article class="glass stack-card">
+          <div class="row">
+            <span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12 11 14 15 10"/><circle cx="12" cy="12" r="10"/></svg></span>
+            <span class="ver">latest</span>
+          </div>
+          <span class="cat">Tests</span>
+          <h4>Vitest + Playwright</h4>
+          <p class="note">Unit + integration + E2E coverage.</p>
+        </article>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== Repo layout ===================== -->
+  <section class="block" id="repo" aria-labelledby="repo-title">
+    <div class="container">
+      <div class="eyebrow">03 · Layout <span class="ref">§3</span></div>
+      <h2 id="repo-title">Repo layout</h2>
+      <p class="lede">Next.js route groups separate marketing, learning, the app, and the API. Click to expand each folder.</p>
+
+      <div class="glass tree" role="tree" aria-label="Repository tree">
+<details open><summary><span class="folder">llm-concepts/</span></summary>
+<div class="indent">
+  <div class="file"><span class="name">BLUEPRINT.md</span> <span class="comment"># product/content vision</span></div>
+  <div class="file"><span class="name">ARCHITECTURE.md</span> <span class="comment"># this spec</span></div>
+  <div class="file"><span class="name">architecture.html</span> <span class="comment"># interactive visualization</span></div>
+  <div class="file"><span class="name">README.md</span></div>
+  <div class="file"><span class="name">package.json</span></div>
+  <div class="file"><span class="name">biome.json</span></div>
+  <div class="file"><span class="name">next.config.ts</span></div>
+  <div class="file"><span class="name">tailwind.config.ts</span></div>
+  <div class="file"><span class="name">drizzle.config.ts</span></div>
+  <div class="file"><span class="name">.env.example</span></div>
+  <details><summary><span class="folder">.github/workflows/</span></summary>
+    <div class="indent">
+      <div class="file"><span class="name">ci.yml</span> <span class="comment"># lint + types + unit + E2E</span></div>
+      <div class="file"><span class="name">deploy.yml</span> <span class="comment"># Vercel preview + prod</span></div>
+    </div>
+  </details>
+  <details><summary><span class="folder">drizzle/</span></summary>
+    <div class="indent">
+      <div class="file"><span class="name">*.sql</span> <span class="comment"># generated migrations</span></div>
+    </div>
+  </details>
+  <details><summary><span class="folder">public/</span></summary>
+    <div class="indent">
+      <div class="file"><span class="name">favicon.svg</span></div>
+      <details><summary><span class="folder">og/</span></summary><div class="indent"><div class="file"><span class="comment"># per-chapter OG cards</span></div></div></details>
+    </div>
+  </details>
+  <details open><summary><span class="folder">src/</span></summary>
+    <div class="indent">
+      <details open><summary><span class="folder">app/</span></summary>
+        <div class="indent">
+          <details><summary><span class="folder">(marketing)/</span> <span class="comment"># landing, pricing, about</span></summary>
+            <div class="indent">
+              <div class="file"><span class="name">page.tsx</span></div>
+              <div class="file"><span class="name">pricing/page.tsx</span></div>
+              <div class="file"><span class="name">about/page.tsx</span></div>
+            </div>
+          </details>
+          <details><summary><span class="folder">(learn)/</span> <span class="comment"># chapter rendering, free + gated</span></summary>
+            <div class="indent">
+              <details><summary><span class="folder">chapters/</span></summary>
+                <div class="indent">
+                  <div class="file"><span class="name">page.tsx</span> <span class="comment"># hub</span></div>
+                  <div class="file"><span class="name">[slug]/page.tsx</span> <span class="comment"># dynamic route per chapter</span></div>
+                </div>
+              </details>
+              <div class="file"><span class="name">glossary/page.tsx</span></div>
+            </div>
+          </details>
+          <details><summary><span class="folder">(app)/</span> <span class="comment"># authenticated app</span></summary>
+            <div class="indent">
+              <div class="file"><span class="name">dashboard/page.tsx</span></div>
+              <div class="file"><span class="name">bookmarks/page.tsx</span></div>
+              <div class="file"><span class="name">notes/page.tsx</span></div>
+              <div class="file"><span class="name">settings/page.tsx</span></div>
+              <details><summary><span class="folder">teams/</span> <span class="comment"># org admin</span></summary>
+                <div class="indent">
+                  <div class="file"><span class="name">page.tsx</span></div>
+                  <div class="file"><span class="name">members/page.tsx</span></div>
+                  <div class="file"><span class="name">billing/page.tsx</span></div>
+                </div>
+              </details>
+            </div>
+          </details>
+          <details><summary><span class="folder">(api)/api/</span> <span class="comment"># server endpoints</span></summary>
+            <div class="indent">
+              <div class="file"><span class="name">tutor/route.ts</span> <span class="comment"># AI tutor streaming POST</span></div>
+              <div class="file"><span class="name">progress/route.ts</span></div>
+              <div class="file"><span class="name">webhooks/lemon-squeezy/route.ts</span></div>
+              <div class="file"><span class="name">webhooks/clerk/route.ts</span></div>
+              <div class="file"><span class="name">og/[slug]/route.ts</span> <span class="comment"># dynamic OG images</span></div>
+            </div>
+          </details>
+          <div class="file"><span class="name">layout.tsx</span> <span class="comment"># theme, fonts, clerk</span></div>
+          <div class="file"><span class="name">globals.css</span></div>
+        </div>
+      </details>
+      <details><summary><span class="folder">content/chapters/</span></summary>
+        <div class="indent">
+          <div class="file"><span class="name">01-foundations.mdx</span></div>
+          <div class="file"><span class="name">02-training.mdx</span></div>
+          <div class="file"><span class="comment"># ...one MDX file per chapter</span></div>
+        </div>
+      </details>
+      <details><summary><span class="folder">components/</span></summary>
+        <div class="indent">
+          <details><summary><span class="folder">comic/</span></summary>
+            <div class="indent">
+              <div class="file"><span class="name">ComicPanel.tsx</span></div>
+              <div class="file"><span class="name">ComicStrip.tsx</span></div>
+              <div class="file"><span class="name">SpeechBubble.tsx</span></div>
+              <div class="file"><span class="name">PersonaStrip.tsx</span></div>
+            </div>
+          </details>
+          <details><summary><span class="folder">learn/</span></summary>
+            <div class="indent">
+              <div class="file"><span class="name">ELI5Card.tsx</span></div>
+              <div class="file"><span class="name">DeepDive.tsx</span></div>
+              <div class="file"><span class="name">RememberCard.tsx</span></div>
+              <div class="file"><span class="name">CompareTable.tsx</span></div>
+              <div class="file"><span class="name">FlowDiagram.tsx</span></div>
+              <div class="file"><span class="name">Callout.tsx</span></div>
+              <div class="file"><span class="name">CodeBlock.tsx, CodeTabs.tsx</span></div>
+            </div>
+          </details>
+          <details><summary><span class="folder">interactive/</span> <span class="comment"># client islands</span></summary>
+            <div class="indent">
+              <div class="file"><span class="name">TokenizerDemo.tsx</span></div>
+              <div class="file"><span class="name">AttentionHeatmap.tsx</span></div>
+              <div class="file"><span class="name">AgentLoopAnimator.tsx</span></div>
+              <div class="file"><span class="name">MCPPlayground.tsx</span></div>
+              <div class="file"><span class="name">TutorChat.tsx</span></div>
+            </div>
+          </details>
+          <details><summary><span class="folder">layout/, theme/, ui/</span></summary>
+            <div class="indent">
+              <div class="file"><span class="name">SiteHeader, SiteFooter, ChapterNav, Paywall</span></div>
+              <div class="file"><span class="name">ThemeProvider.tsx, ThemeToggle.tsx</span></div>
+              <div class="file"><span class="name">ui/ — shadcn primitives</span></div>
+            </div>
+          </details>
+        </div>
+      </details>
+      <details><summary><span class="folder">characters/</span> <span class="comment"># inline SVG components</span></summary>
+        <div class="indent">
+          <div class="file"><span class="name">Tess, Atlas, MCPMae, SkillSam, PlugPip,</span></div>
+          <div class="file"><span class="name">Orchestrator, Vector, Halu</span></div>
+        </div>
+      </details>
+      <details><summary><span class="folder">db/</span></summary>
+        <div class="indent">
+          <div class="file"><span class="name">client.ts</span> <span class="comment"># Drizzle + Neon</span></div>
+          <div class="file"><span class="name">schema.ts</span> <span class="comment"># all tables</span></div>
+          <div class="file"><span class="name">queries/{progress,bookmarks,entitlements,tutor}.ts</span></div>
+        </div>
+      </details>
+      <details><summary><span class="folder">lib/</span></summary>
+        <div class="indent">
+          <div class="file"><span class="name">auth.ts, entitlements.ts, chapters.ts</span></div>
+          <div class="file"><span class="name">mdx-components.tsx, tutor.ts</span></div>
+          <div class="file"><span class="name">rate-limit.ts</span> <span class="comment"># Upstash Redis</span></div>
+          <div class="file"><span class="name">analytics.ts</span></div>
+        </div>
+      </details>
+      <details><summary><span class="folder">styles/</span></summary>
+        <div class="indent">
+          <div class="file"><span class="name">tokens.css</span> <span class="comment"># light + dark CSS variables</span></div>
+          <div class="file"><span class="name">glass.css</span></div>
+        </div>
+      </details>
+      <div class="file"><span class="name">env.ts</span> <span class="comment"># Zod-validated env at startup</span></div>
+    </div>
+  </details>
+  <details><summary><span class="folder">tests/</span></summary>
+    <div class="indent">
+      <div class="file"><span class="name">unit/, integration/, e2e/</span></div>
+    </div>
+  </details>
+</div>
+</details>
+      </div>
+
+      <div class="callout"><strong>Why route groups?</strong> <code>(marketing)</code>, <code>(learn)</code>, <code>(app)</code>, <code>(api)</code> organize files without affecting URLs. Three surfaces, one design system, one auth boundary, one domain.</div>
+    </div>
+  </section>
+
+  <!-- ===================== Theme system ===================== -->
+  <section class="block" id="theme" aria-labelledby="theme-title">
+    <div class="container">
+      <div class="eyebrow">04 · Look &amp; feel <span class="ref">§4</span></div>
+      <h2 id="theme-title">Theme system</h2>
+      <p class="lede">Two palettes — Daybreak and Midnight — driven by CSS custom properties. The toggle in the header is wired into this very page. Try it.</p>
+
+      <div class="theme-grid">
+        <article class="glass palette" aria-labelledby="pal-light">
+          <h3 id="pal-light">Daybreak — light</h3>
+          <span class="tag">data-theme="light"</span>
+          <div class="swatch-grid">
+            <div class="swatch"><span class="chip" style="background:#F4F6FB"></span><span class="meta"><span class="name">--bg-base</span><span class="hex">#F4F6FB</span></span></div>
+            <div class="swatch"><span class="chip" style="background:#E0DCFF"></span><span class="meta"><span class="name">--bg-mesh-1</span><span class="hex">#E0DCFF</span></span></div>
+            <div class="swatch"><span class="chip" style="background:#D1F0EC"></span><span class="meta"><span class="name">--bg-mesh-2</span><span class="hex">#D1F0EC</span></span></div>
+            <div class="swatch"><span class="chip" style="background:#FFE4D6"></span><span class="meta"><span class="name">--bg-mesh-3</span><span class="hex">#FFE4D6</span></span></div>
+            <div class="swatch"><span class="chip" style="background:rgba(255,255,255,0.55);backdrop-filter:blur(8px)"></span><span class="meta"><span class="name">--surface</span><span class="hex">rgba(255,255,255,.55)</span></span></div>
+            <div class="swatch"><span class="chip" style="background:#0F1226"></span><span class="meta"><span class="name">--ink</span><span class="hex">#0F1226</span></span></div>
+            <div class="swatch"><span class="chip" style="background:#5B3FFF"></span><span class="meta"><span class="name">--accent</span><span class="hex">#5B3FFF</span></span></div>
+            <div class="swatch"><span class="chip" style="background:#1FB5A8"></span><span class="meta"><span class="name">--accent-2</span><span class="hex">#1FB5A8</span></span></div>
+            <div class="swatch"><span class="chip" style="background:#F5B945"></span><span class="meta"><span class="name">--sun</span><span class="hex">#F5B945</span></span></div>
+            <div class="swatch"><span class="chip" style="background:#E5484D"></span><span class="meta"><span class="name">--warn</span><span class="hex">#E5484D</span></span></div>
+          </div>
+        </article>
+
+        <article class="glass palette" aria-labelledby="pal-dark">
+          <h3 id="pal-dark">Midnight — dark</h3>
+          <span class="tag">data-theme="dark"</span>
+          <div class="swatch-grid">
+            <div class="swatch"><span class="chip" style="background:#0A0B1A"></span><span class="meta"><span class="name">--bg-base</span><span class="hex">#0A0B1A</span></span></div>
+            <div class="swatch"><span class="chip" style="background:#3B2A78"></span><span class="meta"><span class="name">--bg-mesh-1</span><span class="hex">#3B2A78</span></span></div>
+            <div class="swatch"><span class="chip" style="background:#0F4D49"></span><span class="meta"><span class="name">--bg-mesh-2</span><span class="hex">#0F4D49</span></span></div>
+            <div class="swatch"><span class="chip" style="background:#6B2A2A"></span><span class="meta"><span class="name">--bg-mesh-3</span><span class="hex">#6B2A2A</span></span></div>
+            <div class="swatch"><span class="chip" style="background:rgba(255,255,255,0.10);backdrop-filter:blur(8px)"></span><span class="meta"><span class="name">--surface</span><span class="hex">rgba(255,255,255,.06)</span></span></div>
+            <div class="swatch"><span class="chip" style="background:#F2F3FB"></span><span class="meta"><span class="name">--ink</span><span class="hex">#F2F3FB</span></span></div>
+            <div class="swatch"><span class="chip" style="background:#8D79FF"></span><span class="meta"><span class="name">--accent</span><span class="hex">#8D79FF</span></span></div>
+            <div class="swatch"><span class="chip" style="background:#4DDBCB"></span><span class="meta"><span class="name">--accent-2</span><span class="hex">#4DDBCB</span></span></div>
+            <div class="swatch"><span class="chip" style="background:#FFD56B"></span><span class="meta"><span class="name">--sun</span><span class="hex">#FFD56B</span></span></div>
+            <div class="swatch"><span class="chip" style="background:#FF6B6B"></span><span class="meta"><span class="name">--warn</span><span class="hex">#FF6B6B</span></span></div>
+          </div>
+        </article>
+      </div>
+
+      <article class="glass-strong theme-preview" aria-label="Live theme preview">
+        <div>
+          <h4>Live preview.</h4>
+          <p>This card reads from the same tokens as the rest of the page. Switch the theme above — surfaces, accents, mesh, code, all change in lockstep. No reload. No flash.</p>
+          <div style="display:flex;gap:10px;flex-wrap:wrap">
+            <a class="preview-btn" href="#schema">Primary CTA</a>
+            <span style="display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--ink-mute)">
+              <span style="width:8px;height:8px;border-radius:50%;background:var(--accent-2);box-shadow:0 0 8px var(--accent-2)"></span>
+              tokens reactive
+            </span>
+          </div>
+        </div>
+        <div class="preview-card">
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
+            <div style="width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,var(--accent),var(--accent-2));display:grid;place-items:center;color:white;font-weight:700">7</div>
+            <div>
+              <div style="font-weight:600;color:var(--ink)">Model Context Protocol</div>
+              <div style="font-size:11px;color:var(--ink-mute);font-family:var(--mono)">tier: pro · 12 min · intermediate</div>
+            </div>
+          </div>
+          <p style="font-size:13px;margin:0;color:var(--ink-soft)">The USB-C of AI tools — why every agent now speaks MCP.</p>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <!-- ===================== Lesson schema ===================== -->
+  <section class="block" id="schema" aria-labelledby="schema-title">
+    <div class="container">
+      <div class="eyebrow">05 · Authoring <span class="ref">§5</span></div>
+      <h2 id="schema-title">Lesson schema</h2>
+      <p class="lede">Drop a <code>.mdx</code> file in <code>src/content/chapters/</code> with this frontmatter. Validated by Zod at build. The lesson appears in nav, sidebar, sitemap, and OG cards automatically.</p>
+
+      <div class="annotated-wrap">
+        <pre class="code-block" aria-label="Lesson frontmatter YAML"><code><span class="ln"><span class="c">---</span></span><span class="ln"><span class="k">slug:</span> <span class="s">"07-mcp"</span></span><span class="ln"><span class="k">title:</span> <span class="s">"Model Context Protocol"</span></span><span class="ln"><span class="k">chapterNumber:</span> <span class="n">7</span></span><span class="ln"><span class="k">section:</span> <span class="s">"modern-stack"</span></span><span class="ln"><span class="k">difficulty:</span> <span class="s">"intermediate"</span></span><span class="ln"><span class="k">estimatedMinutes:</span> <span class="n">12</span></span><span class="ln"><span class="k">tier:</span> <span class="s">"pro"</span></span><span class="ln"><span class="k">prereqs:</span> [<span class="s">"05-tools"</span>, <span class="s">"06-agents"</span>]</span><span class="ln"><span class="k">characters:</span> [<span class="s">"Atlas"</span>, <span class="s">"MCPMae"</span>]</span><span class="ln"><span class="k">ogImageVariant:</span> <span class="s">"mcp"</span></span><span class="ln"><span class="k">updatedAt:</span> <span class="s">"2026-05-22"</span></span><span class="ln"><span class="k">authors:</span> [<span class="s">"murugadoss"</span>]</span><span class="ln"><span class="k">summary:</span> <span class="c">&gt;</span></span><span class="ln">  The USB-C of AI tools — why every agent</span><span class="ln">  now speaks MCP. Architecture, transport,</span><span class="ln">  and a 30-line server.</span><span class="ln"><span class="c">---</span></span></code></pre>
+
+        <div class="annotations">
+          <div class="annotation"><strong>slug</strong> — URL segment. Also the lookup key in <code>prereqs</code> and progress tables.</div>
+          <div class="annotation"><strong>chapterNumber</strong> — Sort order across the curriculum. Filename prefix is the source of truth.</div>
+          <div class="annotation"><strong>tier</strong> — <code>free</code> renders directly. <code>pro</code> hits the entitlements check; unentitled users see the first 25% then a <code>&lt;Paywall&gt;</code>.</div>
+          <div class="annotation"><strong>characters</strong> — Which SVG components to preload. Powers the persona strip.</div>
+          <div class="annotation"><strong>ogImageVariant</strong> — Routes to a preset OG card template, rendered at build by <code>/api/og/[slug]</code>.</div>
+          <div class="annotation"><strong>summary</strong> — Used in the chapter hub, sitemap, RSS, and meta description.</div>
+        </div>
+      </div>
+
+      <div class="callout"><strong>Adding a chapter has zero code changes.</strong> Write MDX → commit → Vercel preview deploys it → it appears everywhere. No registry to edit.</div>
+    </div>
+  </section>
+
+  <!-- ===================== Data model ===================== -->
+  <section class="block" id="data" aria-labelledby="data-title">
+    <div class="container">
+      <div class="eyebrow">06 · Persistence <span class="ref">§6</span></div>
+      <h2 id="data-title">Data model</h2>
+      <p class="lede">Drizzle schemas in <code>src/db/schema.ts</code>. Multi-tenant from day one: every user has a personal org, so every row has an <code>orgId</code> path.</p>
+
+      <div class="glass diagram-wrap" aria-label="Entity relationship diagram">
+        <svg viewBox="0 0 1100 720" xmlns="http://www.w3.org/2000/svg" role="img">
+          <title>Entity relationship diagram</title>
+          <desc>Tables grouped by domain: identity (users, orgs, memberships), billing (subscriptions, entitlements), content (chapterProgress, bookmarks, notes), tutor (tutorConversations, tutorMessages), and shared (usageEvents, inviteCodes).</desc>
+
+          <defs>
+            <filter id="ds" x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur in="SourceAlpha" stdDeviation="3"/>
+              <feOffset dx="0" dy="3"/>
+              <feComponentTransfer><feFuncA type="linear" slope="0.25"/></feComponentTransfer>
+              <feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge>
+            </filter>
+            <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+              <path d="M0,0 L10,5 L0,10 z" fill="currentColor"/>
+            </marker>
+          </defs>
+
+          <!-- domain backgrounds -->
+          <rect x="20" y="40" width="320" height="200" rx="20" fill="var(--bg-mesh-1)" opacity="0.18"/>
+          <text x="36" y="62" class="lane-label" fill="var(--accent)">Identity</text>
+
+          <rect x="380" y="40" width="320" height="200" rx="20" fill="var(--bg-mesh-2)" opacity="0.18"/>
+          <text x="396" y="62" class="lane-label" fill="var(--accent-2)">Billing &amp; entitlements</text>
+
+          <rect x="740" y="40" width="340" height="280" rx="20" fill="var(--bg-mesh-3)" opacity="0.18"/>
+          <text x="756" y="62" class="lane-label" fill="var(--sun)">Content progress</text>
+
+          <rect x="20" y="280" width="320" height="220" rx="20" fill="var(--bg-mesh-1)" opacity="0.18"/>
+          <text x="36" y="302" class="lane-label" fill="var(--accent)">AI tutor</text>
+
+          <rect x="380" y="280" width="700" height="220" rx="20" fill="var(--bg-mesh-2)" opacity="0.12"/>
+          <text x="396" y="302" class="lane-label" fill="var(--accent-2)">Shared</text>
+
+          <!-- users -->
+          <g filter="url(#ds)">
+            <rect x="50" y="80" width="160" height="130" rx="12" class="node-rect"/>
+            <text x="64" y="102" class="node-label">users</text>
+            <line x1="50" y1="112" x2="210" y2="112" stroke="var(--border-strong)"/>
+            <text x="64" y="130" class="node-sub">id (uuid, pk)</text>
+            <text x="64" y="146" class="node-sub">email (unique)</text>
+            <text x="64" y="162" class="node-sub">displayName</text>
+            <text x="64" y="178" class="node-sub">createdAt</text>
+            <text x="64" y="194" class="node-sub">updatedAt</text>
+          </g>
+
+          <!-- orgs -->
+          <g filter="url(#ds)">
+            <rect x="220" y="80" width="105" height="130" rx="12" class="node-rect"/>
+            <text x="234" y="102" class="node-label">orgs</text>
+            <line x1="220" y1="112" x2="325" y2="112" stroke="var(--border-strong)"/>
+            <text x="234" y="130" class="node-sub">id (pk)</text>
+            <text x="234" y="146" class="node-sub">name</text>
+            <text x="234" y="162" class="node-sub">slug</text>
+            <text x="234" y="178" class="node-sub">plan</text>
+            <text x="234" y="194" class="node-sub">seatsPurchased</text>
+          </g>
+
+          <!-- memberships -->
+          <g filter="url(#ds)">
+            <rect x="120" y="225" width="180" height="0" rx="12" class="node-rect" style="display:none"/>
+          </g>
+
+          <!-- subscriptions -->
+          <g filter="url(#ds)">
+            <rect x="395" y="80" width="135" height="130" rx="12" class="node-rect"/>
+            <text x="409" y="102" class="node-label">subscriptions</text>
+            <line x1="395" y1="112" x2="530" y2="112" stroke="var(--border-strong)"/>
+            <text x="409" y="130" class="node-sub">id (pk)</text>
+            <text x="409" y="146" class="node-sub">orgId →</text>
+            <text x="409" y="162" class="node-sub">lsSubscriptionId</text>
+            <text x="409" y="178" class="node-sub">status</text>
+            <text x="409" y="194" class="node-sub">currentPeriodEnd</text>
+          </g>
+
+          <!-- entitlements -->
+          <g filter="url(#ds)">
+            <rect x="540" y="80" width="150" height="130" rx="12" class="node-rect" stroke="var(--accent-2)" stroke-width="1.5"/>
+            <text x="554" y="102" class="node-label">entitlements</text>
+            <line x1="540" y1="112" x2="690" y2="112" stroke="var(--border-strong)"/>
+            <text x="554" y="130" class="node-sub">id (pk)</text>
+            <text x="554" y="146" class="node-sub">userId? orgId?</text>
+            <text x="554" y="162" class="node-sub">feature</text>
+            <text x="554" y="178" class="node-sub">source</text>
+            <text x="554" y="194" class="node-sub">expiresAt?</text>
+            <rect x="540" y="216" width="150" height="18" rx="4" fill="var(--accent-2)" opacity="0.18"/>
+            <text x="548" y="229" class="node-sub" fill="var(--accent-2)" font-weight="600">★ ADR-008 abstraction</text>
+          </g>
+
+          <!-- chapterProgress -->
+          <g filter="url(#ds)">
+            <rect x="760" y="80" width="155" height="115" rx="12" class="node-rect"/>
+            <text x="774" y="102" class="node-label">chapterProgress</text>
+            <line x1="760" y1="112" x2="915" y2="112" stroke="var(--border-strong)"/>
+            <text x="774" y="130" class="node-sub">userId →</text>
+            <text x="774" y="146" class="node-sub">chapterSlug</text>
+            <text x="774" y="162" class="node-sub">percentComplete</text>
+            <text x="774" y="178" class="node-sub">lastReadAt</text>
+          </g>
+
+          <!-- bookmarks -->
+          <g filter="url(#ds)">
+            <rect x="925" y="80" width="140" height="115" rx="12" class="node-rect"/>
+            <text x="939" y="102" class="node-label">bookmarks</text>
+            <line x1="925" y1="112" x2="1065" y2="112" stroke="var(--border-strong)"/>
+            <text x="939" y="130" class="node-sub">userId →</text>
+            <text x="939" y="146" class="node-sub">chapterSlug</text>
+            <text x="939" y="162" class="node-sub">anchor</text>
+            <text x="939" y="178" class="node-sub">label</text>
+          </g>
+
+          <!-- notes -->
+          <g filter="url(#ds)">
+            <rect x="760" y="215" width="305" height="90" rx="12" class="node-rect"/>
+            <text x="774" y="237" class="node-label">notes</text>
+            <line x1="760" y1="247" x2="1065" y2="247" stroke="var(--border-strong)"/>
+            <text x="774" y="265" class="node-sub">userId → chapterSlug, anchor?</text>
+            <text x="774" y="281" class="node-sub">body (markdown)</text>
+            <text x="774" y="297" class="node-sub">isPrivate, createdAt, updatedAt</text>
+          </g>
+
+          <!-- memberships -->
+          <g filter="url(#ds)">
+            <rect x="135" y="225" width="180" height="0" style="display:none"/>
+          </g>
+          <g filter="url(#ds)">
+            <rect x="135" y="230" width="180" height="0" style="display:none"/>
+          </g>
+
+          <!-- AI tutor -->
+          <g filter="url(#ds)">
+            <rect x="50" y="320" width="155" height="120" rx="12" class="node-rect"/>
+            <text x="64" y="342" class="node-label">tutorConversations</text>
+            <line x1="50" y1="352" x2="205" y2="352" stroke="var(--border-strong)"/>
+            <text x="64" y="370" class="node-sub">id (pk)</text>
+            <text x="64" y="386" class="node-sub">userId →</text>
+            <text x="64" y="402" class="node-sub">chapterSlug</text>
+            <text x="64" y="418" class="node-sub">title (auto)</text>
+          </g>
+
+          <g filter="url(#ds)">
+            <rect x="215" y="320" width="135" height="120" rx="12" class="node-rect"/>
+            <text x="229" y="342" class="node-label">tutorMessages</text>
+            <line x1="215" y1="352" x2="350" y2="352" stroke="var(--border-strong)"/>
+            <text x="229" y="370" class="node-sub">id (pk)</text>
+            <text x="229" y="386" class="node-sub">conversationId →</text>
+            <text x="229" y="402" class="node-sub">role, content</text>
+            <text x="229" y="418" class="node-sub">tokensIn, tokensOut</text>
+          </g>
+
+          <!-- usageEvents -->
+          <g filter="url(#ds)">
+            <rect x="395" y="320" width="160" height="120" rx="12" class="node-rect"/>
+            <text x="409" y="342" class="node-label">usageEvents</text>
+            <line x1="395" y1="352" x2="555" y2="352" stroke="var(--border-strong)"/>
+            <text x="409" y="370" class="node-sub">userId, orgId?</text>
+            <text x="409" y="386" class="node-sub">kind (text)</text>
+            <text x="409" y="402" class="node-sub">metadata (jsonb)</text>
+            <text x="409" y="418" class="node-sub">createdAt</text>
+          </g>
+
+          <!-- inviteCodes -->
+          <g filter="url(#ds)">
+            <rect x="570" y="320" width="155" height="120" rx="12" class="node-rect"/>
+            <text x="584" y="342" class="node-label">inviteCodes</text>
+            <line x1="570" y1="352" x2="725" y2="352" stroke="var(--border-strong)"/>
+            <text x="584" y="370" class="node-sub">orgId →</text>
+            <text x="584" y="386" class="node-sub">code (unique)</text>
+            <text x="584" y="402" class="node-sub">role</text>
+            <text x="584" y="418" class="node-sub">usesRemaining</text>
+          </g>
+
+          <!-- memberships (proper) -->
+          <g filter="url(#ds)">
+            <rect x="740" y="320" width="155" height="120" rx="12" class="node-rect"/>
+            <text x="754" y="342" class="node-label">memberships</text>
+            <line x1="740" y1="352" x2="895" y2="352" stroke="var(--border-strong)"/>
+            <text x="754" y="370" class="node-sub">userId →</text>
+            <text x="754" y="386" class="node-sub">orgId →</text>
+            <text x="754" y="402" class="node-sub">role (enum)</text>
+            <text x="754" y="418" class="node-sub">joinedAt</text>
+          </g>
+
+          <!-- relationship lines -->
+          <g class="node-line" stroke="var(--ink-mute)" fill="none">
+            <!-- users → memberships -->
+            <path d="M 130 210 Q 130 270 690 320" />
+            <text x="320" y="262" class="flow-label">has many</text>
+            <!-- orgs → memberships -->
+            <path d="M 272 210 Q 272 280 770 320" />
+            <!-- orgs → subscriptions -->
+            <path d="M 325 130 L 395 130" marker-end="url(#arr)"/>
+            <text x="332" y="124" class="flow-label">1:N</text>
+            <!-- subscriptions → entitlements -->
+            <path d="M 530 130 L 540 130" marker-end="url(#arr)"/>
+            <!-- users → entitlements (curved over) -->
+            <path d="M 210 130 Q 380 50 540 110"/>
+            <!-- users → chapterProgress -->
+            <path d="M 210 150 L 760 130" marker-end="url(#arr)"/>
+            <!-- users → bookmarks -->
+            <path d="M 210 165 L 925 145" marker-end="url(#arr)"/>
+            <!-- users → notes -->
+            <path d="M 210 180 Q 460 230 760 240" marker-end="url(#arr)"/>
+            <!-- users → tutorConversations -->
+            <path d="M 130 210 L 130 320" marker-end="url(#arr)"/>
+            <!-- tutorConversations → tutorMessages -->
+            <path d="M 205 380 L 215 380" marker-end="url(#arr)"/>
+            <!-- orgs → inviteCodes -->
+            <path d="M 272 210 Q 460 270 600 320" marker-end="url(#arr)"/>
+          </g>
+
+          <!-- Tess speech bubble -->
+          <g transform="translate(330,540)">
+            <circle cx="40" cy="40" r="36" fill="url(#tessGrad)" stroke="var(--accent)" stroke-width="2"/>
+            <defs>
+              <linearGradient id="tessGrad" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0" stop-color="var(--bg-mesh-1)"/>
+                <stop offset="1" stop-color="var(--accent)" stop-opacity="0.7"/>
+              </linearGradient>
+            </defs>
+            <circle cx="30" cy="35" r="3" fill="var(--ink)"/>
+            <circle cx="50" cy="35" r="3" fill="var(--ink)"/>
+            <path d="M28 50 Q40 58 52 50" fill="none" stroke="var(--ink)" stroke-width="2" stroke-linecap="round"/>
+            <text x="40" y="95" text-anchor="middle" font-family="var(--mono)" font-size="9" fill="var(--ink-mute)">Tess</text>
+
+            <path d="M 80 30 Q 130 10 200 25 L 320 25 Q 340 25 340 45 L 340 90 Q 340 105 320 105 L 200 105 Q 130 105 95 90 Z" fill="var(--surface-strong)" stroke="var(--border-strong)" stroke-width="1"/>
+            <path d="M 95 55 L 75 65 L 90 75" fill="var(--surface-strong)" stroke="var(--border-strong)" stroke-width="1"/>
+            <text x="115" y="60" class="speech-bubble">Hi! I&apos;m a row in</text>
+            <text x="115" y="80" class="speech-bubble" font-family="var(--mono)" font-size="14" fill="var(--accent)">users</text>
+            <text x="170" y="80" class="speech-bubble">— nice to meet you.</text>
+          </g>
+        </svg>
+      </div>
+
+      <div class="diagram-legend">
+        <span class="lg"><span class="dot" style="background:var(--bg-mesh-1);opacity:0.6"></span>Identity</span>
+        <span class="lg"><span class="dot" style="background:var(--bg-mesh-2);opacity:0.6"></span>Billing</span>
+        <span class="lg"><span class="dot" style="background:var(--bg-mesh-3);opacity:0.6"></span>Content</span>
+        <span class="lg"><span class="dot" style="background:var(--accent-2)"></span>ADR-008 abstraction</span>
+      </div>
+
+      <div class="callout"><strong>Entitlements are the single source of truth.</strong> Code never asks "does this user have a Pro subscription?" — it asks "does this user have the <code>chapters:pro</code> entitlement?". This decoupling powers bundles, grants, trials, and provider swaps with zero access-check changes.</div>
+    </div>
+  </section>
+
+  <!-- ===================== Auth & multi-tenant ===================== -->
+  <section class="block" id="auth" aria-labelledby="auth-title">
+    <div class="container">
+      <div class="eyebrow">07 · Identity <span class="ref">§7</span></div>
+      <h2 id="auth-title">Auth &amp; multi-tenant flow</h2>
+      <p class="lede">Sign-up creates a personal org so every user always has an <code>orgId</code>. The multi-tenant code path is uniform from day one.</p>
+
+      <div class="glass diagram-wrap" aria-label="Auth sequence diagram">
+        <svg viewBox="0 0 1060 580" xmlns="http://www.w3.org/2000/svg" role="img">
+          <title>Sign-up sequence diagram</title>
+          <desc>Sequence diagram: Client signs up, Server calls Clerk, Clerk fires a webhook to Server which inserts user, creates personal org, and inserts membership in the DB.</desc>
+
+          <!-- Lane backgrounds -->
+          <rect x="40" y="40" width="220" height="500" rx="16" fill="var(--surface)" stroke="var(--border-strong)"/>
+          <rect x="290" y="40" width="220" height="500" rx="16" fill="var(--surface)" stroke="var(--border-strong)"/>
+          <rect x="540" y="40" width="220" height="500" rx="16" fill="var(--surface)" stroke="var(--border-strong)"/>
+          <rect x="790" y="40" width="220" height="500" rx="16" fill="var(--surface)" stroke="var(--border-strong)"/>
+
+          <!-- Lane headers -->
+          <g>
+            <text x="150" y="68" text-anchor="middle" class="lane-label">Client</text>
+            <text x="150" y="84" text-anchor="middle" class="node-sub">browser</text>
+          </g>
+          <g>
+            <text x="400" y="68" text-anchor="middle" class="lane-label">Next.js Server</text>
+            <text x="400" y="84" text-anchor="middle" class="node-sub">/api/webhooks/clerk</text>
+          </g>
+          <g>
+            <text x="650" y="68" text-anchor="middle" class="lane-label">Clerk</text>
+            <text x="650" y="84" text-anchor="middle" class="node-sub">hosted auth</text>
+          </g>
+          <g>
+            <text x="900" y="68" text-anchor="middle" class="lane-label">Neon Postgres</text>
+            <text x="900" y="84" text-anchor="middle" class="node-sub">users · orgs · memberships</text>
+          </g>
+
+          <!-- Vertical lifelines -->
+          <line x1="150" y1="100" x2="150" y2="530" stroke="var(--border-strong)" stroke-dasharray="3 5"/>
+          <line x1="400" y1="100" x2="400" y2="530" stroke="var(--border-strong)" stroke-dasharray="3 5"/>
+          <line x1="650" y1="100" x2="650" y2="530" stroke="var(--border-strong)" stroke-dasharray="3 5"/>
+          <line x1="900" y1="100" x2="900" y2="530" stroke="var(--border-strong)" stroke-dasharray="3 5"/>
+
+          <defs>
+            <marker id="arr2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path d="M0,0 L10,5 L0,10 z" fill="var(--accent)"/>
+            </marker>
+            <marker id="arr3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path d="M0,0 L10,5 L0,10 z" fill="var(--accent-2)"/>
+            </marker>
+          </defs>
+
+          <!-- step 1 -->
+          <g>
+            <line x1="150" y1="140" x2="650" y2="140" stroke="var(--accent)" stroke-width="2" marker-end="url(#arr2)"/>
+            <text x="400" y="132" text-anchor="middle" class="flow-label" font-weight="600">1. Sign up with email + magic link / Google / GitHub</text>
+          </g>
+
+          <!-- step 2 -->
+          <g>
+            <line x1="650" y1="180" x2="150" y2="180" stroke="var(--accent)" stroke-width="2" marker-end="url(#arr2)"/>
+            <text x="400" y="172" text-anchor="middle" class="flow-label">2. Session token issued · redirect to /dashboard</text>
+          </g>
+
+          <!-- step 3 -->
+          <g>
+            <line x1="650" y1="230" x2="400" y2="230" stroke="var(--accent-2)" stroke-width="2" marker-end="url(#arr3)"/>
+            <text x="525" y="222" text-anchor="middle" class="flow-label" font-weight="600">3. Webhook: user.created (signed)</text>
+          </g>
+
+          <!-- step 4 -->
+          <g>
+            <line x1="400" y1="270" x2="900" y2="270" stroke="var(--accent-2)" stroke-width="2" marker-end="url(#arr3)"/>
+            <text x="650" y="262" text-anchor="middle" class="flow-label">4. INSERT INTO users (id, email, displayName)</text>
+          </g>
+
+          <!-- step 5 -->
+          <g>
+            <line x1="400" y1="310" x2="650" y2="310" stroke="var(--accent-2)" stroke-width="2" marker-end="url(#arr3)"/>
+            <text x="525" y="302" text-anchor="middle" class="flow-label" font-weight="600">5. createOrganization() — personal org</text>
+          </g>
+
+          <!-- step 6 -->
+          <g>
+            <line x1="650" y1="350" x2="400" y2="350" stroke="var(--accent-2)" stroke-width="2" marker-end="url(#arr3)"/>
+            <text x="525" y="342" text-anchor="middle" class="flow-label">6. Webhook: organization.created</text>
+          </g>
+
+          <!-- step 7 -->
+          <g>
+            <line x1="400" y1="390" x2="900" y2="390" stroke="var(--accent-2)" stroke-width="2" marker-end="url(#arr3)"/>
+            <text x="650" y="382" text-anchor="middle" class="flow-label">7. INSERT INTO orgs, INSERT INTO memberships (role=owner)</text>
+          </g>
+
+          <!-- step 8 -->
+          <g>
+            <line x1="150" y1="450" x2="400" y2="450" stroke="var(--accent)" stroke-width="2" marker-end="url(#arr2)"/>
+            <text x="275" y="442" text-anchor="middle" class="flow-label" font-weight="600">8. GET /dashboard</text>
+          </g>
+
+          <!-- step 9 -->
+          <g>
+            <line x1="400" y1="490" x2="900" y2="490" stroke="var(--accent)" stroke-width="2" marker-end="url(#arr2)"/>
+            <text x="650" y="482" text-anchor="middle" class="flow-label">9. auth.protect() → fetch user + orgId from session</text>
+          </g>
+
+          <!-- final state -->
+          <g>
+            <rect x="60" y="500" width="180" height="24" rx="6" fill="var(--accent-2)" opacity="0.18"/>
+            <text x="150" y="516" text-anchor="middle" font-size="10" font-weight="600" fill="var(--accent-2)">User + personal org ready</text>
+          </g>
+        </svg>
+      </div>
+
+      <div class="callout"><strong>Why the auto-personal-org pattern?</strong> Every user has an <code>orgId</code> from the first request. Server components never need to branch between "personal user" and "team user". When the user later upgrades to Team, the same code path now serves multiple seats.</div>
+    </div>
+  </section>
+
+  <!-- ===================== Payments & entitlements ===================== -->
+  <section class="block" id="payments" aria-labelledby="payments-title">
+    <div class="container">
+      <div class="eyebrow">08 · Money <span class="ref">§8</span></div>
+      <h2 id="payments-title">Payments &amp; entitlements flow</h2>
+      <p class="lede">Lemon Squeezy is merchant-of-record (handles global tax). Webhooks grant entitlements; access checks never know about the billing provider.</p>
+
+      <div class="glass diagram-wrap" aria-label="Payments flow diagram">
+        <svg viewBox="0 0 1060 540" xmlns="http://www.w3.org/2000/svg" role="img">
+          <title>Checkout to entitlement-grant sequence</title>
+          <desc>User clicks Upgrade, server creates a checkout session, user completes payment on Lemon Squeezy, Lemon Squeezy fires a webhook back to our server which writes a subscription row and the corresponding entitlement rows.</desc>
+
+          <rect x="40" y="40" width="220" height="460" rx="16" fill="var(--surface)" stroke="var(--border-strong)"/>
+          <rect x="290" y="40" width="220" height="460" rx="16" fill="var(--surface)" stroke="var(--border-strong)"/>
+          <rect x="540" y="40" width="220" height="460" rx="16" fill="var(--surface)" stroke="var(--border-strong)"/>
+          <rect x="790" y="40" width="220" height="460" rx="16" fill="var(--surface)" stroke="var(--border-strong)"/>
+
+          <text x="150" y="68" text-anchor="middle" class="lane-label">Client</text>
+          <text x="150" y="84" text-anchor="middle" class="node-sub">/pricing</text>
+          <text x="400" y="68" text-anchor="middle" class="lane-label">Next.js Server</text>
+          <text x="400" y="84" text-anchor="middle" class="node-sub">action + webhook</text>
+          <text x="650" y="68" text-anchor="middle" class="lane-label">Lemon Squeezy</text>
+          <text x="650" y="84" text-anchor="middle" class="node-sub">hosted checkout</text>
+          <text x="900" y="68" text-anchor="middle" class="lane-label">Postgres</text>
+          <text x="900" y="84" text-anchor="middle" class="node-sub">subscriptions · entitlements</text>
+
+          <line x1="150" y1="100" x2="150" y2="500" stroke="var(--border-strong)" stroke-dasharray="3 5"/>
+          <line x1="400" y1="100" x2="400" y2="500" stroke="var(--border-strong)" stroke-dasharray="3 5"/>
+          <line x1="650" y1="100" x2="650" y2="500" stroke="var(--border-strong)" stroke-dasharray="3 5"/>
+          <line x1="900" y1="100" x2="900" y2="500" stroke="var(--border-strong)" stroke-dasharray="3 5"/>
+
+          <defs>
+            <marker id="arrP" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path d="M0,0 L10,5 L0,10 z" fill="var(--accent)"/>
+            </marker>
+            <marker id="arrPg" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path d="M0,0 L10,5 L0,10 z" fill="var(--accent-2)"/>
+            </marker>
+          </defs>
+
+          <g>
+            <line x1="150" y1="140" x2="400" y2="140" stroke="var(--accent)" stroke-width="2" marker-end="url(#arrP)"/>
+            <text x="275" y="132" text-anchor="middle" class="flow-label" font-weight="600">1. Click "Upgrade to Pro"</text>
+          </g>
+          <g>
+            <line x1="400" y1="180" x2="650" y2="180" stroke="var(--accent)" stroke-width="2" marker-end="url(#arrP)"/>
+            <text x="525" y="172" text-anchor="middle" class="flow-label">2. createCheckout({ userId, orgId })</text>
+          </g>
+          <g>
+            <line x1="650" y1="220" x2="150" y2="220" stroke="var(--accent)" stroke-width="2" marker-end="url(#arrP)"/>
+            <text x="400" y="212" text-anchor="middle" class="flow-label">3. Redirect to hosted checkout page</text>
+          </g>
+          <g>
+            <line x1="150" y1="265" x2="650" y2="265" stroke="var(--accent)" stroke-width="2" marker-end="url(#arrP)"/>
+            <text x="400" y="257" text-anchor="middle" class="flow-label" font-weight="600">4. User pays (3DS, tax handled by LS)</text>
+          </g>
+          <g>
+            <line x1="650" y1="310" x2="400" y2="310" stroke="var(--accent-2)" stroke-width="2" marker-end="url(#arrPg)"/>
+            <text x="525" y="302" text-anchor="middle" class="flow-label" font-weight="600">5. Webhook subscription_created (HMAC verified)</text>
+          </g>
+          <g>
+            <line x1="400" y1="355" x2="900" y2="355" stroke="var(--accent-2)" stroke-width="2" marker-end="url(#arrPg)"/>
+            <text x="650" y="347" text-anchor="middle" class="flow-label">6. UPSERT subscriptions (status, plan, periodEnd)</text>
+          </g>
+          <g>
+            <line x1="400" y1="400" x2="900" y2="400" stroke="var(--accent-2)" stroke-width="2" marker-end="url(#arrPg)"/>
+            <text x="650" y="392" text-anchor="middle" class="flow-label" font-weight="600">7. UPSERT entitlements: chapters:pro · tutor:pro</text>
+          </g>
+          <g>
+            <line x1="650" y1="445" x2="150" y2="445" stroke="var(--accent)" stroke-width="2" marker-end="url(#arrP)"/>
+            <text x="400" y="437" text-anchor="middle" class="flow-label">8. Redirect → /dashboard?upgraded=1 (toast)</text>
+          </g>
+
+          <!-- Idempotency badge -->
+          <g transform="translate(290,475)">
+            <rect width="220" height="20" rx="6" fill="var(--sun)" opacity="0.18"/>
+            <text x="110" y="14" text-anchor="middle" font-size="10" font-weight="600" fill="var(--sun)">LS event id stored — webhooks are idempotent</text>
+          </g>
+        </svg>
+      </div>
+
+      <div class="callout"><strong>★ ADR-008 in action.</strong> Step 7 — the entitlements grant — is the only call any access-check code needs. Subscriptions, manual grants, lifetime deals, promo codes, and a future Stripe migration all write to the same table. Access logic stays untouched.</div>
+    </div>
+  </section>
+
+  <!-- ===================== AI tutor ===================== -->
+  <section class="block" id="tutor" aria-labelledby="tutor-title">
+    <div class="container">
+      <div class="eyebrow">09 · Intelligence <span class="ref">§9</span></div>
+      <h2 id="tutor-title">AI tutor flow</h2>
+      <p class="lede">Claude streams answers back through SSE, grounded in the current chapter. Entitlements and rate limits act as inline guards before any token leaves the server.</p>
+
+      <div class="glass diagram-wrap" aria-label="AI tutor architecture diagram">
+        <svg viewBox="0 0 1080 460" xmlns="http://www.w3.org/2000/svg" role="img">
+          <title>AI tutor architecture</title>
+          <desc>The TutorChat client posts to a Next.js route handler, which runs three guards (auth, rate limit, entitlement), loads chapter context and conversation history, calls Anthropic's streaming API, and pipes deltas back over Server-Sent Events. On completion, messages and usage events are persisted.</desc>
+
+          <defs>
+            <linearGradient id="streamG" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0" stop-color="var(--accent)"/>
+              <stop offset="1" stop-color="var(--accent-2)"/>
+            </linearGradient>
+            <marker id="arrT" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+              <path d="M0,0 L10,5 L0,10 z" fill="var(--accent)"/>
+            </marker>
+            <filter id="glow">
+              <feGaussianBlur stdDeviation="3" result="b"/>
+              <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+            </filter>
+          </defs>
+
+          <!-- Lane labels -->
+          <text x="120" y="40" text-anchor="middle" class="lane-label">Client</text>
+          <text x="540" y="40" text-anchor="middle" class="lane-label">Edge / Server</text>
+          <text x="960" y="40" text-anchor="middle" class="lane-label">Anthropic API</text>
+
+          <!-- Client -->
+          <g filter="url(#glow)">
+            <rect x="40" y="70" width="160" height="120" rx="16" fill="var(--surface-strong)" stroke="var(--accent)" stroke-width="1.5"/>
+            <text x="120" y="100" text-anchor="middle" class="node-label">TutorChat.tsx</text>
+            <text x="120" y="118" text-anchor="middle" class="node-sub">sticky right panel</text>
+            <text x="120" y="134" text-anchor="middle" class="node-sub">streams to message list</text>
+            <text x="120" y="155" text-anchor="middle" class="node-sub" fill="var(--accent)">POST → /api/tutor</text>
+            <text x="120" y="172" text-anchor="middle" class="node-sub" fill="var(--accent-2)">SSE ← deltas</text>
+          </g>
+
+          <!-- Server stack -->
+          <g>
+            <rect x="280" y="70" width="520" height="320" rx="16" fill="var(--surface)" stroke="var(--border-strong)" stroke-width="1"/>
+            <text x="540" y="92" text-anchor="middle" class="node-sub">/api/tutor route handler</text>
+          </g>
+
+          <!-- guards -->
+          <g>
+            <rect x="300" y="110" width="160" height="50" rx="10" fill="var(--surface-strong)" stroke="var(--warn)" stroke-width="1.5"/>
+            <text x="380" y="130" text-anchor="middle" class="node-label" font-size="11">① auth.protect()</text>
+            <text x="380" y="148" text-anchor="middle" class="node-sub">401 if not signed in</text>
+          </g>
+          <g>
+            <rect x="470" y="110" width="160" height="50" rx="10" fill="var(--surface-strong)" stroke="var(--warn)" stroke-width="1.5"/>
+            <text x="550" y="130" text-anchor="middle" class="node-label" font-size="11">② rate-limit</text>
+            <text x="550" y="148" text-anchor="middle" class="node-sub">Upstash · per user · tier</text>
+          </g>
+          <g>
+            <rect x="640" y="110" width="140" height="50" rx="10" fill="var(--surface-strong)" stroke="var(--warn)" stroke-width="1.5"/>
+            <text x="710" y="130" text-anchor="middle" class="node-label" font-size="11">③ entitlement</text>
+            <text x="710" y="148" text-anchor="middle" class="node-sub">tutor:pro if needed</text>
+          </g>
+
+          <!-- context loaders -->
+          <g>
+            <rect x="300" y="190" width="220" height="80" rx="10" fill="var(--surface-strong)" stroke="var(--border-strong)"/>
+            <text x="410" y="212" text-anchor="middle" class="node-label" font-size="12">Chapter context</text>
+            <text x="410" y="230" text-anchor="middle" class="node-sub">MDX → plain text · ~4k tok cap</text>
+            <text x="410" y="248" text-anchor="middle" class="node-sub">cached per slug</text>
+          </g>
+          <g>
+            <rect x="540" y="190" width="240" height="80" rx="10" fill="var(--surface-strong)" stroke="var(--border-strong)"/>
+            <text x="660" y="212" text-anchor="middle" class="node-label" font-size="12">Conversation history</text>
+            <text x="660" y="230" text-anchor="middle" class="node-sub">SELECT last N from tutorMessages</text>
+            <text x="660" y="248" text-anchor="middle" class="node-sub">~6k tok cap · sliding window</text>
+          </g>
+
+          <!-- prompt builder -->
+          <g>
+            <rect x="300" y="290" width="480" height="60" rx="10" fill="var(--surface-strong)" stroke="var(--accent)" stroke-width="1.5"/>
+            <text x="540" y="312" text-anchor="middle" class="node-label" font-size="13">Prompt builder</text>
+            <text x="540" y="330" text-anchor="middle" class="node-sub">system + chapter context + history + new user message</text>
+          </g>
+
+          <!-- Anthropic -->
+          <g filter="url(#glow)">
+            <rect x="880" y="70" width="160" height="180" rx="16" fill="var(--surface-strong)" stroke="var(--accent-2)" stroke-width="1.5"/>
+            <text x="960" y="100" text-anchor="middle" class="node-label">claude-sonnet</text>
+            <text x="960" y="118" text-anchor="middle" class="node-sub">streaming completion</text>
+            <text x="960" y="138" text-anchor="middle" class="node-sub" fill="var(--accent-2)">max_tokens cap</text>
+            <text x="960" y="158" text-anchor="middle" class="node-sub">~8k in · ~800 out avg</text>
+            <text x="960" y="178" text-anchor="middle" class="node-sub" fill="var(--ink-mute)">~$0.036 / message</text>
+          </g>
+
+          <!-- DB persistence -->
+          <g>
+            <rect x="40" y="320" width="160" height="70" rx="12" fill="var(--surface-strong)" stroke="var(--border-strong)"/>
+            <text x="120" y="342" text-anchor="middle" class="node-label" font-size="11">DB persistence</text>
+            <text x="120" y="358" text-anchor="middle" class="node-sub">tutorMessages</text>
+            <text x="120" y="374" text-anchor="middle" class="node-sub">usageEvents</text>
+          </g>
+
+          <!-- streaming pipe -->
+          <path d="M 200 380 Q 280 380 290 350" fill="none" stroke="var(--ink-mute)" stroke-dasharray="3 4"/>
+          <path d="M 780 320 L 880 200" fill="none" stroke="url(#streamG)" stroke-width="3" marker-end="url(#arrT)" filter="url(#glow)"/>
+          <text x="850" y="270" class="flow-label" font-weight="600" fill="var(--accent-2)">stream</text>
+
+          <path d="M 880 140 Q 800 80 540 80" fill="none" stroke="url(#streamG)" stroke-width="3" marker-end="url(#arrT)" filter="url(#glow)"/>
+          <text x="700" y="64" class="flow-label" font-weight="600" fill="var(--accent)">SSE deltas</text>
+
+          <!-- client to server arrow -->
+          <path d="M 200 130 L 280 130" fill="none" stroke="var(--accent)" stroke-width="2" marker-end="url(#arrT)"/>
+
+          <!-- footer note -->
+          <g transform="translate(40,415)">
+            <rect width="1000" height="34" rx="8" fill="var(--surface-strong)" stroke="var(--border-strong)"/>
+            <text x="20" y="22" font-size="11" fill="var(--ink-soft)" font-family="var(--sans)">
+              <tspan font-weight="600" fill="var(--ink)">Daily caps:</tspan>  Free 10 · Pro 200 · Team unlimited.
+              <tspan font-weight="600" fill="var(--ink)">  Inputs &gt; 4k chars rejected (injection vector).</tspan>
+              <tspan>  Errors logged to Sentry, surfaced as SSE error frames.</tspan>
+            </text>
+          </g>
+        </svg>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== Phased build ===================== -->
+  <section class="block" id="phases" aria-labelledby="phases-title">
+    <div class="container">
+      <div class="eyebrow">10 · Delivery <span class="ref">§12</span></div>
+      <h2 id="phases-title">Phased build</h2>
+      <p class="lede">Each phase ships against an explicit exit-criteria checklist. No phase ships before all items pass.</p>
+
+      <div class="glass phase-timeline" aria-label="Phase timeline">
+        <svg viewBox="0 0 1080 110" xmlns="http://www.w3.org/2000/svg" role="img">
+          <title>Build phase timeline</title>
+          <desc>Horizontal Gantt-style visualization of five build phases from week 1 to week 14.</desc>
+          <!-- week ruler -->
+          <g font-family="var(--mono)" font-size="9" fill="var(--ink-mute)">
+            <line x1="40" y1="30" x2="1040" y2="30" stroke="var(--border-strong)"/>
+            <g><line x1="40" y1="25" x2="40" y2="35" stroke="var(--border-strong)"/><text x="40" y="20" text-anchor="middle">W1</text></g>
+            <g><line x1="254" y1="25" x2="254" y2="35" stroke="var(--border-strong)"/><text x="254" y="20" text-anchor="middle">W4</text></g>
+            <g><line x1="397" y1="25" x2="397" y2="35" stroke="var(--border-strong)"/><text x="397" y="20" text-anchor="middle">W6</text></g>
+            <g><line x1="611" y1="25" x2="611" y2="35" stroke="var(--border-strong)"/><text x="611" y="20" text-anchor="middle">W9</text></g>
+            <g><line x1="754" y1="25" x2="754" y2="35" stroke="var(--border-strong)"/><text x="754" y="20" text-anchor="middle">W11</text></g>
+            <g><line x1="1040" y1="25" x2="1040" y2="35" stroke="var(--border-strong)"/><text x="1040" y="20" text-anchor="middle">W14</text></g>
+          </g>
+          <!-- bars -->
+          <g>
+            <rect x="40" y="45" width="214" height="22" rx="6" fill="var(--accent)"/>
+            <text x="50" y="60" fill="white" font-size="11" font-weight="600">P1 · Free content</text>
+          </g>
+          <g>
+            <rect x="254" y="45" width="143" height="22" rx="6" fill="var(--accent-2)"/>
+            <text x="262" y="60" fill="white" font-size="11" font-weight="600">P2 · Accounts</text>
+          </g>
+          <g>
+            <rect x="397" y="45" width="214" height="22" rx="6" fill="var(--sun)"/>
+            <text x="405" y="60" fill="var(--ink)" font-size="11" font-weight="600">P3 · Payments</text>
+          </g>
+          <g>
+            <rect x="611" y="45" width="143" height="22" rx="6" fill="var(--accent)" opacity="0.85"/>
+            <text x="619" y="60" fill="white" font-size="11" font-weight="600">P4 · AI tutor</text>
+          </g>
+          <g>
+            <rect x="754" y="45" width="286" height="22" rx="6" fill="var(--accent-2)" opacity="0.85"/>
+            <text x="762" y="60" fill="white" font-size="11" font-weight="600">P5 · Multi-tenant teams</text>
+          </g>
+          <!-- footer -->
+          <text x="540" y="100" text-anchor="middle" font-size="10" fill="var(--ink-mute)" font-family="var(--mono)">14 weeks · ~4 months · solo founder cadence</text>
+        </svg>
+      </div>
+
+      <div class="phases">
+        <article class="glass phase">
+          <span class="badge"><span class="num">1</span> Phase 1</span>
+          <h4>Free content site</h4>
+          <span class="weeks">Weeks 1–3</span>
+          <p>Next.js scaffold, theme system, MDX pipeline, all component primitives, three written chapters, hub, sitemap, RSS, OG cards.</p>
+          <details>
+            <summary>Exit criteria</summary>
+            <ul>
+              <li>Three chapters render in both themes</li>
+              <li>Lighthouse Perf/A11y/SEO ≥ 95</li>
+              <li>Sitemap + RSS validate</li>
+              <li>OG card per chapter</li>
+              <li>Preview deploys per PR; main → prod</li>
+            </ul>
+          </details>
+        </article>
+
+        <article class="glass phase">
+          <span class="badge"><span class="num">2</span> Phase 2</span>
+          <h4>Accounts &amp; progress</h4>
+          <span class="weeks">Weeks 4–5</span>
+          <p>Clerk integration, Neon + Drizzle, schemas + migrations, Clerk → DB sync via webhook, dashboard shell.</p>
+          <details>
+            <summary>Exit criteria</summary>
+            <ul>
+              <li>Sign-up via email + Google + GitHub works</li>
+              <li>Personal org auto-created</li>
+              <li>Progress updates on 80% scroll = complete</li>
+              <li>Bookmark + note CRUD persists across sessions</li>
+              <li>E2E: signup → read → bookmark → re-login → see</li>
+            </ul>
+          </details>
+        </article>
+
+        <article class="glass phase">
+          <span class="badge"><span class="num">3</span> Phase 3</span>
+          <h4>Payments &amp; gating</h4>
+          <span class="weeks">Weeks 6–8</span>
+          <p>Lemon Squeezy + webhook handler, subscriptions + entitlements + idempotency, Paywall component, pricing page.</p>
+          <details>
+            <summary>Exit criteria</summary>
+            <ul>
+              <li>Test checkout grants entitlement within 60s</li>
+              <li>Pro chapters paywall after 25% for unentitled</li>
+              <li>Cancel at period end behaves correctly</li>
+              <li>Payment-fail → 3-day grace → expires</li>
+              <li>One $1 production purchase succeeds</li>
+            </ul>
+          </details>
+        </article>
+
+        <article class="glass phase">
+          <span class="badge"><span class="num">4</span> Phase 4</span>
+          <h4>AI tutor</h4>
+          <span class="weeks">Weeks 9–10</span>
+          <p>Streaming /api/tutor route, TutorChat client, conversation persistence, rate limiting, abuse protections.</p>
+          <details>
+            <summary>Exit criteria</summary>
+            <ul>
+              <li>Streaming works smoothly on desktop + mobile</li>
+              <li>History persists per chapter</li>
+              <li>Free-tier limit triggers clean upgrade prompt</li>
+              <li>Load test: 10 concurrent users, no errors</li>
+              <li>Per-user $/day alert below threshold</li>
+            </ul>
+          </details>
+        </article>
+
+        <article class="glass phase">
+          <span class="badge"><span class="num">5</span> Phase 5</span>
+          <h4>Multi-tenant / teams</h4>
+          <span class="weeks">Weeks 11–14</span>
+          <p>Clerk Organizations in UI, /teams pages, seat enforcement, invoiced billing variant, optional SSO, admin analytics.</p>
+          <details>
+            <summary>Exit criteria</summary>
+            <ul>
+              <li>Owner buys Team plan with N seats, invites N users</li>
+              <li>Admins can change roles &amp; remove members</li>
+              <li>Seat overflow blocked at invite time</li>
+              <li>Org-level entitlements inherited correctly</li>
+              <li>First real team customer onboarded</li>
+            </ul>
+          </details>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== Cost model ===================== -->
+  <section class="block" id="cost" aria-labelledby="cost-title">
+    <div class="container">
+      <div class="eyebrow">11 · Economics <span class="ref">§13</span></div>
+      <h2 id="cost-title">Cost model</h2>
+      <p class="lede">Monthly run-rate at four scale points. Excludes founder time. Breakeven sits well below 100 Pro users.</p>
+
+      <article class="glass cost-table">
+        <table>
+          <thead>
+            <tr>
+              <th>Scale</th>
+              <th>Active users</th>
+              <th>Pro users</th>
+              <th>Tutor msgs/mo</th>
+              <th>Monthly cost</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Pre-launch</td>
+              <td>0</td>
+              <td>0</td>
+              <td>0</td>
+              <td class="cost-cell">~$0
+                <span class="bar"><span class="bar-fill" style="width:0%"></span></span>
+              </td>
+            </tr>
+            <tr>
+              <td>Early</td>
+              <td>100</td>
+              <td>5</td>
+              <td>~2,000</td>
+              <td class="cost-cell">~$50
+                <span class="bar"><span class="bar-fill" style="width:1.5%"></span></span>
+              </td>
+            </tr>
+            <tr>
+              <td>Scaling</td>
+              <td>1,000</td>
+              <td>50</td>
+              <td>~30,000</td>
+              <td class="cost-cell">~$300
+                <span class="bar"><span class="bar-fill" style="width:9%"></span></span>
+              </td>
+            </tr>
+            <tr>
+              <td>At scale</td>
+              <td>10,000</td>
+              <td>500</td>
+              <td>~300,000</td>
+              <td class="cost-cell">~$2,500–3,500
+                <span class="bar"><span class="bar-fill" style="width:100%"></span></span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </article>
+
+      <div class="callout"><strong>Revenue check at 1k / 50 Pro:</strong> ~$950/mo gross → ~$700 after LS fees → ~$400 net of infra. Real upside opens with Team-plan adoption.</div>
+    </div>
+  </section>
+
+  <!-- ===================== ADRs ===================== -->
+  <section class="block" id="adrs" aria-labelledby="adrs-title">
+    <div class="container">
+      <div class="eyebrow">12 · Decisions <span class="ref">§14</span></div>
+      <h2 id="adrs-title">Risks &amp; ADRs</h2>
+      <p class="lede">Architecture Decision Records — what was decided, why, and how hard it would be to walk back. Click to expand each.</p>
+
+      <div class="adr-list">
+        <details class="glass adr">
+          <summary><span class="adr-num">ADR-001</span><span class="adr-title">Next.js 15 + MDX over Astro</span></summary>
+          <div class="adr-body">
+            <p>We need a SaaS layer within six months — paid courses, multi-tenant, auth, AI tutor. A single Next codebase keeps content + app cohesive; Astro would force a second stack to ship the app surface.</p>
+            <div class="adr-meta"><span class="m">Reversible? <strong>Hard later.</strong></span><span class="m">Domain: foundation</span></div>
+          </div>
+        </details>
+
+        <details class="glass adr">
+          <summary><span class="adr-num">ADR-002</span><span class="adr-title">Glassmorphism (light + dark) over comic-only aesthetic</span></summary>
+          <div class="adr-body">
+            <p>Modern aesthetic pairs better with paid-product expectations; theme switching is table-stakes. Characters are retained, restyled for glass.</p>
+            <div class="adr-meta"><span class="m">Reversible? <strong>Easy.</strong></span><span class="m">Domain: visual</span></div>
+          </div>
+        </details>
+
+        <details class="glass adr">
+          <summary><span class="adr-num">ADR-003</span><span class="adr-title">Clerk over NextAuth / Supabase Auth</span></summary>
+          <div class="adr-body">
+            <p>Organizations (multi-tenant) built in, free up to 10k MAU, best Next.js integration. Lock-in is real — mitigated by the <code>lib/auth.ts</code> helper abstraction.</p>
+            <div class="adr-meta"><span class="m">Reversible? <strong>Medium.</strong></span><span class="m">Domain: identity</span></div>
+          </div>
+        </details>
+
+        <details class="glass adr">
+          <summary><span class="adr-num">ADR-004</span><span class="adr-title">Neon over Supabase / PlanetScale</span></summary>
+          <div class="adr-body">
+            <p>Postgres + serverless + branchable. Per-PR isolated databases are huge for safety; preview deploys never touch prod data.</p>
+            <div class="adr-meta"><span class="m">Reversible? <strong>Medium.</strong></span><span class="m">Domain: data</span></div>
+          </div>
+        </details>
+
+        <details class="glass adr">
+          <summary><span class="adr-num">ADR-005</span><span class="adr-title">Drizzle over Prisma</span></summary>
+          <div class="adr-body">
+            <p>TypeScript-native, edge-friendly, simpler migrations, smaller bundle. Less ecosystem maturity than Prisma but improving fast.</p>
+            <div class="adr-meta"><span class="m">Reversible? <strong>Medium.</strong></span><span class="m">Domain: data</span></div>
+          </div>
+        </details>
+
+        <details class="glass adr">
+          <summary><span class="adr-num">ADR-006</span><span class="adr-title">Lemon Squeezy over Stripe</span></summary>
+          <div class="adr-body">
+            <p>Merchant of record handles global tax — saves ~2 weeks of compliance work for a solo founder. Trade ~2% extra fee for that time. Reversible thanks to ADR-008.</p>
+            <div class="adr-meta"><span class="m">Reversible? <strong>Medium.</strong></span><span class="m">Domain: billing</span></div>
+          </div>
+        </details>
+
+        <details class="glass adr">
+          <summary><span class="adr-num">ADR-007</span><span class="adr-title">Single domain, single codebase over Astro + Next split</span></summary>
+          <div class="adr-body">
+            <p>Easy lesson authoring across free + paid is the dominant requirement. Two-stack operational overhead is not justified at this scale. Future option: extract <code>(marketing)</code> route group to its own Astro site if SEO demands.</p>
+            <div class="adr-meta"><span class="m">Reversible? <strong>Yes, at scale.</strong></span><span class="m">Domain: foundation</span></div>
+          </div>
+        </details>
+
+        <details class="glass adr" open>
+          <summary><span class="adr-num">ADR-008</span><span class="adr-title">★ Entitlements table abstraction over direct subscription checks</span></summary>
+          <div class="adr-body">
+            <p>Decouples access control from billing provider. Lets us add grants, trials, bundles, lifetime offers, switch billing provider — all without touching access-check code. This is the abstraction that makes ADR-006 reversible.</p>
+            <div class="adr-meta"><span class="m">Reversible? <strong>N/A — this is the abstraction.</strong></span><span class="m">Domain: access control</span></div>
+          </div>
+        </details>
+
+        <details class="glass adr">
+          <summary><span class="adr-num">ADR-009</span><span class="adr-title">Glass-compatible character restyle over dropping characters</span></summary>
+          <div class="adr-body">
+            <p>Characters are a memorability asset (BLUEPRINT §4.4). Restyling preserves the asset while modernizing the visual language — cleaner outlines, gradient fills, theme-aware via tokens.</p>
+            <div class="adr-meta"><span class="m">Reversible? <strong>Per character.</strong></span><span class="m">Domain: visual</span></div>
+          </div>
+        </details>
+
+        <details class="glass adr">
+          <summary><span class="adr-num">ADR-010</span><span class="adr-title">Pagefind over Algolia</span></summary>
+          <div class="adr-body">
+            <p>Free, static, zero infra. Algolia is overkill until content &gt; 100 pages. Trivial to swap if recall becomes a problem.</p>
+            <div class="adr-meta"><span class="m">Reversible? <strong>Easy.</strong></span><span class="m">Domain: search</span></div>
+          </div>
+        </details>
+      </div>
+
+      <article class="glass section-card" style="margin-top:24px">
+        <h3 style="font-size:16px;margin-bottom:12px">Known risks worth watching</h3>
+        <ul style="margin:0;padding-left:18px">
+          <li><strong>AI-tutor cost runaway</strong> — if a heavy user finds a prompt that spikes context. Mitigated by rate limits + max_tokens cap + per-user $ alerting in PostHog.</li>
+          <li><strong>Lemon Squeezy fee drag</strong> — argues for a Stripe migration at scale. ADR-006 is reversible thanks to ADR-008.</li>
+          <li><strong>Backdrop-filter perf</strong> on low-end Android. Fall back to flat surfaces for reduced-motion or low-end-device detection.</li>
+          <li><strong>Clerk lock-in</strong> above 10k MAU. Watch the run rate; the <code>lib/auth.ts</code> abstraction makes a future swap merely tedious.</li>
+        </ul>
+      </article>
+    </div>
+  </section>
+
+</main>
+
+<footer class="site-footer">
+  <div>Architecture for <strong style="color:var(--ink)">LLM → Agent</strong> · Last updated 2026-05-22 · Owner: Murugadoss</div>
+  <div style="margin-top:8px">Companion to <a href="BLUEPRINT.md">BLUEPRINT.md</a> · Source: <a href="ARCHITECTURE.md">ARCHITECTURE.md</a></div>
+</footer>
+
+<script>
+(function () {
+  'use strict';
+
+  // ---------- Theme toggle ----------
+  var root = document.documentElement;
+  var buttons = document.querySelectorAll('[data-theme-set]');
+  var mq = window.matchMedia('(prefers-color-scheme: dark)');
+
+  function getPref() {
+    return root.getAttribute('data-theme-pref') || 'system';
+  }
+
+  function applyPref(pref) {
+    var resolved = pref === 'system' ? (mq.matches ? 'dark' : 'light') : pref;
+    root.setAttribute('data-theme', resolved);
+    root.setAttribute('data-theme-pref', pref);
+    try { localStorage.setItem('theme', pref); } catch (e) {}
+    updateButtons(pref);
+  }
+
+  function updateButtons(pref) {
+    buttons.forEach(function (b) {
+      var match = b.getAttribute('data-theme-set') === pref;
+      b.setAttribute('aria-pressed', match ? 'true' : 'false');
+    });
+  }
+
+  buttons.forEach(function (b) {
+    b.addEventListener('click', function () {
+      applyPref(b.getAttribute('data-theme-set'));
+    });
+  });
+
+  mq.addEventListener && mq.addEventListener('change', function () {
+    if (getPref() === 'system') applyPref('system');
+  });
+
+  updateButtons(getPref());
+
+  // ---------- Mesh animation: pause when offscreen / reduced motion ----------
+  var mesh = document.querySelector('.mesh');
+  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)');
+  if (reduce.matches && mesh) mesh.classList.add('is-paused');
+  reduce.addEventListener && reduce.addEventListener('change', function () {
+    if (reduce.matches) mesh.classList.add('is-paused');
+    else mesh.classList.remove('is-paused');
+  });
+
+  // pause when tab hidden to save battery
+  document.addEventListener('visibilitychange', function () {
+    if (!mesh) return;
+    if (document.hidden) mesh.classList.add('is-paused');
+    else if (!reduce.matches) mesh.classList.remove('is-paused');
+  });
+
+  // ---------- Section nav active state ----------
+  var navLinks = document.querySelectorAll('.section-nav a');
+  if ('IntersectionObserver' in window && navLinks.length) {
+    var byId = {};
+    navLinks.forEach(function (a) {
+      var id = a.getAttribute('href').slice(1);
+      byId[id] = a;
+    });
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        if (e.isIntersecting) {
+          navLinks.forEach(function (a) { a.style.background = ''; a.style.color = ''; });
+          var link = byId[e.target.id];
+          if (link) {
+            link.style.background = 'var(--surface-strong)';
+            link.style.color = 'var(--ink)';
+          }
+        }
+      });
+    }, { rootMargin: '-40% 0px -55% 0px' });
+    Object.keys(byId).forEach(function (id) {
+      var el = document.getElementById(id);
+      if (el) io.observe(el);
+    });
+  }
+})();
+</script>
+
+</body>
+</html>

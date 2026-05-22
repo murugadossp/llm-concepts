@@ -1,0 +1,8 @@
+interface:
+  display_name: "LLM Concepts Chapter Writer"
+  short_description: "Draft MDX learning chapters"
+  brand_color: "#5B3FFF"
+  default_prompt: "Use $llm-concepts-chapter-writer to draft the next llm-concepts chapter."
+
+policy:
+  allow_implicit_invocation: true
