@@ -52,8 +52,9 @@ export const mdxComponents: MDXComponents = {
   h3: (props) => (
     <h3 className="mt-8 scroll-mt-24 text-xl font-semibold" style={{ color: "var(--ink)" }} {...props} />
   ),
+  // Use div — MDX often nests block components inside paragraph nodes.
   p: (props) => (
-    <p className="mt-4 leading-7" style={{ color: "var(--ink-soft)" }} {...props} />
+    <div className="mdx-p mt-4 leading-7" style={{ color: "var(--ink-soft)" }} {...props} />
   ),
   ul: (props) => (
     <ul className="mt-4 list-disc space-y-2 pl-6" style={{ color: "var(--ink-soft)" }} {...props} />

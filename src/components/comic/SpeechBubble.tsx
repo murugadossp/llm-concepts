@@ -19,9 +19,9 @@ export function SpeechBubble({ speaker, children }: SpeechBubbleProps) {
           {speaker}
         </span>
       ) : null}
-      <p className="comic-dialogue mt-1 text-sm leading-snug" style={{ color: "var(--ink)" }}>
+      <div className="comic-dialogue mt-1 text-sm leading-snug" style={{ color: "var(--ink)" }}>
         {children}
-      </p>
+      </div>
     </div>
   );
 }
