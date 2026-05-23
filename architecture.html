@@ -2288,135 +2288,171 @@ footer.site-footer {
     </div>
   </section>
 
-  <!-- ===================== Phased build ===================== -->
+  <!-- ===================== Build plan (3 milestones) ===================== -->
   <section class="block" id="phases" aria-labelledby="phases-title">
     <div class="container">
-      <div class="eyebrow">10 · Delivery <span class="ref">§12</span></div>
-      <h2 id="phases-title">Phased build</h2>
-      <p class="lede">Each phase ships against an explicit exit-criteria checklist. No phase ships before all items pass.</p>
+      <div class="eyebrow">10 · Delivery <span class="ref">§12 · ADR-011</span></div>
+      <h2 id="phases-title">Build plan — 3 milestones, engagement-gated</h2>
+      <p class="lede">Two committed milestones with an explicit engagement gate between them, plus a demand-driven third. Each phase ships against an exit-criteria checklist. <strong>Only Milestone 1 is committed</strong> — the rest waits for validation.</p>
 
-      <div class="glass phase-timeline" aria-label="Phase timeline">
-        <svg viewBox="0 0 1080 110" xmlns="http://www.w3.org/2000/svg" role="img">
-          <title>Build phase timeline</title>
-          <desc>Horizontal Gantt-style visualization of five build phases from week 1 to week 14.</desc>
+      <div class="glass phase-timeline" aria-label="Milestone timeline">
+        <svg viewBox="0 0 1080 130" xmlns="http://www.w3.org/2000/svg" role="img">
+          <title>Build milestone timeline</title>
+          <desc>Horizontal timeline: Milestone 1 (Content MVP) weeks 1-4, engagement gate, Milestone 2 (SaaS v1) weeks 5-14 broken into five sub-phases, Milestone 3 (Teams) demand-driven.</desc>
           <!-- week ruler -->
           <g font-family="var(--mono)" font-size="9" fill="var(--ink-mute)">
             <line x1="40" y1="30" x2="1040" y2="30" stroke="var(--border-strong)"/>
             <g><line x1="40" y1="25" x2="40" y2="35" stroke="var(--border-strong)"/><text x="40" y="20" text-anchor="middle">W1</text></g>
             <g><line x1="254" y1="25" x2="254" y2="35" stroke="var(--border-strong)"/><text x="254" y="20" text-anchor="middle">W4</text></g>
-            <g><line x1="397" y1="25" x2="397" y2="35" stroke="var(--border-strong)"/><text x="397" y="20" text-anchor="middle">W6</text></g>
+            <g><line x1="324" y1="25" x2="324" y2="35" stroke="var(--warn)"/><text x="324" y="20" text-anchor="middle" fill="var(--warn)" font-weight="700">GATE</text></g>
+            <g><line x1="468" y1="25" x2="468" y2="35" stroke="var(--border-strong)"/><text x="468" y="20" text-anchor="middle">W7</text></g>
             <g><line x1="611" y1="25" x2="611" y2="35" stroke="var(--border-strong)"/><text x="611" y="20" text-anchor="middle">W9</text></g>
-            <g><line x1="754" y1="25" x2="754" y2="35" stroke="var(--border-strong)"/><text x="754" y="20" text-anchor="middle">W11</text></g>
-            <g><line x1="1040" y1="25" x2="1040" y2="35" stroke="var(--border-strong)"/><text x="1040" y="20" text-anchor="middle">W14</text></g>
+            <g><line x1="826" y1="25" x2="826" y2="35" stroke="var(--border-strong)"/><text x="826" y="20" text-anchor="middle">W13</text></g>
+            <g><line x1="897" y1="25" x2="897" y2="35" stroke="var(--border-strong)"/><text x="897" y="20" text-anchor="middle">W14</text></g>
+            <g><line x1="1040" y1="25" x2="1040" y2="35" stroke="var(--border-strong)"/><text x="1040" y="20" text-anchor="middle">?</text></g>
           </g>
-          <!-- bars -->
+          <!-- Milestone 1 -->
           <g>
-            <rect x="40" y="45" width="214" height="22" rx="6" fill="var(--accent)"/>
-            <text x="50" y="60" fill="white" font-size="11" font-weight="600">P1 · Free content</text>
+            <rect x="40" y="45" width="284" height="22" rx="6" fill="var(--accent)"/>
+            <text x="50" y="60" fill="white" font-size="11" font-weight="700">M1 · Content MVP (3 flagship chapters + email)</text>
+          </g>
+          <!-- engagement gate -->
+          <g>
+            <line x1="324" y1="40" x2="324" y2="74" stroke="var(--warn)" stroke-width="2" stroke-dasharray="3,3"/>
+            <circle cx="324" cy="56" r="6" fill="var(--warn)"/>
+            <text x="324" y="86" text-anchor="middle" font-size="9" fill="var(--warn)" font-family="var(--mono)" font-weight="600">≥500 signups · or ≥50% completion · or clear demand</text>
+          </g>
+          <!-- Milestone 2 sub-phases -->
+          <g>
+            <rect x="324" y="78" width="144" height="22" rx="6" fill="var(--accent-2)"/>
+            <text x="332" y="93" fill="white" font-size="10" font-weight="600">M2.A · Accounts</text>
           </g>
           <g>
-            <rect x="254" y="45" width="143" height="22" rx="6" fill="var(--accent-2)"/>
-            <text x="262" y="60" fill="white" font-size="11" font-weight="600">P2 · Accounts</text>
+            <rect x="468" y="78" width="143" height="22" rx="6" fill="var(--accent-2)" opacity="0.85"/>
+            <text x="476" y="93" fill="white" font-size="10" font-weight="600">M2.B · Chapters</text>
           </g>
           <g>
-            <rect x="397" y="45" width="214" height="22" rx="6" fill="var(--sun)"/>
-            <text x="405" y="60" fill="var(--ink)" font-size="11" font-weight="600">P3 · Payments</text>
+            <rect x="611" y="78" width="143" height="22" rx="6" fill="var(--sun)"/>
+            <text x="619" y="93" fill="var(--ink)" font-size="10" font-weight="600">M2.C · Payments</text>
           </g>
           <g>
-            <rect x="611" y="45" width="143" height="22" rx="6" fill="var(--accent)" opacity="0.85"/>
-            <text x="619" y="60" fill="white" font-size="11" font-weight="600">P4 · AI tutor</text>
+            <rect x="754" y="78" width="143" height="22" rx="6" fill="var(--accent)" opacity="0.85"/>
+            <text x="762" y="93" fill="white" font-size="10" font-weight="600">M2.D · AI tutor</text>
           </g>
           <g>
-            <rect x="754" y="45" width="286" height="22" rx="6" fill="var(--accent-2)" opacity="0.85"/>
-            <text x="762" y="60" fill="white" font-size="11" font-weight="600">P5 · Multi-tenant teams</text>
+            <rect x="897" y="78" width="72" height="22" rx="6" fill="var(--accent-2)" opacity="0.7"/>
+            <text x="905" y="93" fill="white" font-size="10" font-weight="600">M2.E</text>
+          </g>
+          <!-- M3 placeholder -->
+          <g>
+            <rect x="980" y="78" width="60" height="22" rx="6" fill="var(--ink-mute)" opacity="0.25"/>
+            <text x="1010" y="93" fill="var(--ink-soft)" font-size="10" font-weight="600" text-anchor="middle">M3?</text>
           </g>
           <!-- footer -->
-          <text x="540" y="100" text-anchor="middle" font-size="10" fill="var(--ink-mute)" font-family="var(--mono)">14 weeks · ~4 months · solo founder cadence</text>
+          <text x="540" y="120" text-anchor="middle" font-size="10" fill="var(--ink-mute)" font-family="var(--mono)">M1 = 4 wks committed · M2 = 10 wks after gate · M3 = demand-driven only</text>
         </svg>
       </div>
 
       <div class="phases">
-        <article class="glass phase">
-          <span class="badge"><span class="num">1</span> Phase 1</span>
-          <h4>Free content site</h4>
-          <span class="weeks">Weeks 1–3</span>
-          <p>Next.js scaffold, theme system, MDX pipeline, all component primitives, three written chapters, hub, sitemap, RSS, OG cards.</p>
+        <article class="glass phase" style="border-top:3px solid var(--accent)">
+          <span class="badge" style="background:var(--accent);color:#fff"><span class="num">M1</span> Content MVP</span>
+          <h4>Prove the learning experience</h4>
+          <span class="weeks">Weeks 1–4 · committed</span>
+          <p>Next.js scaffold, theme system, MDX pipeline, all component primitives, three flagship chapters (Foundations, Agents, MCP) with interactive widgets, hub page, email capture, SEO foundations, PostHog analytics.</p>
           <details>
             <summary>Exit criteria</summary>
             <ul>
-              <li>Three chapters render in both themes</li>
-              <li>Lighthouse Perf/A11y/SEO ≥ 95</li>
-              <li>Sitemap + RSS validate</li>
-              <li>OG card per chapter</li>
+              <li>3 chapters render in light + dark on desktop &amp; mobile</li>
+              <li>Lighthouse Perf/A11y/SEO ≥ 95 across pages</li>
+              <li>Sitemap, RSS, OG card per chapter validate</li>
+              <li>Newsletter signup → confirmation → list membership works</li>
               <li>Preview deploys per PR; main → prod</li>
             </ul>
           </details>
-        </article>
-
-        <article class="glass phase">
-          <span class="badge"><span class="num">2</span> Phase 2</span>
-          <h4>Accounts &amp; progress</h4>
-          <span class="weeks">Weeks 4–5</span>
-          <p>Clerk integration, Neon + Drizzle, schemas + migrations, Clerk → DB sync via webhook, dashboard shell.</p>
           <details>
-            <summary>Exit criteria</summary>
+            <summary>Engagement gate to M2 — any one triggers</summary>
             <ul>
-              <li>Sign-up via email + Google + GitHub works</li>
-              <li>Personal org auto-created</li>
-              <li>Progress updates on 80% scroll = complete</li>
-              <li>Bookmark + note CRUD persists across sessions</li>
-              <li>E2E: signup → read → bookmark → re-login → see</li>
+              <li>≥500 newsletter signups</li>
+              <li>≥50% scroll-completion on at least one flagship chapter</li>
+              <li>Clear qualitative demand (replies asking for more / paid)</li>
+              <li style="color:var(--warn)"><strong>If none in ~6 wks → iterate on content, don't start M2</strong></li>
             </ul>
           </details>
         </article>
 
-        <article class="glass phase">
-          <span class="badge"><span class="num">3</span> Phase 3</span>
-          <h4>Payments &amp; gating</h4>
-          <span class="weeks">Weeks 6–8</span>
-          <p>Lemon Squeezy + webhook handler, subscriptions + entitlements + idempotency, Paywall component, pricing page.</p>
+        <article class="glass phase" style="border-top:3px solid var(--accent-2)">
+          <span class="badge" style="background:var(--accent-2);color:#fff"><span class="num">M2</span> SaaS v1</span>
+          <h4>Convert validated learning into a sustainable product</h4>
+          <span class="weeks">Weeks 5–14 · only after gate passes</span>
+          <p>Five sub-phases run sequentially.</p>
           <details>
-            <summary>Exit criteria</summary>
+            <summary>M2.A · Accounts &amp; progress (weeks 5–6)</summary>
+            <p>Clerk auth (email magic link + Google + GitHub), Neon + Drizzle, schemas with internal UUIDs + clerkUserId text columns (ADR-013), Clerk webhook sync, dashboard shell.</p>
             <ul>
-              <li>Test checkout grants entitlement within 60s</li>
-              <li>Pro chapters paywall after 25% for unentitled</li>
-              <li>Cancel at period end behaves correctly</li>
-              <li>Payment-fail → 3-day grace → expires</li>
+              <li>Signup → read → bookmark → re-login → see (E2E)</li>
+              <li>Personal org auto-created on signup</li>
+              <li>Progress updates on 80% scroll heuristic</li>
+            </ul>
+          </details>
+          <details>
+            <summary>M2.B · Remaining 8 chapters (weeks 7–8)</summary>
+            <p>Chapters 2–5 + 8–11 authored. `&lt;FreePreview&gt;` / `&lt;ProOnly&gt;` boundaries added (ADR-014) but gating dormant. Pagefind search activates at ≥6 chapters (ADR-010).</p>
+            <ul>
+              <li>All 11 chapters published</li>
+              <li>Pagefind index builds clean</li>
+            </ul>
+          </details>
+          <details>
+            <summary>M2.C · Payments &amp; gating (weeks 9–10)</summary>
+            <p>Lemon Squeezy, webhook handler with idempotency, `entitlements` table (single source of truth, ADR-008), `&lt;ProOnly&gt;` gating live, `/pricing`. Chapter 7 reclassifies as Pro with 7-day grace email.</p>
+            <ul>
+              <li>Test checkout grants entitlement &lt;60s</li>
+              <li>`&lt;ProOnly&gt;` shows paywall to unentitled users (no 25% percentage cut)</li>
+              <li>Cancel at period end works; pay-fail 3-day grace works</li>
               <li>One $1 production purchase succeeds</li>
             </ul>
           </details>
-        </article>
-
-        <article class="glass phase">
-          <span class="badge"><span class="num">4</span> Phase 4</span>
-          <h4>AI tutor</h4>
-          <span class="weeks">Weeks 9–10</span>
-          <p>Streaming /api/tutor route, TutorChat client, conversation persistence, rate limiting, abuse protections.</p>
           <details>
-            <summary>Exit criteria</summary>
+            <summary>M2.D · AI tutor with five cost controls (weeks 11–13)</summary>
+            <p>Streaming /api/tutor with <strong>Haiku default + Sonnet escalation + prompt caching + history summarization + credits + $20/user/mo ceiling</strong> (ADR-012). TutorChat with credits meter. Rate limit via Upstash.</p>
             <ul>
-              <li>Streaming works smoothly on desktop + mobile</li>
-              <li>History persists per chapter</li>
-              <li>Free-tier limit triggers clean upgrade prompt</li>
-              <li>Load test: 10 concurrent users, no errors</li>
-              <li>Per-user $/day alert below threshold</li>
+              <li>Streaming works on desktop + mobile</li>
+              <li>Credits decrement; renewal resets</li>
+              <li>Cost-ceiling kill switch verified</li>
+              <li>Avg cost per Pro user &lt; $5/mo in PostHog</li>
+            </ul>
+          </details>
+          <details>
+            <summary>M2.E · Hardening (week 14)</summary>
+            <p>Sentry coverage, BetterStack uptime, structured logs with PII redaction, Lighthouse CI gates deploys, privacy + ToS + refund policy live, support inbox.</p>
+            <ul>
+              <li>All routes covered by Sentry</li>
+              <li>Public status page live</li>
+              <li>Legal pages live</li>
             </ul>
           </details>
         </article>
 
-        <article class="glass phase">
-          <span class="badge"><span class="num">5</span> Phase 5</span>
-          <h4>Multi-tenant / teams</h4>
-          <span class="weeks">Weeks 11–14</span>
-          <p>Clerk Organizations in UI, /teams pages, seat enforcement, invoiced billing variant, optional SSO, admin analytics.</p>
+        <article class="glass phase" style="border-top:3px solid var(--ink-mute);opacity:0.85">
+          <span class="badge" style="background:var(--ink-mute);color:#fff"><span class="num">M3</span> Teams</span>
+          <h4>B2B revenue — only when demand is real</h4>
+          <span class="weeks">Demand-driven · ADR-011 / P2.8</span>
+          <p>Gated on inbound demand. Until then, the data abstraction is in place (orgId nullable, entitlements check user OR org), but no team UI, seats, invoicing, or SSO.</p>
           <details>
-            <summary>Exit criteria</summary>
+            <summary>Gate to start</summary>
             <ul>
-              <li>Owner buys Team plan with N seats, invites N users</li>
-              <li>Admins can change roles &amp; remove members</li>
-              <li>Seat overflow blocked at invite time</li>
-              <li>Org-level entitlements inherited correctly</li>
-              <li>First real team customer onboarded</li>
+              <li>≥3 unsolicited team inquiries within a quarter</li>
+            </ul>
+          </details>
+          <details>
+            <summary>Scope (only when gate passes)</summary>
+            <ul>
+              <li>Clerk Organizations exposed in UI</li>
+              <li>/teams pages: members, billing, settings</li>
+              <li>Seat enforcement at invite time</li>
+              <li>Invoiced billing variant in Lemon Squeezy</li>
+              <li>Optional SSO via Clerk enterprise</li>
+              <li>Team credit pools (2,000/seat poolable)</li>
             </ul>
           </details>
         </article>
@@ -2444,8 +2480,8 @@ footer.site-footer {
           </thead>
           <tbody>
             <tr>
-              <td>Pre-launch</td>
-              <td>0</td>
+              <td>M1 (Content MVP)</td>
+              <td>up to ~500</td>
               <td>0</td>
               <td>0</td>
               <td class="cost-cell">~$0
@@ -2453,29 +2489,29 @@ footer.site-footer {
               </td>
             </tr>
             <tr>
-              <td>Early</td>
-              <td>100</td>
-              <td>5</td>
+              <td>M2 launch</td>
+              <td>~100</td>
+              <td>~5</td>
               <td>~2,000</td>
-              <td class="cost-cell">~$50
-                <span class="bar"><span class="bar-fill" style="width:1.5%"></span></span>
+              <td class="cost-cell">~$35
+                <span class="bar"><span class="bar-fill" style="width:1.2%"></span></span>
               </td>
             </tr>
             <tr>
-              <td>Scaling</td>
-              <td>1,000</td>
-              <td>50</td>
+              <td>Mid-scale</td>
+              <td>~1,000</td>
+              <td>~50</td>
               <td>~30,000</td>
               <td class="cost-cell">~$300
-                <span class="bar"><span class="bar-fill" style="width:9%"></span></span>
+                <span class="bar"><span class="bar-fill" style="width:10%"></span></span>
               </td>
             </tr>
             <tr>
-              <td>At scale</td>
-              <td>10,000</td>
-              <td>500</td>
+              <td>Healthy product</td>
+              <td>~10,000</td>
+              <td>~500</td>
               <td>~300,000</td>
-              <td class="cost-cell">~$2,500–3,500
+              <td class="cost-cell">~$3,000
                 <span class="bar"><span class="bar-fill" style="width:100%"></span></span>
               </td>
             </tr>
@@ -2483,7 +2519,7 @@ footer.site-footer {
         </table>
       </article>
 
-      <div class="callout"><strong>Revenue check at 1k / 50 Pro:</strong> ~$950/mo gross → ~$700 after LS fees → ~$400 net of infra. Real upside opens with Team-plan adoption.</div>
+      <div class="callout"><strong>Revenue check at 1k / 50 Pro:</strong> ~$950/mo gross → ~$700 after LS fees → <strong>~$400 net of infra</strong>. Breakeven well below 100 Pro users. Tutor numbers reflect ADR-012 controls (Haiku default at ~$0.005/msg, ~15% Sonnet at ~$0.025/msg). Prior plan's $216/mo blowout case is bounded by the $20/user/mo ceiling.</div>
     </div>
   </section>
 
@@ -2570,8 +2606,48 @@ footer.site-footer {
         <details class="glass adr">
           <summary><span class="adr-num">ADR-010</span><span class="adr-title">Pagefind over Algolia</span></summary>
           <div class="adr-body">
-            <p>Free, static, zero infra. Algolia is overkill until content &gt; 100 pages. Trivial to swap if recall becomes a problem.</p>
+            <p>Free, static, zero infra. Algolia is overkill until content &gt; 100 pages. Activated only when ≥6 chapters are live (per reviewer P2.4).</p>
             <div class="adr-meta"><span class="m">Reversible? <strong>Easy.</strong></span><span class="m">Domain: search</span></div>
+          </div>
+        </details>
+
+        <details class="glass adr" open>
+          <summary><span class="adr-num" style="background:var(--accent)">ADR-011 ★</span><span class="adr-title">Two-milestone build with engagement gate</span></summary>
+          <div class="adr-body">
+            <p>Per reviewer P1.1 — separates "did the content land?" from "did the business work?". The prior plan carried launch, monetization, team sales, AI tutor, and content production all at once. The new structure validates the learning experience first, then commits to SaaS only when engagement metrics (≥500 signups, ≥50% completion, or qualitative demand) trigger the gate. Teams milestone gated separately on ≥3 unsolicited inquiries.</p>
+            <div class="adr-meta"><span class="m">Reversible? <strong>Easy.</strong></span><span class="m">Domain: delivery</span></div>
+          </div>
+        </details>
+
+        <details class="glass adr" open>
+          <summary><span class="adr-num" style="background:var(--accent)">ADR-012 ★</span><span class="adr-title">Tutor cost controls — credits + Haiku default + Sonnet escalation + caching + summarization + ceiling</span></summary>
+          <div class="adr-body">
+            <p>Per reviewer P1.3 — "almost no one will" was not a cost control. The redesign applies five compounding mitigations: (1) Haiku default not Sonnet (~5× cheaper), (2) Sonnet escalation user-initiated at 4× credits, (3) prompt caching on chapter context (~10% input price), (4) conversation summarization after 6 turns, (5) credits + hard $20/user/mo ceiling. Worst-case heavy Pro user now ~$3.25/mo cost vs prior $216/mo blowout.</p>
+            <div class="adr-meta"><span class="m">Reversible? <strong>Easy (tune credit grants).</strong></span><span class="m">Domain: economics</span></div>
+          </div>
+        </details>
+
+        <details class="glass adr" open>
+          <summary><span class="adr-num" style="background:var(--accent)">ADR-013 ★</span><span class="adr-title">Internal UUIDs + clerkUserId/clerkOrgId text columns</span></summary>
+          <div class="adr-body">
+            <p>Per reviewer P1.2 — Clerk IDs are <code>user_...</code>/<code>org_...</code> strings, not UUIDs. The original schema declared <code>users.id (uuid, pk) mirrors Clerk userId</code> which would break sync at runtime. New shape: internal random UUIDs as primary keys, plus <code>clerkUserId</code>/<code>clerkOrgId</code> text columns with unique indexes. Decouples internal IDs from any single auth provider (which ADR-003's spirit always required).</p>
+            <div class="adr-meta"><span class="m">Reversible? <strong>N/A — this is the right shape.</strong></span><span class="m">Domain: data model</span></div>
+          </div>
+        </details>
+
+        <details class="glass adr" open>
+          <summary><span class="adr-num" style="background:var(--accent)">ADR-014 ★</span><span class="adr-title">&lt;FreePreview&gt; / &lt;ProOnly&gt; MDX boundary components, not 25% cuts</span></summary>
+          <div class="adr-body">
+            <p>Per reviewer P2.5 — MDX is component-heavy, so a percentage-of-content cut can split components mid-render, leak deep-dive content, or produce awkward previews. Authors mark the boundary explicitly: <code>&lt;FreePreview&gt;</code> always renders, <code>&lt;ProOnly&gt;</code> checks entitlement and renders children or a fallback. Authors keep full control of the teaser shape.</p>
+            <div class="adr-meta"><span class="m">Reversible? <strong>Easy (thin wrappers).</strong></span><span class="m">Domain: content</span></div>
+          </div>
+        </details>
+
+        <details class="glass adr" open>
+          <summary><span class="adr-num" style="background:var(--accent)">ADR-015 ★</span><span class="adr-title">Target major versions instead of "latest"</span></summary>
+          <div class="adr-body">
+            <p>Per reviewer P2.7 — the prior spec claimed "version pins" but used <code>latest</code> throughout, which drifts. Major-pinning (e.g. <code>^15.4</code>, <code>^19.0</code>) gives reproducibility at scaffold time while allowing patch updates via lockfile. Items not needed until Milestone 2 are flagged <strong>(M2)</strong> so M1 install surface stays small.</p>
+            <div class="adr-meta"><span class="m">Reversible? <strong>N/A — operational.</strong></span><span class="m">Domain: tooling</span></div>
           </div>
         </details>
       </div>
@@ -2579,10 +2655,11 @@ footer.site-footer {
       <article class="glass section-card" style="margin-top:24px">
         <h3 style="font-size:16px;margin-bottom:12px">Known risks worth watching</h3>
         <ul style="margin:0;padding-left:18px">
-          <li><strong>AI-tutor cost runaway</strong> — if a heavy user finds a prompt that spikes context. Mitigated by rate limits + max_tokens cap + per-user $ alerting in PostHog.</li>
-          <li><strong>Lemon Squeezy fee drag</strong> — argues for a Stripe migration at scale. ADR-006 is reversible thanks to ADR-008.</li>
-          <li><strong>Backdrop-filter perf</strong> on low-end Android. Fall back to flat surfaces for reduced-motion or low-end-device detection.</li>
-          <li><strong>Clerk lock-in</strong> above 10k MAU. Watch the run rate; the <code>lib/auth.ts</code> abstraction makes a future swap merely tedious.</li>
+          <li><strong>AI-tutor cost runaway</strong> — addressed by ADR-012's five-layer defense (Haiku default, Sonnet escalation, prompt caching, summarization, credits + $20/user/mo ceiling). Backstop kill switch flags accounts &gt; $20/mo for manual review.</li>
+          <li><strong>Lemon Squeezy fee drag</strong> at scale argues for Stripe migration. ADR-006 is reversible thanks to ADR-008 (entitlements abstraction).</li>
+          <li><strong>Backdrop-filter perf</strong> on low-end Android — fall back to flat surfaces under reduced-motion or low-end-device detection.</li>
+          <li><strong>Clerk lock-in</strong> above 10k MAU — pricing escalates. The <code>lib/auth.ts</code> boundary + ADR-013's internal UUIDs make a future swap tedious but not catastrophic.</li>
+          <li><strong>Content MVP gate doesn't trigger</strong> — most likely outcome and the gate's whole point. Iterate on content; don't paper over with SaaS scope.</li>
         </ul>
       </article>
     </div>

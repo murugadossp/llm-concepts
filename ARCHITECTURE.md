@@ -52,7 +52,7 @@ If none of these hit within ~6 weeks of Content MVP shipping, **pause and iterat
 
 **Goal:** open B2B revenue, only when team demand is real.
 
-Gated entirely on inbound demand: **≥3 unsolicited team inquiries** within a quarter. Until then the data abstraction is in place, but no team UI, no seats, no invoicing, no SSO — per ADR-014 / reviewer P2.8.
+Gated entirely on inbound demand: **≥3 unsolicited team inquiries** within a quarter. Until then the data abstraction is in place, but no team UI, no seats, no invoicing, no SSO — per reviewer P2.8.
 
 ### Non-goals (all milestones)
 
@@ -67,7 +67,7 @@ Gated entirely on inbound demand: **≥3 unsolicited team inquiries** within a q
 
 ## 2. Stack & target versions
 
-Versions are pinned to **target major** per ADR-013. At scaffold time, take the latest patch of the named major; lockfile pins exact versions per checkout.
+Versions are pinned to **target major** per ADR-015. At scaffold time, take the latest patch of the named major; lockfile pins exact versions per checkout.
 
 | Layer | Choice | Target | Notes |
 |-------|--------|--------|-------|
@@ -371,6 +371,10 @@ tier: "pro"                        # free | pro
 prereqs: ["05-tools", "06-agents"] # array of slugs
 characters: ["Atlas", "MCPMae"]    # which character SVGs to preload
 ogImageVariant: "mcp"             # which preset OG card to render
+suggestedPrompts:                 # 3-5 starter prompts for the AI tutor (M2.D+)
+  - "Why does MCP exist when we already have function calling?"
+  - "Walk me through what an MCP server actually exposes."
+  - "What's the difference between a tool and a resource in MCP?"
 updatedAt: "2026-05-22"
 authors: ["murugadoss"]
 summary: >
@@ -382,17 +386,31 @@ summary: >
 
 `lib/chapters.ts` reads every MDX file at build (via `fs` + `gray-matter`), validates frontmatter, sorts by `chapterNumber`, and exports a typed `chapters: ChapterMeta[]` for use in nav, sidebar, OG generation, and sitemap.
 
-### 5.3 Gating
+### 5.3 Gating — explicit boundary components, not percentages (per ADR-014)
 
-The `[slug]/page.tsx` route handler:
+The percentage-of-content approach (showing the first 25% of an MDX file) was rejected per reviewer P2.5: MDX is component-heavy, so a percentage cut can split components mid-render, leak deep-dive content, or produce awkward previews. Instead, authors mark the boundary explicitly with two MDX components:
 
-1. Loads chapter metadata.
-2. If `tier === 'free'` → render directly.
-3. If `tier === 'pro'` → check `getEntitlement(userId, 'chapters:pro')`.
-   - If entitled → render directly.
-   - If not entitled → render the **first 25% of content** (the comic hook + TL;DR), then a `<Paywall>` component.
+```mdx
+# Chapter 7 — MCP
 
-This is implemented at the route level so the rest of the rendering pipeline (MDX → React) doesn't need to know about tiers.
+<FreePreview>
+  Comic hook, TL;DR, first concept section.
+  Everything inside this wrapper is shown to everyone (signed-in or not).
+</FreePreview>
+
+<ProOnly fallback={<Paywall reason="upgrade" chapterSlug="07-mcp" />}>
+  Remaining deep-dive sections, advanced patterns, comparison tables.
+</ProOnly>
+```
+
+How it works:
+
+- `<FreePreview>` is a passthrough — always renders children.
+- `<ProOnly>` accepts a `fallback` prop. Server-side it checks `hasEntitlement(ctx, 'chapters:pro')` and renders either children (entitled) or fallback (not entitled).
+- The route handler is dumb: it just renders the MDX. Tier-awareness lives in the components themselves.
+- Authors have **full control** over what the teaser looks like — no surprises, no broken layouts.
+
+Chapters without `<ProOnly>` are implicitly free. Pro chapters use the explicit boundary.
 
 ### 5.4 Adding a new lesson
 
@@ -414,18 +432,22 @@ Drizzle schemas in `src/db/schema.ts`. PostgreSQL via Neon. Designed for multi-t
 
 ```
 users
-  id (uuid, pk)             -- mirrors Clerk userId
+  id (uuid, pk, default random())   -- internal ID (decoupled from auth provider per ADR-013)
+  clerkUserId (text, unique)        -- Clerk's "user_..." string ID
   email (text, unique)
   displayName (text)
   createdAt, updatedAt
+  index (clerkUserId)
 
 orgs
-  id (uuid, pk)             -- mirrors Clerk orgId
+  id (uuid, pk, default random())   -- internal ID
+  clerkOrgId (text, unique)         -- Clerk's "org_..." string ID
   name (text)
   slug (text, unique)
   plan (enum: free, pro, team)
   seatsPurchased (int)
   createdAt, updatedAt
+  index (clerkOrgId)
 
 memberships
   userId (fk users)
@@ -491,9 +513,30 @@ tutorMessages
   conversationId (fk tutorConversations)
   role (enum: user, assistant, system)
   content (text)            -- markdown
+  model (text)              -- "claude-haiku-X" | "claude-sonnet-X"
+  mode (enum: haiku, sonnet)
   tokensIn (int), tokensOut (int)
+  tokensCached (int)        -- cached prefix tokens (Anthropic cache hits)
+  costUsd (numeric(10,6))   -- computed at write time
   createdAt
   index (conversationId, createdAt)
+
+tutorCredits             -- per ADR-012: credits-based metering
+  id (uuid, pk)
+  userId (fk users)
+  orgId (fk orgs, nullable)   -- nullable; org credits are pooled across team seats
+  creditsGranted (int)        -- e.g. 500 for Pro
+  creditsRemaining (int)
+  periodStart (timestamp)
+  periodEnd (timestamp)
+  createdAt
+  index (userId, periodEnd), index (orgId, periodEnd)
+
+webhook_events           -- idempotency for Clerk + Lemon Squeezy webhooks
+  id (text, pk)            -- Svix message ID or LS event ID
+  source (enum: clerk, lemon_squeezy)
+  receivedAt (timestamp)
+  processedAt (timestamp, nullable)
 
 usageEvents             -- for analytics + abuse detection
   id (uuid, pk)
@@ -579,14 +622,26 @@ export default async function ChapterPage({ params }) {
 
 ### 7.3 Clerk → DB sync
 
-A Clerk webhook (`/api/webhooks/clerk/route.ts`) syncs:
+A Clerk webhook (`/api/webhooks/clerk/route.ts`) syncs Clerk's string IDs to our internal UUID-keyed rows (per ADR-013):
 
-- `user.created` → insert into `users`, create personal org, insert membership.
-- `user.updated` → upsert `users`.
-- `organization.created` → insert into `orgs`.
-- `organizationMembership.created/deleted` → upsert/delete `memberships`.
+- `user.created` → insert into `users` with new internal UUID + `clerkUserId = data.id`, create personal org, insert membership.
+- `user.updated` → upsert `users` keyed on `clerkUserId`.
+- `organization.created` → insert into `orgs` with new internal UUID + `clerkOrgId = data.id`.
+- `organizationMembership.created/deleted` → upsert/delete `memberships` after resolving Clerk IDs to internal UUIDs.
 
-Webhook signatures verified via Clerk's `Webhook` helper.
+Throughout the app, **never store Clerk's string IDs in domain tables** — always resolve to internal UUIDs at the boundary. The `lib/auth.ts` helper handles this:
+
+```ts
+export async function getCurrentUser(): Promise<User | null> {
+  const { userId: clerkUserId } = await auth();
+  if (!clerkUserId) return null;
+  return db.query.users.findFirst({
+    where: eq(users.clerkUserId, clerkUserId),
+  });
+}
+```
+
+Webhook signatures verified via Clerk's `Webhook` helper (Svix-backed). Idempotency via the `webhook_events` table keyed by Svix message ID — every event is recorded; reprocessed events skip the body.
 
 ### 7.4 Team admin
 
@@ -598,15 +653,23 @@ Webhook signatures verified via Clerk's `Webhook` helper.
 
 ## 8. Payments & entitlements
 
-### 8.1 Plans
+### 8.1 Plans (per ADR-012 — credits-based tutor metering)
 
 | Plan | Price | Includes |
 |------|-------|----------|
-| Free | $0 | Chapters 1–5, 10 AI tutor messages/day |
-| Pro | $19/mo or $190/yr | All chapters, 200 AI tutor messages/day, unlimited bookmarks/notes |
-| Team | $15/seat/mo (min 3 seats) | Everything in Pro, admin dashboard, SSO (Phase 5+), invoiced billing on annual |
+| Free | $0 | Chapters 1–5 + Ch7 (during Content MVP only), **20 tutor credits/mo** (~20 Haiku msgs or 5 Sonnet escalations) |
+| Pro | $19/mo or $190/yr | All chapters, **500 tutor credits/mo**, unlimited bookmarks/notes, priority support |
+| Team (Milestone 3) | $15/seat/mo, min 3 seats | Pro per seat + **2,000 credits/seat/mo** (poolable across team), admin dashboard, SSO, invoiced billing on annual |
 
-Pricing is set in Lemon Squeezy; the app reads plan metadata via webhook.
+**Credit economics:**
+
+- 1 credit = 1 Haiku message (chapter-aware, prompt-cached, history-summarized) ≈ $0.005 actual cost
+- 4 credits = 1 Sonnet escalation (user opts in via "Need a deeper answer?" button) ≈ $0.025 actual cost
+- A Pro user fully burning 500 credits on the cheapest mix (all Haiku) ≈ $2.50/mo cost.
+- A Pro user fully burning 500 credits on the priciest mix (all Sonnet at 4×) = 125 messages × $0.025 ≈ $3.13/mo cost.
+- **Either way: < $4 cost on a $19 sub → sustainable margin.** Compare to the prior plan's theoretical $216/mo blowout.
+
+Pricing is set in Lemon Squeezy. The app reads plan metadata via webhook and writes corresponding entitlements + credit grants. Credits reset on subscription renewal and **do not roll over** (keeps the cost ceiling predictable).
 
 ### 8.2 Checkout flow
 
@@ -635,19 +698,31 @@ On `payment_failed`, entitlements stay active for 3 days while LS retries. After
 
 ---
 
-## 9. AI tutor
+## 9. AI tutor (per ADR-012)
+
+The reviewer flagged (P1.3) that "200 messages/day at $19/mo Pro" risked ~$216/mo cost for a heavy user — unsustainable. The redesign applies **five compounding cost controls as defense-in-depth**, so failure of any one doesn't blow up the economics.
+
+1. **Haiku is the default model**, not Sonnet. ~5× cheaper, adequate for ~90% of teaching questions.
+2. **Sonnet escalation is user-initiated** ("Need a deeper answer?" button) and costs 4× credits — user is fully aware.
+3. **Prompt caching** on chapter context — Anthropic's cache hits cost ~10% of input price. Chapter text is identical across messages in a conversation.
+4. **Conversation summarization** after 6 turns — context stops growing linearly.
+5. **Credits + hard $ ceiling** — 500 credits/mo Pro; backstop kill switch at $20/user/mo of tutor cost (PostHog alert → manual review).
 
 ### 9.1 Architecture
 
 ```
-[Client]                    [Edge / Server Action]                 [Anthropic API]
-TutorChat.tsx  ─── POST ───▶  /api/tutor (route handler)  ─── stream ──▶  claude-sonnet-X
-   ▲                              │                                          │
-   │                              │   load chapter context                    │
-   │                              ▼                                          │
-   │                          Postgres: tutorConversations,                  │
-   │◀── SSE stream ───────────  tutorMessages, rate-limit,                   │
-                                entitlement check                            │
+[Client]                    [Server route]                          [Anthropic API]
+TutorChat.tsx  ─── POST ───▶  /api/tutor                   ─── stream ──▶  Haiku (default)
+   ▲                              │                                    │   Sonnet (escalation)
+   │                              │   1. auth.protect()                │
+   │                              │   2. credit check + decrement      │
+   │                              │   3. rate limit (Upstash sliding)  │
+   │                              │   4. cost-ceiling kill switch      │
+   │                              │   5. load chapter (cached prompt)  │
+   │                              │   6. summarize history if >6 turns │
+   │◀── SSE stream ──────────────  7. stream from Anthropic            │
+                                Postgres: tutorConversations,
+                                tutorMessages, tutorCredits, usageEvents
 ```
 
 ### 9.2 Request shape
@@ -658,47 +733,57 @@ POST /api/tutor
   conversationId?: string,
   chapterSlug: string,
   userMessage: string,
+  mode: "haiku" | "sonnet",     // defaults to "haiku"; "sonnet" costs 4 credits
 }
 → 200 text/event-stream
 data: { type: "delta", content: "..." }
-data: { type: "done", conversationId, messageId, tokensIn, tokensOut }
+data: { type: "done", conversationId, messageId, creditsCharged, creditsRemaining, model }
+data: { type: "error", code: "credits_exhausted" | "rate_limit" | "cost_ceiling" | "upstream_error", message }
 ```
 
 ### 9.3 Server flow
 
 1. `auth.protect()` — must be signed in.
-2. Check rate limit (Upstash Redis, sliding window per user). Limits by tier: Free 10/day, Pro 200/day, Team unlimited.
-3. Check `tutor:pro` entitlement if tier requires it.
-4. Load (or create) conversation row.
-5. Load last N user/assistant messages for context (cap at ~6k tokens).
-6. Load chapter MDX content; strip components; truncate to ~4k tokens of plain text.
-7. Build the prompt:
-   - **System:** "You're a tutor helping a reader understand Chapter N: {title}. Stay grounded in the chapter content. If asked about something outside scope, briefly answer and gently redirect."
-   - **Context:** chapter plain text.
-   - **History:** prior messages.
+2. **Credit check.** Read `tutorCredits` for current period. Cost = 1 (Haiku) or 4 (Sonnet). Return `credits_exhausted` if insufficient.
+3. **Rate limit.** Upstash sliding window: 30 messages/hour regardless of credits (DoS protection).
+4. **Cost-ceiling check.** Sum the last 30 days of `tutorMessages.costUsd` for this user. If > $20 → return `cost_ceiling` and flag for manual review.
+5. **Load chapter** as plain text (strip components). Submit to Anthropic with `cache_control: { type: "ephemeral" }` on the chapter block — repeat calls within ~5 min hit the cache at ~10% input price.
+6. **Summarize history** if conversation has >6 turns. One-shot Haiku call compresses turns 1..N-6 into a 200-token summary; keep the last 6 turns verbatim. Cache the summary on the conversation row.
+7. **Build prompt:**
+   - **System (cached):** "You're a tutor for Chapter {N}: {title}. Stay grounded in the chapter content. If asked outside scope, answer briefly and gently redirect."
+   - **Context (cached):** chapter plain text, ~3–4k tokens.
+   - **History:** summary (if any) + last 6 turns.
    - **User:** new message.
-8. Stream from Anthropic SDK, forward as SSE.
-9. On completion, persist `tutorMessages` (both user and assistant), update conversation `updatedAt`, emit `usageEvents`.
-10. On error, log to Sentry, emit `data: { type: "error", message: "..." }` and close.
+8. **Stream** from Anthropic SDK, forward as SSE.
+9. **On completion:** decrement credits, persist `tutorMessages` (user + assistant) with `model`, `mode`, `tokensIn/Out/Cached`, `costUsd`. Update `conversation.updatedAt`. Emit `usageEvents`.
+10. **On error:** log to Sentry, refund the credit (so failed calls aren't charged), emit `data: { type: "error", ... }`.
 
 ### 9.4 Client (TutorChat.tsx)
 
-- Sticky right-side panel on desktop, full-screen sheet on mobile.
-- Lists prior conversations for this chapter (sidebar).
+- Sticky right-side panel on desktop; full-screen sheet on mobile.
+- **Credits meter** in the header ("237 of 500 credits this month").
+- **Sonnet escalation** as a "Need a deeper answer?" pill next to the input — single-click swap to `mode: "sonnet"` for the next message only (clearly indicates 4-credit cost).
+- Prior conversations for the current chapter in a collapsible sidebar.
 - Streams assistant tokens into a virtualized message list.
-- Suggests starter prompts pulled from chapter frontmatter (`suggestedPrompts: []`).
-- "New conversation" button.
+- Starter prompts pulled from chapter frontmatter (`suggestedPrompts: []`).
+- `credits_exhausted` → upgrade prompt + link to billing.
+- `cost_ceiling` → "We're reviewing your account" message + support link (manual review by operator).
 
 ### 9.5 Abuse protection
 
 - Rate limit (above).
-- Anthropic-side `max_tokens` cap to bound cost.
-- Reject messages > 4k characters (prompt injection vector).
-- Server-side block patterns for known jailbreak attempts (re-checked daily — soft block, surfaced to user).
+- `max_tokens` cap: 800 default, 1600 for Sonnet mode.
+- Reject messages > 4k characters (prompt-injection vector).
+- Server-side block patterns for known jailbreak attempts (soft block, surfaced to user, logged).
 
-### 9.6 Cost model
+### 9.6 Cost model — revised
 
-Average tutor exchange ≈ 8k input tokens (chapter context + history) + 800 output tokens. At Sonnet 4.x pricing (~$3/M in, $15/M out): ≈ $0.036 per message. A heavy Pro user hitting their 200/day = ~$7.20/day = ~$216/mo. We will monitor and adjust limits if real users hit theoretical caps; in practice almost no one will.
+| Mode | Input (cached) | Output | Cost per msg | Credits |
+|------|----------------|--------|--------------|---------|
+| Haiku default | ~4k @ $0.08/M (cached) | 800 @ $4/M | ~$0.005 | 1 |
+| Sonnet escalation | ~4k @ $0.30/M (cached) | 1600 @ $15/M | ~$0.026 | 4 |
+
+**Worst-case heavy Pro user** burning 500 credits/mo entirely on Sonnet (125 messages): ~$3.25/mo cost on a $19/mo subscription. Healthy margin even with the most expensive mix. The cost ceiling at $20/mo is ~6× the worst case — generous backstop for outliers.
 
 ---
 
@@ -766,83 +851,97 @@ R2_BUCKET
 
 ---
 
-## 12. Phased build
+## 12. Build plan — three milestones, engagement-gated (per ADR-011)
 
-Each phase has an explicit **exit criteria** — the phase ships when all items pass, not before.
+Each phase has explicit **exit criteria** — the phase ships when all items pass, not before. Milestones are gated on validation, not calendar.
 
-### Phase 1 — Free content site (weeks 1–3)
+### Milestone 1 — Content MVP (weeks 1–4)
 
-**Scope:** Next.js scaffold, Tailwind 4, theme system (light + dark), shadcn/ui setup, MDX pipeline, all component primitives (`ComicPanel`, `ELI5`, `DeepDive`, etc.), Chapter 1 + Chapter 6 + Chapter 7 written, hub page, sitemap, RSS, OG cards, Plausible-or-PostHog analytics, deploy to Vercel.
+**Theme:** prove the learning experience before any monetization.
 
-**Exit criteria:**
-- Three chapters render correctly in both themes on desktop + mobile.
-- Lighthouse: Performance ≥ 95, Accessibility ≥ 95, SEO ≥ 95 on marketing pages.
+**Phase 1.A — Foundation (week 1).** Next.js scaffold, Tailwind 4, theme system (light + dark + system, flash-free), shadcn/ui setup, MDX pipeline, all visual component primitives (`ComicPanel`, `ELI5`, `DeepDive`, `RememberCard`, `Callout`, `Chip`, `CodeBlock`, `CodeTabs`, `Infographic`, `FlowDiagram`, `CompareTable`, `PersonaStrip`, `SpeechBubble`), site layout (`SiteHeader`, `SiteFooter`, `ThemeToggle`).
+
+**Phase 1.B — Flagship chapters (weeks 2–3).** Chapter 1 (Foundations) + Chapter 6 (Agents) + Chapter 7 (MCP) authored in MDX with hero comics, all in-chapter components, interactive widgets (tokenizer demo Ch1, agent-loop animator Ch6, MCP playground Ch7). Hub page rendering chapter cards.
+
+**Phase 1.C — Acquisition surface (week 4).** Email capture (Resend audience or ConvertKit list), newsletter signup CTAs in header + footer + after-chapter prompts. SEO foundations: sitemap, RSS, per-chapter OG cards (Vercel OG), schema.org Article markup. PostHog analytics (scroll depth, completion %, time-on-page).
+
+**Milestone 1 exit criteria:**
+
+- Three flagship chapters render correctly in both themes on desktop + mobile.
+- Lighthouse: Performance ≥ 95, Accessibility ≥ 95, SEO ≥ 95 on all pages.
 - Sitemap + RSS validate.
 - OG card renders for every chapter.
-- Vercel preview deploy on every PR; `main` deploys to prod.
+- Newsletter signup works end-to-end (signup → confirmation email → list membership).
+- Vercel preview deploy on every PR; `main` auto-deploys to prod.
 
-### Phase 2 — Accounts & progress (weeks 4–5)
+**Engagement gate to Milestone 2** — any one triggers the gate:
 
-**Scope:** Clerk integration, Neon + Drizzle setup, schemas + migrations for `users`, `orgs`, `memberships`, `chapterProgress`, `bookmarks`, `notes`. Clerk webhook → DB sync. `/dashboard`, `/bookmarks`, `/notes`, `/settings` shell pages.
+- ≥500 newsletter signups
+- ≥50% scroll-completion on at least one flagship chapter
+- Clear qualitative demand (replies asking for more / paid)
 
-**Exit criteria:**
-- Sign up via email + Google + GitHub all work.
-- Personal org auto-created on signup.
-- Reading a chapter updates `chapterProgress` (with 80% scroll = complete heuristic).
-- Bookmark + note CRUD works; data persists across logins.
-- E2E test: signup → read → bookmark → log out → log in → see bookmark.
-
-### Phase 3 — Payments & gated content (weeks 6–8)
-
-**Scope:** Lemon Squeezy integration, webhook handler, `subscriptions` + `entitlements` + `webhook_events` tables, `<Paywall>` component, gating in chapter routes, `/pricing` page, customer portal link.
-
-**Exit criteria:**
-- Test-mode checkout completes end-to-end; entitlement granted within 60s.
-- Pro chapters render the paywall for unentitled users (showing first 25% of content).
-- Cancellation → access continues to period end → expires correctly.
-- Payment failure → 3-day grace → entitlement expires.
-- One real $1 test purchase in production succeeds.
-
-### Phase 4 — AI tutor (weeks 9–10)
-
-**Scope:** `/api/tutor` streaming route, `<TutorChat>` component, conversation persistence, rate limiting (Upstash Redis), abuse protections, tier-based daily limits.
-
-**Exit criteria:**
-- Streaming chat works smoothly on desktop + mobile.
-- Conversation history persists per chapter.
-- Free user hitting daily limit gets a clean upgrade prompt.
-- Rate limit verified via load test (10 concurrent users, no errors).
-- Average cost per Pro user tracked; alert if > $5/day per user.
-
-### Phase 5 — Multi-tenant / teams (weeks 11–14)
-
-**Scope:** Clerk Organizations exposed in UI, `/teams/*` pages, seat enforcement, invoiced billing variant in LS, optional SSO via Clerk's enterprise plan, admin analytics.
-
-**Exit criteria:**
-- Owner can purchase Team plan with N seats and invite N users.
-- Admins can change member roles and remove members.
-- Seat overflow blocked at invite time with clear UX.
-- Org-level entitlements correctly inherited by members.
-- One real team customer (or internal team) successfully onboarded.
-
-### Phase 6+ (post-launch, driven by data)
-
-Quizzes with certificates, in-product comments per chapter section, instructor course builder (UGC), affiliate program, Stripe migration if LS limits hit, mobile app (PWA first, native later).
+If none of these hit within ~6 weeks of shipping, **pause and iterate on content** before adding SaaS scope.
 
 ---
 
-## 13. Cost model
+### Milestone 2 — SaaS v1 (weeks 5–14, after gate)
 
-Approximate monthly run-rate at four scale points. Excludes Murugadoss's time.
+**Theme:** convert validated learning experience into a sustainable product.
+
+**Phase 2.A — Accounts & progress (weeks 5–6).** Clerk integration (sign-in: email magic link + Google + GitHub), Neon + Drizzle setup, schemas + migrations for `users`, `orgs`, `memberships`, `chapterProgress`, `bookmarks`, `notes`, `webhook_events`. Clerk webhook → DB sync using `clerkUserId` text columns (per ADR-013). `/dashboard`, `/bookmarks`, `/notes`, `/settings` pages.
+
+*Exit:* signup → read → bookmark → log out → log in → see bookmark (E2E). Reading chapter updates progress with 80% scroll heuristic. Personal org auto-created on signup.
+
+**Phase 2.B — Remaining chapters (weeks 7–8).** Chapters 2, 3, 4, 5, 8, 9, 10, 11 authored. `<FreePreview>` / `<ProOnly>` boundary components in chapters that will be Pro (per ADR-014) — boundaries exist but gating is dormant until 2.C. Search via Pagefind enabled once ≥6 chapters live.
+
+*Exit:* all 11 chapters published. Pagefind index builds. Free/Pro boundaries visible in MDX source.
+
+**Phase 2.C — Payments & gating (weeks 9–10).** Lemon Squeezy integration, webhook handler with idempotency (`webhook_events`), `subscriptions` + `entitlements` + `tutorCredits` tables, `<Paywall>` component activated, `<ProOnly>` gating live, `/pricing` page, customer portal link. **Chapter 7 reclassified as Pro** with 7-day grace email to prior readers (per BLUEPRINT decision).
+
+*Exit:* test-mode checkout end-to-end; entitlement granted in <60s. Pro chapters show paywall to unentitled users via `<ProOnly>`. Cancellation → access continues to period end → expires correctly. Payment failure → 3-day grace → entitlement expires. One real $1 test purchase in production succeeds.
+
+**Phase 2.D — AI tutor (weeks 11–13).** `/api/tutor` streaming route with **all five cost controls** (Haiku default, Sonnet escalation, prompt caching, conversation summarization, credits + $20/user/mo cost ceiling — per ADR-012). `<TutorChat>` component with credits meter UI. Rate limiting via Upstash. Per-tier credit grants on subscription webhook events.
+
+*Exit:* streaming chat works on desktop + mobile. Conversation history persists. Credits decrement correctly. Free user hitting 20 credits → upgrade prompt. Pro user hitting 500 credits → wait-till-renewal prompt. Cost-ceiling kill switch verified via load test. Average cost per Pro user tracked in PostHog — target < $5/user/mo.
+
+**Phase 2.E — Hardening (week 14).** Sentry coverage on all routes, BetterStack uptime monitor, structured logs (Pino) with PII redaction, Lighthouse CI gates deploys. Privacy policy, ToS, refund policy live (drafted via Termly/Iubenda). Customer support inbox + basic help center.
+
+*Exit:* all M2 routes covered by Sentry. Uptime monitor live with status page. Lighthouse CI blocks regressions. All legal pages live.
+
+---
+
+### Milestone 3 — Teams (demand-driven, post-launch)
+
+**Theme:** open B2B revenue, only when team demand is real.
+
+**Gate to start:** ≥3 unsolicited team inquiries within a quarter (per ADR-011 / reviewer P2.8).
+
+**Scope (only when gate passes):** Clerk Organizations exposed in UI, `/teams/*` pages (members, billing, settings), seat enforcement at invite time, invoiced billing variant in Lemon Squeezy, optional SSO via Clerk enterprise plan, admin analytics dashboard, **team credit pools** (2,000 credits/seat poolable across all members of the org).
+
+**Exit:** one real paying team customer onboarded.
+
+---
+
+### Milestone 4+ — Post-launch, data-driven
+
+Quizzes with certificates, in-product comments per chapter section, instructor course builder (UGC), affiliate program, Stripe migration if Lemon Squeezy fees become material, native PWA, mobile app.
+
+---
+
+## 13. Cost model — revised after ADR-012
+
+Approximate monthly run-rate at four scale points. Excludes operator time. Tutor cost recomputed using ADR-012 mitigations (Haiku default at ~$0.005/msg, ~15% Sonnet escalation at ~$0.025/msg → weighted average ~$0.008/msg).
 
 | Scale | Active users | Pro users | Tutor msgs/mo | Monthly cost |
 |-------|--------------|-----------|---------------|--------------|
-| 0 | 0 | 0 | 0 | **~$0** (all free tiers) |
-| 100 | 100 | 5 | ~2,000 | **~$50** (Vercel $20, Neon $0, Clerk $0, LS fees on revenue, Sentry $0, PostHog $0, Anthropic ~$30) |
-| 1,000 | 1,000 | 50 | ~30,000 | **~$300** (Vercel $20, Neon $20, Clerk $25, Sentry $26, PostHog $0–50, Anthropic ~$150, Resend $0–20, Upstash $10) |
-| 10,000 | 10,000 | 500 | ~300,000 | **~$2,500–3,500** (Vercel $80, Neon $69+, Clerk $100+, Sentry $80+, PostHog $100+, Anthropic ~$1,500, Resend $20+, Upstash $40+, R2 $5) |
+| Milestone 1 (Content MVP) | up to ~500 | 0 | 0 | **~$0** (Vercel free tier covers this; PostHog free; Resend free up to 3k emails/mo) |
+| Milestone 2 launch | ~100 | ~5 | ~2,000 | **~$35** (Vercel $20, Neon $0 dev branch, Clerk $0, Sentry $0, PostHog $0, Anthropic ~$16, Resend $0) |
+| Mid-scale | ~1,000 | ~50 | ~30,000 | **~$300** (Vercel $20, Neon $20, Clerk $25, Sentry $26, PostHog $0–50, Anthropic ~$240, Resend $20, Upstash $10) |
+| Healthy product | ~10,000 | ~500 | ~300,000 | **~$3,000** (Vercel $80, Neon $69+, Clerk $100+, Sentry $80+, PostHog $100+, Anthropic ~$2,400, Resend $20+, Upstash $40+, R2 $5) |
 
-Revenue at 1k users / 50 Pro = ~$950/mo gross → ~$700 after LS fees → ~$400 net of infra. Breakeven well below 100 Pro users. Real upside opens at Team plan adoption.
+**Revenue side** at 1k users / 50 Pro = 50 × $19 ≈ $950 gross / mo → ~$700 net of LS fees → **~$400 net of infra**. Breakeven sits well below 100 Pro users. Team plan unlocks per-seat economics that compound favorably.
+
+**Worst-case tutor blowout** is now bounded by the $20/user/mo cost ceiling × concurrent heavy users — verifiable from PostHog before it becomes a P1 incident. The prior plan had no such ceiling.
 
 ---
 
@@ -861,7 +960,12 @@ Architecture Decision Records — brief, dated, reversible-when-noted.
 | ADR-007 | **Single domain, single codebase** over Astro+Next split | Easy lesson authoring across free + paid is the dominant requirement. Operational overhead of two stacks not justified at this scale. | Reversible at scale (extract `(marketing)` route group to its own Astro site if SEO demands it). |
 | ADR-008 | **Entitlements table abstraction** over direct subscription checks | Decouples access control from billing provider; lets us add grants, trials, bundles, lifetime, switch billing provider, etc. without touching access-check code. | N/A — this is the abstraction. |
 | ADR-009 | **Glass-compatible character restyle** over pure aesthetic / dropping characters | Characters are a memorability asset (BLUEPRINT §4.4). Restyling preserves the asset while modernizing visual language. | Reversible per-character. |
-| ADR-010 | **Pagefind** over Algolia | Free, static, zero infra. Algolia is overkill until content > 100 pages. | Easy. |
+| ADR-010 | **Pagefind** over Algolia | Free, static, zero infra. Algolia is overkill until content > 100 pages. Activated only when ≥6 chapters live (per reviewer P2.4). | Easy. |
+| ADR-011 | **Two-milestone build with engagement gate** (Content MVP → SaaS v1) + demand-driven Teams milestone | Per reviewer P1.1 — separates "did the content land?" from "did the business work?". Avoids carrying launch / monetization / team sales / AI tutor / content production all at once. Validates the learning experience before the SaaS layer is paid for in code. | Easy to reverse if user demand swamps Content MVP and you want to fast-forward to M2 — but the gate is there precisely so you don't have to guess. |
+| ADR-012 | **Tutor cost controls** — credits + Haiku default + Sonnet escalation + prompt caching + summarization + $20/user/mo ceiling | Per reviewer P1.3 — "almost no one will" was not a cost control. Five layered mitigations cap worst case at ~$3.25/user/mo on Sonnet-only burn vs $216 prior. Credits are transparent to user; cost ceiling is invisible backstop. | Easy — adjust credit grants in Lemon Squeezy plan metadata. |
+| ADR-013 | **Internal UUIDs + clerkUserId / clerkOrgId text columns** instead of UUID columns storing Clerk's string IDs | Per reviewer P1.2 — Clerk IDs are `user_...` / `org_...` strings, not UUIDs. UUID columns would break sync. Also future-proofs against Clerk migration (just rewrite the boundary mapping). | N/A — this is the right shape from day one. |
+| ADR-014 | **`<FreePreview>` / `<ProOnly>` MDX boundary components** instead of percentage-of-content gating | Per reviewer P2.5 — MDX is component-heavy, so a percentage cut splits components and leaks content. Author marks boundary explicitly; renderer obeys. Authors keep full control of the teaser. | Easy — components are thin wrappers, replaceable. |
+| ADR-015 | **Target major versions** ("^15.4") instead of `latest` | Per reviewer P2.7 — `latest` drifts. Major-pinning gives reproducibility at scaffold time while allowing patch updates via lockfile. | N/A — operational. |
 
 ### Known risks
 
@@ -872,14 +976,19 @@ Architecture Decision Records — brief, dated, reversible-when-noted.
 
 ---
 
-## 15. What to build next
+## 15. What to build next — Milestone 1 only
 
-1. Apply BLUEPRINT.md edits (in this same turn) → both docs aligned.
-2. Generate `architecture.html` — interactive glassmorphism visualization of this document.
-3. Scaffold the Next.js project per §3 layout. Tag commit `v0.0.1-scaffold`.
-4. Implement theme system per §4. Tag `v0.0.2-theme`. Demo to Murugadoss.
-5. Implement component primitives. Tag `v0.0.3-components`.
-6. Author Chapter 1 in MDX as the template. Tag `v0.0.4-chapter-01`.
-7. Hub page + sitemap + RSS + OG. Phase 1 ships.
+The plan covers M1 + M2 + M3, but **only M1 is committed**. Don't pre-build M2 work; the engagement gate exists for a reason.
 
-Each tag is a checkpoint — easy rollback, easy progress reporting.
+1. Scaffold the Next.js project per §3 layout. Tag `v0.1.0-scaffold`.
+2. Implement the theme system per §4 (tokens, ThemeProvider, flash-free switch). Tag `v0.2.0-theme`. **Demo before continuing.**
+3. Implement the visual component primitives (`ComicPanel`, `ELI5`, `DeepDive`, etc.). Tag `v0.3.0-components`.
+4. Author Chapter 1 in MDX as the template. Validate the visual language. Tag `v0.4.0-chapter-01`.
+5. Add Chapter 6 + Chapter 7 in MDX. Interactive widgets. Tag `v0.5.0-flagships`.
+6. Hub page + sitemap + RSS + per-chapter OG cards. Tag `v0.6.0-seo`.
+7. Newsletter signup + PostHog analytics. Tag `v0.7.0-acquisition`.
+8. **Ship Milestone 1.** Watch engagement metrics.
+9. Wait for the gate. If gate doesn't trigger in ~6 weeks → iterate on content, do not start M2.
+10. Only after the gate passes: begin Phase 2.A (accounts).
+
+Each tag is a checkpoint — easy rollback, easy progress reporting, easy to share with anyone you want feedback from.

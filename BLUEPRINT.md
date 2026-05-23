@@ -639,7 +639,7 @@ Each chapter outline below lists: **promise**, **comic premise**, **concepts to 
 
 1. **Chapter 1 — Foundations.** Sets the MDX template every other chapter follows.
 2. **Chapter 6 — The Agent Era.** Validates the comic + diagram patterns on a richer topic.
-3. **Chapter 7 — MCP.** The marquee modern topic; first paid-tier chapter.
+3. **Chapter 7 — MCP.** The marquee modern topic and Content MVP front-door draw.
 4. **Chapters 8, 9, 10, 11** — the rest of the "modern stack" + safety.
 5. **Chapters 2, 3, 4, 5** — fill in the LLM fundamentals between Foundations and Agents.
 6. **Verification pass** — read every chapter end-to-end in both themes, click every link, run Lighthouse, validate all interactive widgets.
@@ -702,14 +702,15 @@ Captures decisions made during the design phase. Each is dated; reversibility no
 | Interactive widgets | **Yes** — tokenizer playground (Ch1), attention heatmap (Ch1), agent-loop animator (Ch6), MCP playground (Ch7), AI tutor in every chapter (post-Phase-4). | 2026-05-22 |
 | Brand / byline | "by Murugadoss" on the hub footer + per-chapter author line. Final copy TBD. | 2026-05-22 |
 | Monetization | Free chapters 1–5 + Ch7 during Content MVP. **Pro tier** ($19/mo or $190/yr) unlocks chapters 6–11 + 500 tutor credits/mo. **Team tier** ($15/seat/mo, 2,000 credits/seat) deferred to demand-driven Milestone 3. Billing via Lemon Squeezy. | 2026-05-22 |
-| Milestone structure | **Two milestones with engagement gate** — Content MVP (3 flagship chapters, free, email capture) → engagement-based gate (≥500 signups OR ≥50% completion OR clear demand) → SaaS v1 (remaining chapters, auth, payments, tutor). Teams milestone gated on inbound demand. | 2026-05-26 |
-| AI tutor metering | **Credits model with Haiku default + Sonnet escalation.** 500 credits/mo Pro, 2,000/mo per Team seat. Haiku message = 1 credit, Sonnet escalation = 4 credits. Prompt caching on chapter context. Conversation auto-summarized after 6 turns. Hard $20/user/mo ceiling triggers manual review. | 2026-05-26 |
-| Chapter 7 (MCP) disposition | **Free during Content MVP** as the marquee front-door draw. Converts to Pro tier at SaaS v1 launch with a 7-day grace window for prior readers. | 2026-05-26 |
-| Search | **Deferred to ≥6 chapters published.** Pagefind added at that point. Hub is the search until then. | 2026-05-26 |
-| Multi-tenant scope | **Data model multi-tenant from day one** (every scoped row has nullable `orgId`; entitlements check user OR org). **Team UI, seats, invoicing, SSO all deferred to Milestone 3** (demand-driven). Schema migrations on a live product are expensive; the abstraction is nearly free upfront. | 2026-05-26 |
+| Milestone structure | **Two milestones with engagement gate** — Content MVP (3 flagship chapters, free, email capture) → engagement-based gate (≥500 signups OR ≥50% completion OR clear demand) → SaaS v1 (remaining chapters, auth, payments, tutor). Teams milestone gated on inbound demand. | 2026-05-23 |
+| AI tutor metering | **Credits model with Haiku default + Sonnet escalation.** 500 credits/mo Pro, 2,000/mo per Team seat. Haiku message = 1 credit, Sonnet escalation = 4 credits. Prompt caching on chapter context. Conversation auto-summarized after 6 turns. Hard $20/user/mo ceiling triggers manual review. | 2026-05-23 |
+| Chapter 7 (MCP) disposition | **Free during Content MVP** as the marquee front-door draw. Converts to Pro tier at SaaS v1 launch with a 7-day grace window for prior readers. | 2026-05-23 |
+| Search | **Deferred to ≥6 chapters published.** Pagefind added at that point. Hub is the search until then. | 2026-05-23 |
+| Multi-tenant scope | **Data model multi-tenant from day one** (every scoped row has nullable `orgId`; entitlements check user OR org). **Team UI, seats, invoicing, SSO all deferred to Milestone 3** (demand-driven). Schema migrations on a live product are expensive; the abstraction is nearly free upfront. | 2026-05-23 |
 
-**Open questions remaining (non-blocking):**
+| Newsletter provider | **Resend Audiences** — already in the stack for transactional email (per ARCHITECTURE.md §2), so this is one fewer vendor and one fewer dashboard. Broadcast functionality is sufficient for M1. Reversible later if needs grow (ConvertKit / Buttondown are escape hatches). | 2026-05-23 |
 
-- Final production domain (`llmtoagent.com` is a candidate — needs DNS check + trademark sanity check).
-- Newsletter provider (Resend supports broadcast; ConvertKit / Buttondown are alternatives).
-- When to seed the Discord vs wait for organic demand (likely after Phase 3 ships).
+**Parked decisions (revisit at the right moment):**
+
+- **Final production domain.** Parked. `llmtoagent.com` was a candidate but no commitment yet. **Revisit before Phase 1.C** (the Vercel custom-domain hookup is the last point at which this matters for M1). Until then, the Vercel-assigned `*.vercel.app` URL is fine for previews.
+- **Discord seeding timing.** Parked. Likely after Phase 2.C ships (when there's a paid product to support); could be earlier if Content MVP unexpectedly takes off.
