@@ -1,273 +1,51 @@
 ---
 slug: "01-foundations"
 title: "Foundations: Tokens, Embeddings, Attention"
+navTitle: "Foundations"
 chapterNumber: 1
+lessonNumber: 0
 section: "foundations"
 difficulty: "beginner"
-estimatedMinutes: 12
+estimatedMinutes: 4
 tier: "free"
 prereqs: []
-characters: ["Tess", "Vector"]
+characters: ["Tess"]
 ogImageVariant: "foundations"
-updatedAt: "2026-05-22"
+suggestedPrompts:
+  - "Where should I start in this module?"
+  - "What's the difference between tokens, embeddings, and attention?"
+  - "Why do I need these ideas before learning about agents?"
+  - "Can you walk me through the lesson order?"
+updatedAt: "2026-05-23"
 authors: ["murugadoss"]
 summary: >
-  What a token is, why embeddings turn text into meaning-space, and how attention lets a large language model read words in context.
+  A calm map of the first ideas every LLM learner needs before moving toward agents.
 ---
 
-By the end of this chapter you'll know what a token is, why embeddings are the soul of a large language model, and how attention lets a model see the whole sentence at once.
-
-## TL;DR
-
-- A token is a chunk of text the model reads, often a word, part of a word, punctuation mark, or space.
-- An embedding turns each token into coordinates in meaning-space, so related ideas land near each other.
-- Attention lets each token ask which other tokens matter before the model predicts what comes next.
-
-## Comic Script: Tess Enters Meaning-Space
-
-<ComicStrip>
-  {/* Panel 1 */}
-  **Setting:** A sentence floats across the page: "The queen waved happily."
-  **Characters:** Tess the Token.
-  **Action:** The sentence splits into glowing pieces. Tess tumbles out as one highlighted chunk.
-  **Dialogue:** Tess: "I thought I was a word. Why am I only part of one?"
-  **Teaching point:** Models do not read text as whole human words. They read tokens.
-
-  {/* Panel 2 */}
-  **Setting:** A conveyor belt labeled "Tokenizer" sends tokens into numbered boxes.
-  **Characters:** Tess.
-  **Action:** Tess receives a tiny badge with an integer on it.
-  **Dialogue:** Tess: "So the model sees my badge number, not my face?"
-  **Teaching point:** Text becomes token identifiers (IDs) before it becomes model input.
-
-  {/* Panel 3 */}
-  **Setting:** A soft glass map called "Embedding Space" with hills labeled royalty, family, animals, weather.
-  **Characters:** Tess and Vector the Embedding.
-  **Action:** Vector gives Tess a coordinate card with many tiny numbers.
-  **Dialogue:** Vector: "This is where your meaning lives. Nearby tokens are your neighbors."
-  **Teaching point:** Embeddings place tokens in a geometric space where distance carries meaning.
-
-  {/* Panel 4 */}
-  **Setting:** A round table where tokens from one sentence point small spotlights at each other.
-  **Characters:** Tess, Vector, and neighboring word tokens.
-  **Action:** The token "it" shines a bright beam toward "cat" and a dim beam toward "mat."
-  **Dialogue:** Tess: "So attention is how we decide who matters right now?"
-  **Teaching point:** Attention weighs relationships between tokens in context.
-</ComicStrip>
-
-**Where the comic analogy breaks down:** Tess feels like one stable character, but real tokens do not carry fixed human meaning by themselves. Their role changes inside each sentence, and the model keeps updating their internal representation layer by layer.
-
-## 1. Tokens: The Pieces The Model Can See
-
-When you type a sentence, a large language model (LLM) does not receive it as a neat row of words. First, a tokenizer cuts the text into tokens. A token can be a whole word, a word fragment, punctuation, a number, or even a leading space.
-
-For example, the word `happily` might be one token in one tokenizer and two tokens in another: `happi` + `ly`. This is not a bug. Tokenizers are built to reuse common chunks of text so the model can handle huge vocabularies without memorizing every possible word.
-
-<ELI5Card title="A token is a puzzle piece">
-  If a sentence is a picture, tokens are the puzzle pieces the model is allowed to pick up. Some pieces are large, like a whole common word. Some are small, like a suffix or punctuation mark.
-</ELI5Card>
-
-**Diagram brief:** Show the sentence "The queen waved happily." flowing through three stages: raw text, colored token chunks, and token IDs. Include one example where `happily` splits into two pieces so readers see sub-word tokenization.
-
-<DeepDive title="Byte Pair Encoding in one minute">
-  Byte Pair Encoding (BPE) starts with tiny text units and repeatedly merges pairs that appear together often. Over many merges, common chunks become single tokens. This is why frequent words may fit in one token while rare names or misspellings split into several pieces.
-
-  The analogy to puzzle pieces breaks down because tokenizers are not trying to discover perfect linguistic meaning. They are optimizing a practical compression problem: represent lots of text with a fixed vocabulary that the model can learn from.
-</DeepDive>
-
-## 2. Token IDs: Text Becomes Numbers
-
-After tokenization, each token maps to an integer identifier (ID) from the model's vocabulary. The model does not reason over the letters `q`, `u`, `e`, `e`, `n` directly. It sees an ID that points to a learned entry.
-
-That sounds cold, but it is useful. Once text becomes IDs, the model can look up a learned vector for each token. That vector is the token's embedding.
-
-<ELI5Card title="The badge number is not the meaning">
-  Tess's token ID is like a library card number. It helps the model find the right shelf, but the rich information lives in the embedding the model looks up next.
-</ELI5Card>
-
-**Try-it prompt:** Type your name, a common word, and a made-up word into a tokenizer playground. Notice which ones stay whole and which ones split apart.
-
-<TokenizerDemo
-  defaultText="The queen waved happily."
-  notes={[
-    "Show token chunks with colors.",
-    "Show token IDs below each chunk.",
-    "Highlight that different tokenizers may split text differently."
-  ]}
-/>
-
-## 3. Embeddings: Coordinates For Meaning
-
-An embedding is a list of numbers that represents a token inside the model. You can think of it as coordinates on a map, except the real map has hundreds or thousands of dimensions instead of two.
-
-Tokens used in similar contexts tend to have embeddings that point in similar directions. That is why examples like `king`, `queen`, `man`, and `woman` are useful for intuition. The model learns patterns of relationship, not dictionary definitions written by hand.
-
-<ELI5Card title="Meaning becomes a location">
-  Imagine every token gets a pin on a giant map. Tokens about royalty gather in one area. Animal tokens gather somewhere else. The map is not drawn by a person. The model learns it from text.
-</ELI5Card>
-
-**Diagram brief:** Show a two-dimensional projection of embedding space with clusters for royalty, animals, and actions. Label that the drawing is a flattened view of a much higher-dimensional space.
-
-<DeepDive title="Why the map metaphor is useful but incomplete">
-  Embedding space is not a literal map with one axis for "royalty" and another for "gender." Individual dimensions are usually hard to interpret. Meaning is distributed across many numbers.
-
-  The map analogy breaks down when it makes embeddings feel fixed and clean. In a transformer, the initial embedding is only the starting point. Each layer updates the token representation using context from the surrounding tokens.
-</DeepDive>
-
-## 4. The Transformer: A Repeating Prediction Machine
-
-Most modern LLMs use a transformer architecture. At a high level, a transformer repeats the same kind of block many times:
-
-1. Turn token IDs into embeddings.
-2. Let tokens exchange information with attention.
-3. Pass the result through a multilayer perceptron (MLP), a small learned network inside each block.
-4. Repeat for many layers.
-5. Produce logits, which are scores for possible next tokens.
-6. Sample or choose the next token.
-
-<ELI5Card title="A stack of reading passes">
-  The first pass notices nearby words. Later passes can combine bigger ideas. By the end, the model has a context-aware representation it can use to guess the next token.
-</ELI5Card>
-
-**Diagram brief:** Draw a transformer block as a stack of glass building blocks: token IDs, embeddings, attention, MLP, repeated layers, output logits, sampled next token.
-
-<DeepDive title="What logits are">
-  Logits are raw scores for every token in the vocabulary. Before the model picks the next token, these scores are converted into probabilities, often with softmax. A higher logit means the model currently considers that token more likely.
-</DeepDive>
-
-## 5. Attention: Everyone Asks Everyone
-
-Attention is the part of the transformer that lets tokens look at other tokens in the same context. A token does not read only the token before it. It can weigh many earlier tokens and decide which ones matter most for the next representation.
-
-In plain English, self-attention asks: "For this token, which other tokens should influence what it means right now?"
-
-The classic attention ingredients are query, key, and value. A query is what a token is looking for. A key is what another token offers for matching. A value is the information that gets passed along if the match matters.
-
-<ELI5Card title="A classroom of raised hands">
-  Each token asks a question. Other tokens raise hands with clues. The brighter the match, the more that clue influences the token's next version.
-</ELI5Card>
-
-**Diagram brief:** Show an attention heatmap for "The cat sat on the mat because it was tired." Make `it` strongly attend to `cat`, while other tokens receive lighter weights. Add a caption noting that real attention patterns can be more complex than one clean link.
-
-<DeepDive title="Softmax behind attention">
-  In scaled dot-product attention, the model compares a query vector with key vectors using dot products. The scores are scaled, passed through softmax, and used as weights over value vectors.
-
-  Softmax turns raw scores into a distribution. The highest-scoring tokens get more weight, but lower-scoring tokens can still contribute. This is why attention can blend information rather than choosing only one source.
-</DeepDive>
-
-<DeepDive title="Why positional encoding exists">
-  Attention by itself does not know word order. Without position information, the model would struggle to distinguish "dog bites man" from "man bites dog." Positional encoding gives the model a way to represent where each token sits.
-
-  Rotary Position Embedding (RoPE) is one common technique. It rotates parts of the query and key vectors based on position, which helps the model compare relative positions during attention.
-</DeepDive>
-
-## 6. Context Window: The Model's Working Page
-
-The context window is how much text the model can consider at once. It includes your prompt, the conversation history, tool results, retrieved documents, and the model's generated tokens.
-
-A bigger context window lets the model look at more material, but it also costs more. More tokens mean more computation. Long context can also become noisy if the important details are buried.
-
-<ELI5Card title="A desk with limited space">
-  The model can work with whatever fits on the desk. A bigger desk helps, but a messy desk can still hide the note you need.
-</ELI5Card>
-
-**Diagram brief:** Show a horizontal context bar with system instructions, user message, retrieved notes, previous assistant answer, and next-token space. Add a warning marker where the context limit is reached.
-
-<DeepDive title="Key-value cache">
-  During generation, the model produces one token at a time. The key-value cache stores attention data from earlier tokens so the model does not recompute the whole prefix from scratch for every new token.
-
-  This makes inference faster, especially for long prompts. The tradeoff is memory: cached keys and values take space.
-</DeepDive>
-
-## 7. Sampling: The Creativity Dials
-
-Once the model has scores for possible next tokens, decoding rules decide what comes out.
-
-Temperature changes how sharp or flat the probability distribution is. Low temperature makes the model favor high-probability tokens. Higher temperature gives lower-probability tokens more room.
-
-Top-p sampling, also called nucleus sampling, keeps the smallest set of likely tokens whose probabilities add up to a chosen threshold. Top-k sampling keeps only the k most likely tokens.
-
-<ELI5Card title="Choosing from a menu">
-  Low temperature orders the house special again and again. Higher temperature explores the menu. Top-p and top-k decide how much of the menu is available.
-</ELI5Card>
-
-**Diagram brief:** Show three side-by-side outputs from the same prompt at temperature 0, 0.7, and 1.5. Label temperature 0 as predictable, 0.7 as balanced, and 1.5 as adventurous but risky.
-
-<DeepDive title="Temperature, top-p, and top-k together">
-  These settings interact. Temperature reshapes probabilities. Top-p and top-k filter which candidates remain. In production systems, stable tasks often use lower randomness, while brainstorming tools may use more.
-
-  The menu analogy breaks down because the model is not choosing from fixed meals. Each generated token changes the next menu.
-</DeepDive>
-
-## Tokenizer Comparison
-
-export const tokenizerCompare = {
-  columns: ["Tokenizer", "Core idea", "Where readers may see it", "Tradeoff"],
-  rows: [
-    [
-      "Byte Pair Encoding (BPE)",
-      "Merge frequent text pairs into reusable chunks.",
-      "Many generative language models.",
-      "Efficient and practical, but splits can look odd to humans.",
-    ],
-    [
-      "WordPiece",
-      "Build sub-word pieces that improve likelihood on training text.",
-      "Bidirectional Encoder Representations from Transformers (BERT)-style models.",
-      "Good for masked-language-model training, but still produces non-human-looking fragments.",
-    ],
-    [
-      "SentencePiece",
-      "Treat text as a raw stream and learn pieces without relying on pre-tokenized words.",
-      "Multilingual and production tokenizers.",
-      "Flexible across languages, but token boundaries can surprise beginners.",
-    ],
-  ],
-};
-
-<CompareTable {...tokenizerCompare} />
-
-The table is here for orientation. The practical lesson is not to memorize tokenizer brands. The practical lesson is to remember that token boundaries are model-specific.
-
-## Try It: Break A Sentence Into Tokens
-
-<TokenizerDemo
-  defaultText="Tess happily entered embedding space."
-  tasks={[
-    "Type a common English sentence.",
-    "Type a name or uncommon product term.",
-    "Type an emoji, punctuation-heavy phrase, or code snippet.",
-    "Compare how many tokens each input uses."
-  ]}
-/>
-
-Questions to ask while trying it:
-
-- Which words stayed whole?
-- Which words split into pieces?
-- Did punctuation or whitespace become tokens?
-- What would happen to cost if a long document produced more tokens than expected?
-
-## Remember
+This module slows the foundation down. Instead of rushing through the entire transformer stack, each lesson teaches one idea, gives it a visual model, then explains where the metaphor stops working.
+
+<Callout title="Learning goal">
+  By the end of this module, you should be able to explain how text becomes tokens, how tokens become vectors, how attention mixes context, why context windows matter, and how sampling changes model output.
+</Callout>
+
+## Start Here
+
+1. **What Is a Token?** Learn the pieces an LLM can actually read.
+2. **Embeddings** See how token IDs become coordinates in meaning-space.
+3. **Attention** Understand how tokens decide which other tokens matter.
+4. **Context Windows** Learn what fits on the model's working page.
+5. **Sampling** Explore why the same prompt can produce different answers.
 
 <RememberCard>
   - Token = chunk of text the model sees.
-  - Embedding = token coordinates in meaning-space.
-  - Attention = each token deciding which other tokens matter in context.
+  - Embedding = learned vector for a token.
+  - Attention = context-aware information mixing.
   - Context window = the model's working page.
-  - Temperature = randomness dial during sampling.
+  - Sampling = the rules for choosing the next token.
 </RememberCard>
 
-## Where This Shows Up Later
+## Why This Module Matters
 
-- Embeddings return in Chapter 4 when we build retrieval-augmented generation (RAG).
-- Attention returns in Chapter 6 when agents manage long, messy task histories.
-- Token budgets return in Chapter 11 when we talk about cost, latency, and safety guardrails.
+Agents, retrieval systems, tool calls, memory, evaluations, and safety all depend on these basics. If tokens feel fuzzy, token budgets feel arbitrary. If embeddings feel magical, retrieval feels magical. If attention feels vague, long-context behavior feels unpredictable.
 
-## Read More
-
-- TODO: Add a primary-source tokenizer reference.
-- TODO: Add the original Transformer paper reference.
-- TODO: Add a clear embedding visualization reference.
-- TODO: Add a current model-provider guide for temperature, top-p, and token limits.
-
+The point is not to memorize architecture diagrams. The point is to build a working mental model you can use when a real LLM app behaves strangely.
