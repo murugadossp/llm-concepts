@@ -38,3 +38,7 @@ a {
   outline: 2px solid var(--ring);
   outline-offset: 2px;
 }
+
+.comic-dialogue {
+  font-family: var(--font-caveat), "Patrick Hand", cursive;
+}

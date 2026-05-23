@@ -201,14 +201,31 @@ Top-p sampling, also called nucleus sampling, keeps the smallest set of likely t
 
 ## Tokenizer Comparison
 
-<CompareTable
-  columns={["Tokenizer", "Core idea", "Where readers may see it", "Tradeoff"]}
-  rows={[
-    ["Byte Pair Encoding (BPE)", "Merge frequent text pairs into reusable chunks.", "Many generative language models.", "Efficient and practical, but splits can look odd to humans."],
-    ["WordPiece", "Build sub-word pieces that improve likelihood on training text.", "Bidirectional Encoder Representations from Transformers (BERT)-style models.", "Good for masked-language-model training, but still produces non-human-looking fragments."],
-    ["SentencePiece", "Treat text as a raw stream and learn pieces without relying on pre-tokenized words.", "Multilingual and production tokenizers.", "Flexible across languages, but token boundaries can surprise beginners."]
-  ]}
-/>
+export const tokenizerCompare = {
+  columns: ["Tokenizer", "Core idea", "Where readers may see it", "Tradeoff"],
+  rows: [
+    [
+      "Byte Pair Encoding (BPE)",
+      "Merge frequent text pairs into reusable chunks.",
+      "Many generative language models.",
+      "Efficient and practical, but splits can look odd to humans.",
+    ],
+    [
+      "WordPiece",
+      "Build sub-word pieces that improve likelihood on training text.",
+      "Bidirectional Encoder Representations from Transformers (BERT)-style models.",
+      "Good for masked-language-model training, but still produces non-human-looking fragments.",
+    ],
+    [
+      "SentencePiece",
+      "Treat text as a raw stream and learn pieces without relying on pre-tokenized words.",
+      "Multilingual and production tokenizers.",
+      "Flexible across languages, but token boundaries can surprise beginners.",
+    ],
+  ],
+};
+
+<CompareTable {...tokenizerCompare} />
 
 The table is here for orientation. The practical lesson is not to memorize tokenizer brands. The practical lesson is to remember that token boundaries are model-specific.
 
@@ -254,13 +271,3 @@ Questions to ask while trying it:
 - TODO: Add a clear embedding visualization reference.
 - TODO: Add a current model-provider guide for temperature, top-p, and token limits.
 
-<!--
-Draft self-review:
-- Banned-word scan passed.
-- Acronyms expanded on first use: large language model (LLM), identifier (ID), Byte Pair Encoding (BPE), multilayer perceptron (MLP), Bidirectional Encoder Representations from Transformers (BERT), retrieval-augmented generation (RAG), Rotary Position Embedding (RoPE).
-- Analogy limits are included for comic, puzzle pieces, map, and menu metaphors.
-- Beginner and builder layers are present through core prose, ELI5 cards, and deep dives.
-- Frontmatter follows the current ARCHITECTURE.md contract.
-- Component placeholders are MDX-shaped and ready for later implementation.
-- Further reading remains TODO until sources are verified.
--->

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Fraunces, Inter, JetBrains_Mono } from "next/font/google";
+import { Caveat, Fraunces, Inter, JetBrains_Mono } from "next/font/google";
 import Script from "next/script";
 import { MeshBackground } from "@/components/layout/MeshBackground";
 import { SiteFooter } from "@/components/layout/SiteFooter";
@@ -24,7 +24,14 @@ const jetbrains = JetBrains_Mono({
   subsets: ["latin"],
 });
 
+const caveat = Caveat({
+  variable: "--font-caveat",
+  subsets: ["latin"],
+  weight: ["500", "600", "700"],
+});
+
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"),
   title: "LLM → Agent",
   description:
     "A graphic-novel-style journey from tokens to multi-agent systems — MCP, Skills, and Plugins.",
@@ -43,7 +50,7 @@ export default function RootLayout({
         </Script>
       </head>
       <body
-        className={`${inter.variable} ${fraunces.variable} ${jetbrains.variable} antialiased`}
+        className={`${inter.variable} ${fraunces.variable} ${jetbrains.variable} ${caveat.variable} antialiased`}
       >
         <ThemeProvider>
           <MeshBackground />

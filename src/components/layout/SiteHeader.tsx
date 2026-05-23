@@ -15,6 +15,12 @@ export function SiteHeader() {
         <Link href="/chapters" className="hover:underline">
           Chapters
         </Link>
+        <Link href="/about" className="hover:underline">
+          About
+        </Link>
+        <Link href="/pricing" className="hover:underline">
+          Pricing
+        </Link>
         <ThemeToggle />
       </nav>
     </header>

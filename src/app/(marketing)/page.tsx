@@ -1,9 +1,15 @@
 import Link from "next/link";
+import { Atlas } from "@/characters/Atlas";
+import { Tess } from "@/characters/Tess";
 
 export default function HomePage() {
   return (
     <div className="mx-auto w-[min(100%-2rem,var(--maxw-wide))] px-4 py-12">
       <section className="glass-strong mx-auto max-w-3xl px-8 py-12 text-center">
+        <div className="mx-auto mb-6 flex items-center justify-center gap-4" style={{ color: "var(--accent)" }}>
+          <Tess />
+          <Atlas />
+        </div>
         <p className="text-sm font-medium uppercase tracking-widest" style={{ color: "var(--accent-2)" }}>
           Milestone 1 — Content MVP
         </p>
@@ -12,7 +18,6 @@ export default function HomePage() {
         </h1>
         <p className="mt-6 text-lg leading-relaxed" style={{ color: "var(--ink-soft)" }}>
           Learn how modern LLMs work through glassmorphism chapters, comics, and interactive widgets.
-          Theme system is live — toggle light, dark, or system in the header.
         </p>
         <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
           <Link
