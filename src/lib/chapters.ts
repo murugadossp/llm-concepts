@@ -8,7 +8,10 @@ const chaptersDir = path.join(process.cwd(), "src/content/chapters");
 const chapterMetaSchema = z.object({
   slug: z.string().min(1),
   title: z.string().min(1),
+  navTitle: z.string().min(1).optional(),
   chapterNumber: z.number().int().positive(),
+  lessonNumber: z.number().int().nonnegative().optional(),
+  parentSlug: z.string().min(1).optional(),
   section: z.enum(["foundations", "core", "modern-stack", "safety"]),
   difficulty: z.enum(["beginner", "intermediate", "advanced"]),
   estimatedMinutes: z.number().int().positive(),
@@ -29,6 +32,10 @@ export type Chapter = ChapterMeta & {
   filePath: string;
 };
 
+export type ChapterTreeItem = ChapterMeta & {
+  lessons: ChapterMeta[];
+};
+
 function readChapterFile(filename: string): Chapter {
   const filePath = path.join(chaptersDir, filename);
   const raw = fs.readFileSync(filePath, "utf8");
@@ -44,8 +51,26 @@ export function getAllChapters(): ChapterMeta[] {
     .readdirSync(chaptersDir)
     .filter((name) => name.endsWith(".mdx"))
     .map((name) => readChapterFile(name))
-    .sort((a, b) => a.chapterNumber - b.chapterNumber)
+    .sort(compareChapters)
     .map(({ content: _content, filePath: _filePath, ...meta }) => meta);
+}
+
+function compareChapters(a: ChapterMeta, b: ChapterMeta): number {
+  if (a.chapterNumber !== b.chapterNumber) return a.chapterNumber - b.chapterNumber;
+  return (a.lessonNumber ?? 0) - (b.lessonNumber ?? 0);
+}
+
+export function getChapterTree(): ChapterTreeItem[] {
+  const chapters = getAllChapters();
+  const bySlug = new Map(chapters.map((chapter) => [chapter.slug, chapter]));
+  const roots = chapters.filter((chapter) => !chapter.parentSlug);
+
+  return roots.map((root) => ({
+    ...root,
+    lessons: chapters.filter(
+      (chapter) => chapter.parentSlug === root.slug && bySlug.has(root.slug),
+    ),
+  }));
 }
 
 export function getChapter(slug: string): Chapter | null {
@@ -53,7 +78,9 @@ export function getChapter(slug: string): Chapter | null {
 
   const match = fs
     .readdirSync(chaptersDir)
-    .find((name) => name.endsWith(".mdx") && (name === `${slug}.mdx` || name.endsWith(`-${slug}.mdx`)));
+    .find(
+      (name) => name.endsWith(".mdx") && (name === `${slug}.mdx` || name.endsWith(`-${slug}.mdx`)),
+    );
 
   if (!match) {
     const byMeta = fs

@@ -5,9 +5,11 @@
   --bg-mesh-1: #e0dcff;
   --bg-mesh-2: #d1f0ec;
   --bg-mesh-3: #ffe4d6;
-  --surface: rgba(255, 255, 255, 0.55);
-  --surface-strong: rgba(255, 255, 255, 0.75);
-  --border: rgba(255, 255, 255, 0.65);
+  --surface: #ffffff;
+  --surface-strong: #ffffff;
+  --surface-muted: #f7f8fc;
+  --surface-hover: #eef1fb;
+  --border: rgba(15, 18, 38, 0.08);
   --border-strong: rgba(15, 18, 38, 0.1);
   --ring: rgba(91, 63, 255, 0.35);
   --ink: #0f1226;
@@ -26,8 +28,10 @@
   --bg-mesh-1: #3b2a78;
   --bg-mesh-2: #0f4d49;
   --bg-mesh-3: #6b2a2a;
-  --surface: rgba(255, 255, 255, 0.06);
-  --surface-strong: rgba(255, 255, 255, 0.1);
+  --surface: #111326;
+  --surface-strong: #16192d;
+  --surface-muted: #1d2138;
+  --surface-hover: #252a45;
   --border: rgba(255, 255, 255, 0.12);
   --border-strong: rgba(255, 255, 255, 0.18);
   --ring: rgba(141, 121, 255, 0.55);
@@ -49,6 +53,6 @@
   --r-md: 16px;
   --r-lg: 24px;
   --r-pill: 999px;
-  --maxw-content: 760px;
+  --maxw-content: 920px;
   --maxw-wide: 1100px;
 }

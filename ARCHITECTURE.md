@@ -3,7 +3,7 @@
 **Companion to:** `BLUEPRINT.md` (product / content / visual vision)
 **Owner:** Murugadoss
 **Status:** Pre-build technical spec — locked
-**Last updated:** 2026-05-22
+**Last updated:** 2026-05-23
 
 > **BLUEPRINT.md** = *what we're building and how it should feel.*
 > **ARCHITECTURE.md** = *how we build it and what it runs on.*
@@ -21,8 +21,8 @@ The project ships in **two distinct milestones** with an explicit engagement gat
 **Goal:** prove the learning experience.
 
 1. Ship **3 flagship chapters** — Chapter 1 (Foundations), Chapter 6 (Agents), Chapter 7 (MCP) — as a free, public site.
-2. **Glassmorphism design system** — light + dark themes, system-preference detection, persisted choice.
-3. **MDX-driven authoring** — drop a `.mdx` file in `/src/content/chapters/`, lesson appears in nav.
+2. **Solid learning-app design system** — light + dark themes, system-preference detection, persisted choice, opaque surfaces, subdued mesh background.
+3. **MDX-driven authoring** — drop a `.mdx` file in `/src/content/chapters/`, chapter or sub-lesson appears in nav.
 4. **Email capture** — newsletter signup with single CTA throughout site.
 5. **Analytics** — scroll depth, completion rate, time-on-page (PostHog).
 6. **SEO foundations** — sitemap, RSS, per-chapter OG cards, schema.org Article markup.
@@ -108,7 +108,7 @@ Items marked **(M2)** are not installed during Content MVP — keeps the Milesto
 - **Neon over Supabase/PlanetScale:** scales to zero (cheap when quiet), branchable databases per preview deploy, Postgres (not MySQL — better JSON, full-text search, extensions).
 - **Drizzle over Prisma:** TypeScript-native schemas, smaller bundle, faster at edge, simpler migration story.
 - **Lemon Squeezy over Stripe:** merchant of record handles EU VAT and US sales tax globally — saves ~2 weeks of compliance for a solo founder. Trade-off: ~5% + $0.50 per transaction vs Stripe's 2.9% + $0.30. Worth it at small scale.
-- **Tailwind 4 over CSS modules / styled-components:** CSS-first config aligns naturally with the BLUEPRINT design token tables. Class-based glassmorphism utilities are clean.
+- **Tailwind 4 over CSS modules / styled-components:** CSS-first config aligns naturally with the BLUEPRINT design token tables and theme-aware utility classes.
 - **Biome over ESLint+Prettier:** one tool, ~10× faster, removes a long-standing pain point.
 
 ---
@@ -173,7 +173,9 @@ llm-concepts/
 │   │   └── not-found.tsx
 │   ├── content/
 │   │   └── chapters/
-│   │       ├── 01-foundations.mdx
+│   │       ├── 01-foundations.mdx    ← module overview
+│   │       ├── 01-1-tokens.mdx       ← sub-lesson
+│   │       ├── 01-2-embeddings.mdx   ← sub-lesson
 │   │       ├── 02-training.mdx
 │   │       └── ...                ← per BLUEPRINT chapter outlines
 │   ├── components/
@@ -236,7 +238,7 @@ llm-concepts/
 │   │   └── analytics.ts           ← PostHog wrapper
 │   ├── styles/
 │   │   ├── tokens.css             ← CSS variable tokens (light + dark)
-│   │   └── glass.css              ← reusable glass utility classes
+│   │   └── glass.css              ← reusable solid surface utility classes
 │   └── env.ts                     ← Zod-validated env at startup
 └── tests/
     ├── unit/
@@ -252,7 +254,7 @@ llm-concepts/
 
 ## 4. Theme system
 
-The site implements true **glassmorphism** with a robust light + dark theming pipeline. Tokens live in `src/styles/tokens.css` as CSS custom properties; the `<ThemeProvider>` toggles a `data-theme` attribute on `<html>`; choice is persisted to `localStorage` and synced to `prefers-color-scheme` on first load.
+The site implements a **solid learning-app UI** with a robust light + dark theming pipeline. Tokens live in `src/styles/tokens.css` as CSS custom properties; the `<ThemeProvider>` toggles a `data-theme` attribute on `<html>`; choice is persisted to `localStorage` when available and synced to `prefers-color-scheme` on first load. Content surfaces are intentionally opaque so the sidebar, top nav, hero, and article content do not visually bleed through each other.
 
 ### 4.1 Tokens (CSS custom properties)
 
@@ -262,9 +264,11 @@ The site implements true **glassmorphism** with a robust light + dark theming pi
   --bg-mesh-1: #E0DCFF;     /* violet */
   --bg-mesh-2: #D1F0EC;     /* teal */
   --bg-mesh-3: #FFE4D6;     /* coral */
-  --surface: rgba(255, 255, 255, 0.55);
-  --surface-strong: rgba(255, 255, 255, 0.75);
-  --border: rgba(255, 255, 255, 0.65);
+  --surface: #FFFFFF;
+  --surface-strong: #FFFFFF;
+  --surface-muted: #F7F8FC;
+  --surface-hover: #EEF1FB;
+  --border: rgba(15, 18, 38, 0.08);
   --border-strong: rgba(15, 18, 38, 0.10);
   --ring: rgba(91, 63, 255, 0.35);
   --ink: #0F1226;
@@ -283,8 +287,10 @@ The site implements true **glassmorphism** with a robust light + dark theming pi
   --bg-mesh-1: #3B2A78;
   --bg-mesh-2: #0F4D49;
   --bg-mesh-3: #6B2A2A;
-  --surface: rgba(255, 255, 255, 0.06);
-  --surface-strong: rgba(255, 255, 255, 0.10);
+  --surface: #111326;
+  --surface-strong: #16192D;
+  --surface-muted: #1D2138;
+  --surface-hover: #252A45;
   --border: rgba(255, 255, 255, 0.12);
   --border-strong: rgba(255, 255, 255, 0.18);
   --ring: rgba(141, 121, 255, 0.55);
@@ -300,25 +306,21 @@ The site implements true **glassmorphism** with a robust light + dark theming pi
 }
 
 :root {
-  --blur-soft: 16px;
-  --blur-strong: 28px;
   --r-sm: 10px;
   --r-md: 16px;
   --r-lg: 24px;
   --r-pill: 999px;
-  --maxw-content: 760px;
+  --maxw-content: 920px;
   --maxw-wide: 1100px;
 }
 ```
 
-### 4.2 Glass utility class
+### 4.2 Solid surface utility classes
 
 ```css
 .glass {
   background: var(--surface);
   border: 1px solid var(--border);
-  backdrop-filter: blur(var(--blur-soft)) saturate(140%);
-  -webkit-backdrop-filter: blur(var(--blur-soft)) saturate(140%);
   box-shadow: var(--shadow-card);
   border-radius: var(--r-md);
 }
@@ -326,7 +328,6 @@ The site implements true **glassmorphism** with a robust light + dark theming pi
 .glass-strong {
   background: var(--surface-strong);
   border: 1px solid var(--border-strong);
-  backdrop-filter: blur(var(--blur-strong)) saturate(140%);
   box-shadow: var(--shadow-elevated);
   border-radius: var(--r-lg);
 }
@@ -334,13 +335,13 @@ The site implements true **glassmorphism** with a robust light + dark theming pi
 
 ### 4.3 Gradient mesh background
 
-A single fixed `<div class="mesh">` behind everything renders three radial gradients animated extremely slowly (or static when `prefers-reduced-motion: reduce`). The mesh colors swap automatically with the theme via tokens.
+A single fixed `<div class="mesh">` behind everything renders three radial gradients at low opacity (or static when `prefers-reduced-motion: reduce`). The mesh colors swap automatically with the theme via tokens, but it must stay subtle enough that it never interferes with text or stacked navigation surfaces.
 
 ### 4.4 ThemeProvider behavior
 
-- **First load:** read `localStorage.theme`. If absent, fall back to `matchMedia('(prefers-color-scheme: dark)')`.
+- **First load:** read `localStorage.theme` when storage is available. If absent or blocked, fall back to `matchMedia('(prefers-color-scheme: dark)')`.
 - **Render:** set `<html data-theme="…">` *before* paint to avoid flash-of-wrong-theme. This means inlining a tiny blocking script in `<head>` (Next.js supports this in `<Script strategy="beforeInteractive">`).
-- **Toggle:** update state → update DOM attribute → persist to `localStorage`.
+- **Toggle:** update state → update DOM attribute → persist to `localStorage` when available. Theme switching still works when storage is unavailable.
 - **Server-side:** prerender both themes; CSS handles switching client-side. No JS-required to *see* either theme on first paint.
 
 ### 4.5 Accessibility
@@ -353,7 +354,7 @@ A single fixed `<div class="mesh">` behind everything renders three radial gradi
 
 ## 5. Lesson schema
 
-Every chapter is one `.mdx` file in `src/content/chapters/`. The filename's leading number defines order; the rest is the slug.
+Every chapter or sub-lesson is one `.mdx` file in `src/content/chapters/`. A root chapter has no `parentSlug`; a lesson belongs to a root chapter via `parentSlug` and uses `lessonNumber` for nested ordering.
 
 ### 5.1 Frontmatter contract
 
@@ -363,7 +364,9 @@ Validated with Zod at build time in `lib/chapters.ts`.
 ---
 slug: "07-mcp"
 title: "Model Context Protocol"
+navTitle: "MCP"
 chapterNumber: 7
+lessonNumber: 0
 section: "modern-stack"           # foundations | core | modern-stack | safety
 difficulty: "intermediate"        # beginner | intermediate | advanced
 estimatedMinutes: 12
@@ -382,9 +385,33 @@ summary: >
 ---
 ```
 
+Sub-lessons add `parentSlug` and a positive `lessonNumber`:
+
+```yaml
+---
+slug: "01-1-tokens"
+title: "What Is a Token?"
+navTitle: "Tokens"
+chapterNumber: 1
+lessonNumber: 1
+parentSlug: "01-foundations"
+section: "foundations"
+difficulty: "beginner"
+estimatedMinutes: 8
+tier: "free"
+prereqs: []
+characters: ["Tess"]
+ogImageVariant: "foundations"
+updatedAt: "2026-05-23"
+authors: ["murugadoss"]
+summary: >
+  Tokens are the chunks of text an LLM reads before anything becomes model input.
+---
+```
+
 ### 5.2 Lesson index build
 
-`lib/chapters.ts` reads every MDX file at build (via `fs` + `gray-matter`), validates frontmatter, sorts by `chapterNumber`, and exports a typed `chapters: ChapterMeta[]` for use in nav, sidebar, OG generation, and sitemap.
+`lib/chapters.ts` reads every MDX file at build (via `fs` + `gray-matter`), validates frontmatter, sorts by `chapterNumber` then `lessonNumber`, and exports typed chapter metadata for use in nav, sidebar, OG generation, and sitemap. `getChapterTree()` groups root chapters with their sub-lessons for the collapsible sidebar.
 
 ### 5.3 Gating — explicit boundary components, not percentages (per ADR-014)
 
@@ -416,9 +443,9 @@ Chapters without `<ProOnly>` are implicitly free. Pro chapters use the explicit 
 
 The "easy to add new lessons" goal reduces to:
 
-1. Create `src/content/chapters/12-rag-deep-dive.mdx`.
+1. Create `src/content/chapters/12-rag-deep-dive.mdx` for a root chapter or `src/content/chapters/12-1-rag-basics.mdx` for a sub-lesson.
 2. Write frontmatter + prose + components.
-3. Commit. Vercel preview deploys it. Lesson appears in the chapter index, sitemap, sidebar, and OG cards automatically.
+3. Commit. Vercel preview deploys it. The chapter or lesson appears in the chapter index, sitemap, sidebar, and OG cards automatically.
 
 No code changes. No registry to update.
 
@@ -952,14 +979,14 @@ Architecture Decision Records — brief, dated, reversible-when-noted.
 | # | Decision | Rationale | Reversible? |
 |---|----------|-----------|-------------|
 | ADR-001 | **Next.js 15 + MDX** over Astro | Need SaaS layer within 6 months (paid courses, multi-tenant, auth, AI tutor). Single codebase keeps content + app cohesive. | Hard to reverse later. |
-| ADR-002 | **Glassmorphism (light + dark)** over comic-only aesthetic | Modern aesthetic; pairs better with paid-product expectations; theme switching is table-stakes. Characters retained, restyled. | Easy. |
+| ADR-002 | **Solid learning-app UI (light + dark)** over comic-only aesthetic | Modern aesthetic; pairs better with paid-product expectations; theme switching is table-stakes. Opaque surfaces preserve hierarchy and readability better than transparent glass for long-form lessons. Characters retained, restyled. | Easy. |
 | ADR-003 | **Clerk** over NextAuth / Supabase Auth | Organizations built in (multi-tenant), free up to 10k MAU, best Next integration. | Medium effort to migrate. |
 | ADR-004 | **Neon** over Supabase / PlanetScale | Postgres + serverless + branchable; per-PR DBs are huge for safety. | Medium effort. |
 | ADR-005 | **Drizzle** over Prisma | TypeScript-native, edge-friendly, simpler migrations. | Medium effort. |
 | ADR-006 | **Lemon Squeezy** over Stripe | Merchant of record handles global tax. Trade ~2% extra fee for ~2 weeks of compliance work saved. | Medium effort; entitlement abstraction makes it tolerable. |
 | ADR-007 | **Single domain, single codebase** over Astro+Next split | Easy lesson authoring across free + paid is the dominant requirement. Operational overhead of two stacks not justified at this scale. | Reversible at scale (extract `(marketing)` route group to its own Astro site if SEO demands it). |
 | ADR-008 | **Entitlements table abstraction** over direct subscription checks | Decouples access control from billing provider; lets us add grants, trials, bundles, lifetime, switch billing provider, etc. without touching access-check code. | N/A — this is the abstraction. |
-| ADR-009 | **Glass-compatible character restyle** over pure aesthetic / dropping characters | Characters are a memorability asset (BLUEPRINT §4.4). Restyling preserves the asset while modernizing visual language. | Reversible per-character. |
+| ADR-009 | **Theme-aware character restyle** over pure aesthetic / dropping characters | Characters are a memorability asset (BLUEPRINT §4.4). Restyling preserves the asset while modernizing visual language. | Reversible per-character. |
 | ADR-010 | **Pagefind** over Algolia | Free, static, zero infra. Algolia is overkill until content > 100 pages. Activated only when ≥6 chapters live (per reviewer P2.4). | Easy. |
 | ADR-011 | **Two-milestone build with engagement gate** (Content MVP → SaaS v1) + demand-driven Teams milestone | Per reviewer P1.1 — separates "did the content land?" from "did the business work?". Avoids carrying launch / monetization / team sales / AI tutor / content production all at once. Validates the learning experience before the SaaS layer is paid for in code. | Easy to reverse if user demand swamps Content MVP and you want to fast-forward to M2 — but the gate is there precisely so you don't have to guess. |
 | ADR-012 | **Tutor cost controls** — credits + Haiku default + Sonnet escalation + prompt caching + summarization + $20/user/mo ceiling | Per reviewer P1.3 — "almost no one will" was not a cost control. Five layered mitigations cap worst case at ~$3.25/user/mo on Sonnet-only burn vs $216 prior. Credits are transparent to user; cost ceiling is invisible backstop. | Easy — adjust credit grants in Lemon Squeezy plan metadata. |
@@ -971,7 +998,7 @@ Architecture Decision Records — brief, dated, reversible-when-noted.
 
 - **AI tutor cost runaway** if a heavy user finds a prompt that spikes context. Mitigated by rate limits + max_tokens caps + per-user $ alerting in PostHog.
 - **Lemon Squeezy fee drag** at scale eventually argues for Stripe migration. ADR-006 is reversible thanks to ADR-008.
-- **Backdrop-filter perf** on low-end mobile. We test on a 2018-era Android; if FPS drops, fall back to flat surfaces for `prefers-reduced-motion` *or* low-end-device detection.
+- **Visual hierarchy regression** if transparent effects creep back into the learning shell. Keep the sidebar, top nav, chapter hero, and article panels on opaque theme surfaces; reserve transparency only for non-critical decoration.
 - **Clerk lock-in.** Pricing escalates above 10k MAU. We watch the run rate; the auth-helper abstraction (`lib/auth.ts`) makes a future swap merely tedious.
 
 ---

@@ -1,9 +1,9 @@
-import Link from "next/link";
 import { Chip } from "@/components/learn/Chip";
-import { getAllChapters } from "@/lib/chapters";
+import { getChapterTree } from "@/lib/chapters";
+import Link from "next/link";
 
 export default function ChaptersHubPage() {
-  const chapters = getAllChapters();
+  const chapters = getChapterTree();
 
   return (
     <div className="mx-auto w-[min(100%-2rem,var(--maxw-wide))] px-4 py-10">
@@ -24,7 +24,10 @@ export default function ChaptersHubPage() {
                 <Chip tone="accent">{chapter.tier}</Chip>
                 <Chip tone="neutral">{chapter.difficulty}</Chip>
               </div>
-              <h2 className="font-display mt-3 text-xl font-semibold" style={{ color: "var(--ink)" }}>
+              <h2
+                className="font-display mt-3 text-xl font-semibold"
+                style={{ color: "var(--ink)" }}
+              >
                 {chapter.title}
               </h2>
               <p className="mt-2 text-sm" style={{ color: "var(--ink-soft)" }}>
@@ -34,6 +37,26 @@ export default function ChaptersHubPage() {
                 ~{chapter.estimatedMinutes} min read
               </p>
             </Link>
+            {chapter.lessons.length > 0 ? (
+              <ol className="mt-3 space-y-2">
+                {chapter.lessons.map((lesson) => (
+                  <li key={lesson.slug}>
+                    <Link
+                      href={`/chapters/${lesson.slug}`}
+                      className="glass flex items-center justify-between gap-3 px-4 py-3 text-sm transition hover:opacity-95"
+                    >
+                      <span style={{ color: "var(--ink)" }}>
+                        {chapter.chapterNumber}.{lesson.lessonNumber}{" "}
+                        {lesson.navTitle ?? lesson.title}
+                      </span>
+                      <span className="shrink-0 text-xs" style={{ color: "var(--ink-mute)" }}>
+                        ~{lesson.estimatedMinutes} min
+                      </span>
+                    </Link>
+                  </li>
+                ))}
+              </ol>
+            ) : null}
           </li>
         ))}
       </ul>

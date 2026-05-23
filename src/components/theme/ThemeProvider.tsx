@@ -1,13 +1,6 @@
 "use client";
 
-import {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-} from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 
 export type Theme = "light" | "dark";
 export type ThemePreference = Theme | "system";
@@ -30,6 +23,22 @@ function applyTheme(theme: Theme) {
   document.documentElement.setAttribute("data-theme", theme);
 }
 
+function readStoredPreference(): ThemePreference | null {
+  try {
+    return window.localStorage?.getItem("theme") as ThemePreference | null;
+  } catch {
+    return null;
+  }
+}
+
+function storePreference(preference: ThemePreference) {
+  try {
+    window.localStorage?.setItem("theme", preference);
+  } catch {
+    // Theme switching should still work when storage is unavailable.
+  }
+}
+
 export function ThemeProvider({
   children,
   defaultPreference = "system",
@@ -42,14 +51,14 @@ export function ThemeProvider({
 
   const setPreference = useCallback((next: ThemePreference) => {
     setPreferenceState(next);
-    localStorage.setItem("theme", next);
+    storePreference(next);
     const resolved = resolveTheme(next);
     setTheme(resolved);
     applyTheme(resolved);
   }, []);
 
   useEffect(() => {
-    const stored = localStorage.getItem("theme") as ThemePreference | null;
+    const stored = readStoredPreference();
     const initial = stored ?? defaultPreference;
     setPreferenceState(initial);
     const resolved = resolveTheme(initial);

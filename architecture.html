@@ -39,10 +39,12 @@
   --bg-mesh-1: #E0DCFF;
   --bg-mesh-2: #D1F0EC;
   --bg-mesh-3: #FFE4D6;
-  --surface: rgba(255,255,255,0.55);
-  --surface-strong: rgba(255,255,255,0.75);
-  --surface-flat: rgba(255,255,255,0.92);
-  --border: rgba(255,255,255,0.65);
+  --surface: #FFFFFF;
+  --surface-strong: #FFFFFF;
+  --surface-muted: #F7F8FC;
+  --surface-hover: #EEF1FB;
+  --surface-flat: #FFFFFF;
+  --border: rgba(15,18,38,0.08);
   --border-strong: rgba(15,18,38,0.10);
   --ring: rgba(91,63,255,0.35);
   --ink: #0F1226;
@@ -66,9 +68,11 @@
   --bg-mesh-1: #3B2A78;
   --bg-mesh-2: #0F4D49;
   --bg-mesh-3: #6B2A2A;
-  --surface: rgba(255,255,255,0.06);
-  --surface-strong: rgba(255,255,255,0.10);
-  --surface-flat: rgba(20,22,42,0.85);
+  --surface: #111326;
+  --surface-strong: #16192D;
+  --surface-muted: #1D2138;
+  --surface-hover: #252A45;
+  --surface-flat: #16192D;
   --border: rgba(255,255,255,0.12);
   --border-strong: rgba(255,255,255,0.18);
   --ring: rgba(141,121,255,0.55);
@@ -89,13 +93,11 @@
   --code-comment: #6B6E8E;
 }
 :root {
-  --blur-soft: 16px;
-  --blur-strong: 28px;
   --r-sm: 10px;
   --r-md: 16px;
   --r-lg: 24px;
   --r-pill: 999px;
-  --maxw-content: 760px;
+  --maxw-content: 920px;
   --maxw-wide: 1100px;
   --space-section: 96px;
   --serif: "Instrument Serif", "Iowan Old Style", Georgia, serif;
@@ -191,21 +193,17 @@ code, pre { font-family: var(--mono); font-size: 0.9em; }
 .mesh.is-paused { animation-play-state: paused; }
 
 /* ============================================================
-   Glass utilities
+   Solid surface utilities
    ============================================================ */
 .glass {
   background: var(--surface);
   border: 1px solid var(--border);
-  backdrop-filter: blur(var(--blur-soft)) saturate(140%);
-  -webkit-backdrop-filter: blur(var(--blur-soft)) saturate(140%);
   box-shadow: var(--shadow-card);
   border-radius: var(--r-md);
 }
 .glass-strong {
   background: var(--surface-strong);
   border: 1px solid var(--border-strong);
-  backdrop-filter: blur(var(--blur-strong)) saturate(140%);
-  -webkit-backdrop-filter: blur(var(--blur-strong)) saturate(140%);
   box-shadow: var(--shadow-elevated);
   border-radius: var(--r-lg);
 }
@@ -224,8 +222,6 @@ code, pre { font-family: var(--mono); font-size: 0.9em; }
   gap: 16px;
   background: var(--surface);
   border-bottom: 1px solid var(--border);
-  backdrop-filter: blur(var(--blur-strong)) saturate(140%);
-  -webkit-backdrop-filter: blur(var(--blur-strong)) saturate(140%);
 }
 .brand {
   display: flex;
@@ -369,8 +365,6 @@ footer.site-footer {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--r-pill);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
   margin-bottom: 20px;
 }
 .hero-eyebrow .dot {
@@ -425,8 +419,6 @@ footer.site-footer {
   background: var(--surface);
   border-color: var(--border);
   color: var(--ink);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
 }
 .btn-ghost:hover {
   background: var(--surface-strong);
@@ -1157,9 +1149,9 @@ footer.site-footer {
   <!-- ===================== Hero ===================== -->
   <section class="hero" aria-labelledby="hero-title">
     <div class="container">
-      <span class="hero-eyebrow"><span class="dot"></span> Pre-build spec • Locked • Updated 2026-05-22</span>
+      <span class="hero-eyebrow"><span class="dot"></span> Pre-build spec • Locked • Updated 2026-05-23</span>
       <h1 id="hero-title">Architecture.<br/><em>Where the comic meets the cloud.</em></h1>
-      <p class="hero-sub">A visual companion to <code>ARCHITECTURE.md</code>. Eleven illustrated chapters become a multi-tenant SaaS: glassmorphism design system, Next.js 15 + MDX content, Clerk organizations, Neon Postgres, Lemon Squeezy payments, and a Claude-streamed AI tutor in every chapter.</p>
+      <p class="hero-sub">A visual companion to <code>ARCHITECTURE.md</code>. Eleven illustrated chapters become a multi-tenant SaaS: solid learning-app design system, Next.js 15 + MDX content, Clerk organizations, Neon Postgres, Lemon Squeezy payments, and a Claude-streamed AI tutor in every chapter.</p>
       <div class="hero-actions">
         <a class="btn btn-primary" href="#stack">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 5 7 7-7 7"/><path d="M5 12h14"/></svg>
@@ -1195,7 +1187,7 @@ footer.site-footer {
             <li><span class="check"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="m2 6 3 3 5-6"/></svg></span>Paid Pro tier — gated chapters + AI tutor</li>
             <li><span class="check"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="m2 6 3 3 5-6"/></svg></span>Multi-tenant organizations with team seats &amp; invoiced billing</li>
             <li><span class="check"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="m2 6 3 3 5-6"/></svg></span>In-page AI tutor — Claude streaming, chapter-aware, rate-limited by tier</li>
-            <li><span class="check"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="m2 6 3 3 5-6"/></svg></span>Glassmorphism design system — light + dark, system-preference, persisted</li>
+            <li><span class="check"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="m2 6 3 3 5-6"/></svg></span>Solid learning-app design system — light + dark, system-preference, persisted</li>
             <li><span class="check"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="m2 6 3 3 5-6"/></svg></span>MDX-driven authoring — drop a file in <code>/content/chapters</code>, lesson appears</li>
           </ul>
         </article>
@@ -1527,9 +1519,11 @@ footer.site-footer {
       </details>
       <details><summary><span class="folder">content/chapters/</span></summary>
         <div class="indent">
-          <div class="file"><span class="name">01-foundations.mdx</span></div>
+          <div class="file"><span class="name">01-foundations.mdx</span> <span class="comment"># module overview</span></div>
+          <div class="file"><span class="name">01-1-tokens.mdx</span> <span class="comment"># sub-lesson</span></div>
+          <div class="file"><span class="name">01-2-embeddings.mdx</span> <span class="comment"># sub-lesson</span></div>
           <div class="file"><span class="name">02-training.mdx</span></div>
-          <div class="file"><span class="comment"># ...one MDX file per chapter</span></div>
+          <div class="file"><span class="comment"># ...one MDX file per chapter or sub-lesson</span></div>
         </div>
       </details>
       <details><summary><span class="folder">components/</span></summary>
@@ -1619,7 +1613,7 @@ footer.site-footer {
     <div class="container">
       <div class="eyebrow">04 · Look &amp; feel <span class="ref">§4</span></div>
       <h2 id="theme-title">Theme system</h2>
-      <p class="lede">Two palettes — Daybreak and Midnight — driven by CSS custom properties. The toggle in the header is wired into this very page. Try it.</p>
+      <p class="lede">Two palettes — Daybreak and Midnight — driven by CSS custom properties. The learning UI uses solid theme-aware surfaces with a subdued mesh behind them, so navigation and lesson content stay readable. The toggle in the header is wired into this very page. Try it.</p>
 
       <div class="theme-grid">
         <article class="glass palette" aria-labelledby="pal-light">
@@ -1630,7 +1624,7 @@ footer.site-footer {
             <div class="swatch"><span class="chip" style="background:#E0DCFF"></span><span class="meta"><span class="name">--bg-mesh-1</span><span class="hex">#E0DCFF</span></span></div>
             <div class="swatch"><span class="chip" style="background:#D1F0EC"></span><span class="meta"><span class="name">--bg-mesh-2</span><span class="hex">#D1F0EC</span></span></div>
             <div class="swatch"><span class="chip" style="background:#FFE4D6"></span><span class="meta"><span class="name">--bg-mesh-3</span><span class="hex">#FFE4D6</span></span></div>
-            <div class="swatch"><span class="chip" style="background:rgba(255,255,255,0.55);backdrop-filter:blur(8px)"></span><span class="meta"><span class="name">--surface</span><span class="hex">rgba(255,255,255,.55)</span></span></div>
+            <div class="swatch"><span class="chip" style="background:#FFFFFF"></span><span class="meta"><span class="name">--surface</span><span class="hex">#FFFFFF</span></span></div>
             <div class="swatch"><span class="chip" style="background:#0F1226"></span><span class="meta"><span class="name">--ink</span><span class="hex">#0F1226</span></span></div>
             <div class="swatch"><span class="chip" style="background:#5B3FFF"></span><span class="meta"><span class="name">--accent</span><span class="hex">#5B3FFF</span></span></div>
             <div class="swatch"><span class="chip" style="background:#1FB5A8"></span><span class="meta"><span class="name">--accent-2</span><span class="hex">#1FB5A8</span></span></div>
@@ -1647,7 +1641,7 @@ footer.site-footer {
             <div class="swatch"><span class="chip" style="background:#3B2A78"></span><span class="meta"><span class="name">--bg-mesh-1</span><span class="hex">#3B2A78</span></span></div>
             <div class="swatch"><span class="chip" style="background:#0F4D49"></span><span class="meta"><span class="name">--bg-mesh-2</span><span class="hex">#0F4D49</span></span></div>
             <div class="swatch"><span class="chip" style="background:#6B2A2A"></span><span class="meta"><span class="name">--bg-mesh-3</span><span class="hex">#6B2A2A</span></span></div>
-            <div class="swatch"><span class="chip" style="background:rgba(255,255,255,0.10);backdrop-filter:blur(8px)"></span><span class="meta"><span class="name">--surface</span><span class="hex">rgba(255,255,255,.06)</span></span></div>
+            <div class="swatch"><span class="chip" style="background:#111326"></span><span class="meta"><span class="name">--surface</span><span class="hex">#111326</span></span></div>
             <div class="swatch"><span class="chip" style="background:#F2F3FB"></span><span class="meta"><span class="name">--ink</span><span class="hex">#F2F3FB</span></span></div>
             <div class="swatch"><span class="chip" style="background:#8D79FF"></span><span class="meta"><span class="name">--accent</span><span class="hex">#8D79FF</span></span></div>
             <div class="swatch"><span class="chip" style="background:#4DDBCB"></span><span class="meta"><span class="name">--accent-2</span><span class="hex">#4DDBCB</span></span></div>
@@ -1660,7 +1654,7 @@ footer.site-footer {
       <article class="glass-strong theme-preview" aria-label="Live theme preview">
         <div>
           <h4>Live preview.</h4>
-          <p>This card reads from the same tokens as the rest of the page. Switch the theme above — surfaces, accents, mesh, code, all change in lockstep. No reload. No flash.</p>
+          <p>This card reads from the same tokens as the rest of the page. Switch the theme above — opaque surfaces, accents, mesh, code, all change in lockstep. No reload. No flash.</p>
           <div style="display:flex;gap:10px;flex-wrap:wrap">
             <a class="preview-btn" href="#schema">Primary CTA</a>
             <span style="display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--ink-mute)">
@@ -1688,22 +1682,23 @@ footer.site-footer {
     <div class="container">
       <div class="eyebrow">05 · Authoring <span class="ref">§5</span></div>
       <h2 id="schema-title">Lesson schema</h2>
-      <p class="lede">Drop a <code>.mdx</code> file in <code>src/content/chapters/</code> with this frontmatter. Validated by Zod at build. The lesson appears in nav, sidebar, sitemap, and OG cards automatically.</p>
+      <p class="lede">Drop a <code>.mdx</code> file in <code>src/content/chapters/</code> with this frontmatter. Validated by Zod at build. Root chapters and nested sub-lessons appear in nav, sidebar, sitemap, and OG cards automatically.</p>
 
       <div class="annotated-wrap">
-        <pre class="code-block" aria-label="Lesson frontmatter YAML"><code><span class="ln"><span class="c">---</span></span><span class="ln"><span class="k">slug:</span> <span class="s">"07-mcp"</span></span><span class="ln"><span class="k">title:</span> <span class="s">"Model Context Protocol"</span></span><span class="ln"><span class="k">chapterNumber:</span> <span class="n">7</span></span><span class="ln"><span class="k">section:</span> <span class="s">"modern-stack"</span></span><span class="ln"><span class="k">difficulty:</span> <span class="s">"intermediate"</span></span><span class="ln"><span class="k">estimatedMinutes:</span> <span class="n">12</span></span><span class="ln"><span class="k">tier:</span> <span class="s">"pro"</span></span><span class="ln"><span class="k">prereqs:</span> [<span class="s">"05-tools"</span>, <span class="s">"06-agents"</span>]</span><span class="ln"><span class="k">characters:</span> [<span class="s">"Atlas"</span>, <span class="s">"MCPMae"</span>]</span><span class="ln"><span class="k">ogImageVariant:</span> <span class="s">"mcp"</span></span><span class="ln"><span class="k">updatedAt:</span> <span class="s">"2026-05-22"</span></span><span class="ln"><span class="k">authors:</span> [<span class="s">"murugadoss"</span>]</span><span class="ln"><span class="k">summary:</span> <span class="c">&gt;</span></span><span class="ln">  The USB-C of AI tools — why every agent</span><span class="ln">  now speaks MCP. Architecture, transport,</span><span class="ln">  and a 30-line server.</span><span class="ln"><span class="c">---</span></span></code></pre>
+        <pre class="code-block" aria-label="Lesson frontmatter YAML"><code><span class="ln"><span class="c">---</span></span><span class="ln"><span class="k">slug:</span> <span class="s">"01-1-tokens"</span></span><span class="ln"><span class="k">title:</span> <span class="s">"What Is a Token?"</span></span><span class="ln"><span class="k">navTitle:</span> <span class="s">"Tokens"</span></span><span class="ln"><span class="k">chapterNumber:</span> <span class="n">1</span></span><span class="ln"><span class="k">lessonNumber:</span> <span class="n">1</span></span><span class="ln"><span class="k">parentSlug:</span> <span class="s">"01-foundations"</span></span><span class="ln"><span class="k">section:</span> <span class="s">"foundations"</span></span><span class="ln"><span class="k">difficulty:</span> <span class="s">"beginner"</span></span><span class="ln"><span class="k">estimatedMinutes:</span> <span class="n">8</span></span><span class="ln"><span class="k">tier:</span> <span class="s">"free"</span></span><span class="ln"><span class="k">prereqs:</span> []</span><span class="ln"><span class="k">characters:</span> [<span class="s">"Tess"</span>]</span><span class="ln"><span class="k">ogImageVariant:</span> <span class="s">"foundations"</span></span><span class="ln"><span class="k">updatedAt:</span> <span class="s">"2026-05-23"</span></span><span class="ln"><span class="k">authors:</span> [<span class="s">"murugadoss"</span>]</span><span class="ln"><span class="k">summary:</span> <span class="c">&gt;</span></span><span class="ln">  Tokens are the chunks of text an LLM reads</span><span class="ln">  before anything becomes model input.</span><span class="ln"><span class="c">---</span></span></code></pre>
 
         <div class="annotations">
           <div class="annotation"><strong>slug</strong> — URL segment. Also the lookup key in <code>prereqs</code> and progress tables.</div>
-          <div class="annotation"><strong>chapterNumber</strong> — Sort order across the curriculum. Filename prefix is the source of truth.</div>
-          <div class="annotation"><strong>tier</strong> — <code>free</code> renders directly. <code>pro</code> hits the entitlements check; unentitled users see the first 25% then a <code>&lt;Paywall&gt;</code>.</div>
+          <div class="annotation"><strong>chapterNumber / lessonNumber</strong> — Sort order across the curriculum and inside a chapter module.</div>
+          <div class="annotation"><strong>parentSlug</strong> — Optional. When present, this file appears as a nested lesson under its parent chapter in the sidebar.</div>
+          <div class="annotation"><strong>tier</strong> — <code>free</code> renders directly. <code>pro</code> uses explicit <code>&lt;FreePreview&gt;</code> / <code>&lt;ProOnly&gt;</code> boundaries.</div>
           <div class="annotation"><strong>characters</strong> — Which SVG components to preload. Powers the persona strip.</div>
           <div class="annotation"><strong>ogImageVariant</strong> — Routes to a preset OG card template, rendered at build by <code>/api/og/[slug]</code>.</div>
           <div class="annotation"><strong>summary</strong> — Used in the chapter hub, sitemap, RSS, and meta description.</div>
         </div>
       </div>
 
-      <div class="callout"><strong>Adding a chapter has zero code changes.</strong> Write MDX → commit → Vercel preview deploys it → it appears everywhere. No registry to edit.</div>
+      <div class="callout"><strong>Adding a chapter or sub-lesson has zero code changes.</strong> Write MDX → commit → Vercel preview deploys it → it appears everywhere. No registry to edit.</div>
     </div>
   </section>
 
@@ -2540,9 +2535,9 @@ footer.site-footer {
         </details>
 
         <details class="glass adr">
-          <summary><span class="adr-num">ADR-002</span><span class="adr-title">Glassmorphism (light + dark) over comic-only aesthetic</span></summary>
+          <summary><span class="adr-num">ADR-002</span><span class="adr-title">Solid learning-app UI (light + dark) over comic-only aesthetic</span></summary>
           <div class="adr-body">
-            <p>Modern aesthetic pairs better with paid-product expectations; theme switching is table-stakes. Characters are retained, restyled for glass.</p>
+            <p>Modern aesthetic pairs better with paid-product expectations; theme switching is table-stakes. Opaque surfaces preserve readability and hierarchy better than transparent glass for long-form lessons. Characters are retained and restyled for the theme-aware UI.</p>
             <div class="adr-meta"><span class="m">Reversible? <strong>Easy.</strong></span><span class="m">Domain: visual</span></div>
           </div>
         </details>
@@ -2657,7 +2652,7 @@ footer.site-footer {
         <ul style="margin:0;padding-left:18px">
           <li><strong>AI-tutor cost runaway</strong> — addressed by ADR-012's five-layer defense (Haiku default, Sonnet escalation, prompt caching, summarization, credits + $20/user/mo ceiling). Backstop kill switch flags accounts &gt; $20/mo for manual review.</li>
           <li><strong>Lemon Squeezy fee drag</strong> at scale argues for Stripe migration. ADR-006 is reversible thanks to ADR-008 (entitlements abstraction).</li>
-          <li><strong>Backdrop-filter perf</strong> on low-end Android — fall back to flat surfaces under reduced-motion or low-end-device detection.</li>
+          <li><strong>Visual hierarchy regression</strong> if transparent effects creep back into the learning shell — keep sidebar, top nav, chapter hero, and article panels on opaque theme surfaces.</li>
           <li><strong>Clerk lock-in</strong> above 10k MAU — pricing escalates. The <code>lib/auth.ts</code> boundary + ADR-013's internal UUIDs make a future swap tedious but not catastrophic.</li>
           <li><strong>Content MVP gate doesn't trigger</strong> — most likely outcome and the gate's whole point. Iterate on content; don't paper over with SaaS scope.</li>
         </ul>

@@ -1,8 +1,6 @@
 .glass {
   background: var(--surface);
   border: 1px solid var(--border);
-  backdrop-filter: blur(var(--blur-soft)) saturate(140%);
-  -webkit-backdrop-filter: blur(var(--blur-soft)) saturate(140%);
   box-shadow: var(--shadow-card);
   border-radius: var(--r-md);
 }
@@ -10,8 +8,6 @@
 .glass-strong {
   background: var(--surface-strong);
   border: 1px solid var(--border-strong);
-  backdrop-filter: blur(var(--blur-strong)) saturate(140%);
-  -webkit-backdrop-filter: blur(var(--blur-strong)) saturate(140%);
   box-shadow: var(--shadow-elevated);
   border-radius: var(--r-lg);
 }
@@ -31,7 +27,7 @@
   position: absolute;
   border-radius: 50%;
   filter: blur(80px);
-  opacity: 0.85;
+  opacity: 0.24;
 }
 
 .mesh::before {
@@ -61,27 +57,41 @@
   border-radius: 50%;
   background: radial-gradient(circle, var(--bg-mesh-3) 0%, transparent 70%);
   filter: blur(72px);
-  opacity: 0.75;
+  opacity: 0.18;
   animation: mesh-drift-c 24s ease-in-out infinite alternate;
 }
 
 @keyframes mesh-drift-a {
-  from { transform: translate(0, 0) scale(1); }
-  to { transform: translate(4%, 6%) scale(1.05); }
+  from {
+    transform: translate(0, 0) scale(1);
+  }
+  to {
+    transform: translate(4%, 6%) scale(1.05);
+  }
 }
 
 @keyframes mesh-drift-b {
-  from { transform: translate(0, 0) scale(1); }
-  to { transform: translate(-5%, -4%) scale(1.08); }
+  from {
+    transform: translate(0, 0) scale(1);
+  }
+  to {
+    transform: translate(-5%, -4%) scale(1.08);
+  }
 }
 
 @keyframes mesh-drift-c {
-  from { transform: translate(0, 0); }
-  to { transform: translate(6%, -5%); }
+  from {
+    transform: translate(0, 0);
+  }
+  to {
+    transform: translate(6%, -5%);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .mesh::before,
   .mesh::after,
-  .mesh-blob { animation: none; }
+  .mesh-blob {
+    animation: none;
+  }
 }
