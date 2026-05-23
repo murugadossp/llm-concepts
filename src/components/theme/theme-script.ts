@@ -1,0 +1,1 @@
+export const themeInitScript = `(function(){try{var t=localStorage.getItem('theme');var d;if(t==='dark')d=true;else if(t==='light')d=false;else d=window.matchMedia('(prefers-color-scheme: dark)').matches;document.documentElement.setAttribute('data-theme',d?'dark':'light');}catch(e){document.documentElement.setAttribute('data-theme','light');}})();`;
