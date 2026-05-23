@@ -1,36 +1,51 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# LLM → Agent
 
-## Getting Started
+An interactive learning site that explains how large language models work, from tokens to agents. Built with Next.js 15, React 19, and MDX.
 
-First, run the development server:
+## Prerequisites
+
+- Node.js 20+
+- npm 10+
+
+## Setup
 
 ```bash
+cp .env.example .env.local
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open `http://localhost:3000`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Commands
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Command | Description |
+|---|---|
+| `npm run dev` | Start dev server with Turbopack |
+| `npm run build` | Production build |
+| `npm run typecheck` | TypeScript type check |
+| `npm run lint` | Biome lint |
+| `npm run lint:fix` | Biome lint with auto-fix |
+| `npm run format` | Biome format |
 
-## Learn More
+## Authoring chapters
 
-To learn more about Next.js, take a look at the following resources:
+Chapters live in `src/content/chapters/` as MDX files. Each file needs YAML frontmatter validated by the Zod schema in `src/lib/chapters.ts`.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Naming convention: `{chapterNumber}-{lessonNumber}-{slug}.mdx` (e.g. `01-2-embeddings.mdx`). Section index pages use `{chapterNumber}-{slug}.mdx` with `lessonNumber: 0`.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+The chapter-writer skill in `.agents/skills/llm-concepts-chapter-writer/SKILL.md` documents the required structure, component catalog, and self-review checklist.
 
-## Deploy on Vercel
+## Characters
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+SVG character components live in `src/characters/`. Reference them in chapter frontmatter via the `characters` array; the chapter page renders the first listed character automatically.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Current cast: `Tess` (token), `Vector` (embedding), `Atlas` (retrieval), `MCPMae` (MCP/tools).
+
+## Tech stack
+
+- **Next.js 15** — App Router, static generation
+- **next-mdx-remote** — MDX compilation with remark-gfm, rehype-slug, rehype-autolink-headings
+- **Tailwind CSS v4** — utility styling
+- **Biome** — linting and formatting (replaces ESLint/Prettier)
+- **Zod** — frontmatter validation at build time

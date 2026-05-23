@@ -1,0 +1,124 @@
+---
+slug: "01-1-tokens"
+title: "What Is a Token?"
+navTitle: "Tokens"
+chapterNumber: 1
+lessonNumber: 1
+parentSlug: "01-foundations"
+section: "foundations"
+difficulty: "beginner"
+estimatedMinutes: 8
+tier: "free"
+prereqs: []
+characters: ["Tess"]
+ogImageVariant: "foundations"
+updatedAt: "2026-05-23"
+authors: ["murugadoss"]
+summary: >
+  Tokens are the chunks of text an LLM reads before anything becomes model input.
+---
+
+By the end of this lesson, you should be able to look at a sentence and predict why a model may split it into surprising pieces.
+
+## TL;DR
+
+- A token is a chunk of text: a word, part of a word, punctuation mark, number, space, or symbol.
+- The tokenizer turns raw text into token IDs before the model sees it.
+- Different models can split the same text differently.
+
+## Comic Script: Tess Gets Split
+
+<ComicStrip>
+  <ComicPanel character="Tess" title="Tess Gets Split">
+    <SpeechBubble speaker="Tess">I thought I was a word. Why am I only part of one?</SpeechBubble>
+    **Visual action:** A sentence "The queen waved happily." floats across the page, then splits into glowing pieces. Tess tumbles out as one highlighted chunk.
+    **Teaching point:** Models do not read text as whole human words. They read tokens.
+  </ComicPanel>
+  <ComicPanel character="Tess" title="The Badge Number">
+    <SpeechBubble speaker="Tess">So the model sees my badge number, not my face?</SpeechBubble>
+    **Visual action:** A conveyor belt labeled "Tokenizer" sends tokens into numbered boxes. Tess receives a tiny badge with an integer on it.
+    **Teaching point:** Text becomes token identifiers before it becomes model input.
+  </ComicPanel>
+</ComicStrip>
+
+## Tokens: The Pieces The Model Can See
+
+When you type a sentence, a large language model does not receive it as a neat row of human words. First, a tokenizer cuts the text into tokens. A token can be a whole word, a word fragment, punctuation, a number, or even a leading space.
+
+For example, the word `happily` might be one token in one tokenizer and two tokens in another: `happi` + `ly`. This is not a bug. Tokenizers reuse common chunks so the model can handle huge vocabularies without memorizing every possible word.
+
+<ELI5Card title="A token is a puzzle piece">
+  If a sentence is a picture, tokens are the puzzle pieces the model is allowed to pick up. Some pieces are large, like a common word. Some are small, like a suffix or punctuation mark.
+</ELI5Card>
+
+## Token IDs: Text Becomes Numbers
+
+After tokenization, each token maps to an integer identifier from the model's vocabulary. The model does not reason over the letters `q`, `u`, `e`, `e`, `n` directly. It sees an ID that points to a learned entry.
+
+That sounds cold, but it is useful. Once text becomes IDs, the model can look up a learned vector for each token. That vector is the token's embedding.
+
+<ELI5Card title="The badge number is not the meaning">
+  Tess's token ID is like a library card number. It helps the model find the right shelf, but the rich information lives in the embedding the model looks up next.
+</ELI5Card>
+
+## Try It
+
+<TokenizerDemo
+  defaultText="The queen waved happily."
+  tasks={[
+    "Type a common English sentence.",
+    "Type a name or uncommon product term.",
+    "Type an emoji, punctuation-heavy phrase, or code snippet.",
+    "Compare how many chunks each input produces."
+  ]}
+/>
+
+Questions to ask while trying it:
+
+- Which words stayed whole?
+- Which words split into pieces?
+- Did punctuation or whitespace become visible chunks?
+- What would happen to cost if a long document produced more tokens than expected?
+
+## Tokenizer Comparison
+
+export const tokenizerCompare = {
+  columns: ["Tokenizer", "Core idea", "Where readers may see it", "Tradeoff"],
+  rows: [
+    [
+      "Byte Pair Encoding (BPE)",
+      "Merge frequent text pairs into reusable chunks.",
+      "Many generative language models.",
+      "Efficient and practical, but splits can look odd to humans.",
+    ],
+    [
+      "WordPiece",
+      "Build sub-word pieces that improve likelihood on training text.",
+      "Bidirectional Encoder Representations from Transformers (BERT)-style models.",
+      "Good for masked-language-model training, but still produces non-human-looking fragments.",
+    ],
+    [
+      "SentencePiece",
+      "Treat text as a raw stream and learn pieces without relying on pre-tokenized words.",
+      "Multilingual and production tokenizers.",
+      "Flexible across languages, but token boundaries can surprise beginners.",
+    ],
+  ],
+};
+
+<CompareTable {...tokenizerCompare} />
+
+<DeepDive title="Byte Pair Encoding in one minute">
+  Byte Pair Encoding starts with tiny text units and repeatedly merges pairs that appear together often. Over many merges, common chunks become single tokens.
+
+  The puzzle-piece analogy breaks down because tokenizers are not trying to discover perfect linguistic meaning. They are optimizing a practical compression problem.
+</DeepDive>
+
+## Remember
+
+<RememberCard>
+  - A token is the unit the model reads.
+  - A token ID is a vocabulary lookup number.
+  - Token boundaries are model-specific.
+  - More text usually means more tokens, more cost, and more context pressure.
+</RememberCard>

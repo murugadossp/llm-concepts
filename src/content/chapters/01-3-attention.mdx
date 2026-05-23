@@ -1,0 +1,96 @@
+---
+slug: "01-3-attention"
+title: "Attention: How Tokens Read Each Other"
+navTitle: "Attention"
+chapterNumber: 1
+lessonNumber: 3
+parentSlug: "01-foundations"
+section: "foundations"
+difficulty: "beginner"
+estimatedMinutes: 9
+tier: "free"
+prereqs: ["01-1-tokens", "01-2-embeddings"]
+characters: ["Tess"]
+ogImageVariant: "foundations"
+updatedAt: "2026-05-23"
+authors: ["murugadoss"]
+summary: >
+  Attention lets each token decide which other tokens should influence its meaning right now.
+---
+
+Attention is the idea that turns a row of token vectors into context-aware representations.
+
+## TL;DR
+
+- Attention lets tokens look at other tokens in the same context.
+- Query, key, and value are the classic ingredients.
+- Attention blends information; it does not simply pick one perfect source.
+
+## Comic: Tess Asks for Help
+
+<ComicStrip>
+  <ComicPanel character="Tess" title="Everyone Asks Everyone">
+    <SpeechBubble speaker="Tess">Which of you knows what "it" means in this sentence?</SpeechBubble>
+    **Visual action:** Tess stands in a row of tokens. She holds up a query card. Other tokens raise key cards in response.
+    **Teaching point:** Attention lets each token ask which others should influence its meaning right now.
+  </ComicPanel>
+  <ComicPanel character="Tess" title="The Match Decides">
+    <SpeechBubble speaker="Tess">You match — so your meaning shapes mine.</SpeechBubble>
+    **Visual action:** A bright connection line forms between "it" and "cat" across the sentence. Tess updates her representation.
+    **Teaching point:** High-scoring matches transfer more of their value into the querying token's new representation.
+  </ComicPanel>
+</ComicStrip>
+
+## The Transformer: A Repeating Prediction Machine
+
+Most modern LLMs use a transformer architecture. At a high level, a transformer repeats the same kind of block many times:
+
+1. Turn token IDs into embeddings.
+2. Let tokens exchange information with attention.
+3. Pass the result through a multilayer perceptron, a learned network inside each block.
+4. Repeat for many layers.
+5. Produce logits, which are scores for possible next tokens.
+6. Sample or choose the next token.
+
+<ELI5Card title="A stack of reading passes">
+  The first pass notices nearby words. Later passes combine bigger ideas. By the end, the model has a context-aware representation it can use to guess the next token.
+</ELI5Card>
+
+## Everyone Asks Everyone
+
+Attention lets tokens look at other tokens in the same context. A token does not read only the token before it. It can weigh many earlier tokens and decide which ones matter most for the next representation.
+
+In plain English, self-attention asks: "For this token, which other tokens should influence what it means right now?"
+
+The classic attention ingredients are query, key, and value. A query is what a token is looking for. A key is what another token offers for matching. A value is the information that gets passed along if the match matters.
+
+<ELI5Card title="A classroom of raised hands">
+  Each token asks a question. Other tokens raise hands with clues. The brighter the match, the more that clue influences the token's next version.
+</ELI5Card>
+
+## A Tiny Example
+
+In the sentence "The cat sat on the mat because it was tired," the token `it` may need information from `cat` to make sense. Attention gives the model a way to make that connection, even when the related words are not next to each other.
+
+Real attention patterns are not always this clean. A token can attend to punctuation, grammar cues, repeated phrases, or earlier instructions. The key idea is that meaning is updated by context.
+
+<DeepDive title="Softmax behind attention">
+  In scaled dot-product attention, the model compares a query vector with key vectors using dot products. The scores are scaled, passed through softmax, and used as weights over value vectors.
+
+  Softmax turns raw scores into a distribution. The highest-scoring tokens get more weight, but lower-scoring tokens can still contribute.
+</DeepDive>
+
+<DeepDive title="Why positional encoding exists">
+  Attention by itself does not know word order. Without position information, the model would struggle to distinguish "dog bites man" from "man bites dog."
+
+  Rotary Position Embedding is one common technique. It rotates parts of the query and key vectors based on position, which helps the model compare relative positions during attention.
+</DeepDive>
+
+## Remember
+
+<RememberCard>
+  - Attention makes token meaning context-aware.
+  - Query, key, and value describe matching and information flow.
+  - Attention can blend several sources at once.
+  - Position information helps the model understand order.
+</RememberCard>
