@@ -1,0 +1,254 @@
+Resilient Legal Document Processing Workflow
+
+Objective
+
+This design describes a resilient LangGraph workflow for a legal contract
+processing system. The workflow extracts key contract information, validates
+important legal clauses, generates a summary, and keeps detailed operational
+and compliance records. It is designed to continue producing useful results
+when external services fail, document quality is poor, or processing takes too
+long.
+
+
+1. State Schema
+
+The workflow uses one shared state object that stores business data,
+execution tracking, resilience information, and compliance records.
+
+Core document fields:
+
+- document_id: Unique identifier for the contract being processed.
+- document_content: Original document text or OCR input.
+- urgency: Processing priority, either standard or rush.
+- system_health: Current service status, such as healthy, degraded, or offline.
+- processing_history: Structured historical information about this document
+  type. It includes document_type, prior_failures, and optional fields such as
+  last_failure_reason or last_successful_route.
+
+Business output fields:
+
+- complexity: Classification of the document as simple, standard, or complex.
+- extracted_text: Text extracted from the document.
+- extracted_fields: Key fields detected in the contract, such as parties,
+  effective date, termination clause, liability clause, and confidentiality
+  clause.
+- validation_results: Results from legal clause validation, including missing
+  clauses, risk level, validation source, and attorney review requirement.
+- summary: Final summary or manual-review message.
+- status: Current workflow status, such as processing, completed, partial, or
+  manual_review.
+
+Execution tracking fields:
+
+- processing_steps: List of workflow steps that ran. Each entry records the
+  step name, status, timestamp, and details.
+- retry_counts: Number of retries attempted for external services such as OCR
+  and legal database validation.
+
+Error handling fields:
+
+- error_logs: List of failures. Each entry records the node, error type,
+  message, retry count, whether a fallback was used, and timestamp.
+- fallback_usage: List of fallback mechanisms used, such as embedded text
+  extraction, internal clause library, or chunked processing.
+
+Compliance fields:
+
+- audit_trail: Ordered record of workflow events, actor, timestamp, and data
+  sources used.
+- data_sources_used: Data sources consulted during processing, such as OCR
+  service, internal clause library, external legal database, document metadata,
+  or document chunks.
+- compliance_notes: Notes explaining reliability limits, manual-review reasons,
+  and prior failure context.
+
+
+2. Error Handling Plan
+
+Failure Scenario 1: External API Failure
+
+Examples:
+
+- OCR service is unavailable.
+- External legal clause database is offline.
+
+Detection method:
+
+- Check system_health for degraded or offline status.
+- Detect service outage markers from the workflow environment.
+- Capture failed service attempts in the node that calls the external service.
+
+Fallback strategy:
+
+- If OCR fails, use embedded text extraction when document text is already
+  available.
+- If the legal database fails, use an internal clause library to perform a
+  reduced validation.
+- Continue processing with a partial status when the result is useful but
+  depends on fallback data.
+
+State updates:
+
+- Increment retry_counts for the failed service.
+- Add an error_logs entry with error_type external_api_failure.
+- Add the fallback name to fallback_usage.
+- Add the fallback data source to data_sources_used.
+- Add an audit_trail entry showing which fallback was used.
+
+
+Failure Scenario 2: Data Quality Issues
+
+Examples:
+
+- Corrupted scan.
+- Empty document.
+- Unreadable OCR output.
+- Document format that cannot be parsed safely.
+
+Detection method:
+
+- Check whether document_content is empty.
+- Detect unreadable or corrupted markers.
+- Detect extraction output that is too incomplete for legal conclusions.
+
+Fallback strategy:
+
+- Do not generate final legal conclusions from unreliable source material.
+- Route the document to manual_review.
+- Preserve all available metadata, errors, and audit information so a human
+  reviewer can inspect the issue.
+
+State updates:
+
+- Set status to manual_review.
+- Add an error_logs entry with error_type data_quality.
+- Add a processing_steps entry showing the failed automated step.
+- Add compliance_notes explaining that manual review is required because the
+  source content failed quality checks.
+- Add an audit_trail entry showing that manual review was queued.
+
+
+Failure Scenario 3: Processing Timeout
+
+Examples:
+
+- Complex multi-party agreement.
+- Very long contract with many exhibits.
+- Full-document processing exceeds the time limit.
+
+Detection method:
+
+- Classify document complexity before extraction.
+- Check document length and complexity signals such as multi-party language or
+  master services agreement language.
+- Detect timeout exceptions or timeout risk before running expensive processing.
+
+Fallback strategy:
+
+- Route the document to chunked_processing.
+- Process the document in smaller sections.
+- Produce partial extraction and risk indicators instead of failing the entire
+  workflow.
+- Route high-risk partial results to manual review when needed.
+
+State updates:
+
+- Add an error_logs entry with error_type processing_timeout.
+- Add chunked_processing to fallback_usage.
+- Add document_chunks to data_sources_used.
+- Add compliance_notes explaining that the result may be partial.
+- Set status to partial if a useful summary is produced with fallbacks, or
+  manual_review if legal risk is high.
+
+
+3. Routing Logic
+
+The workflow uses conditional routing instead of one fixed linear path. Routing
+decisions consider document complexity, system health, processing history, and
+urgency.
+
+Decision tree:
+
+1. Start at assess_document.
+2. If the document is empty, corrupted, or unreadable, route to manual_review.
+3. If the document is simple, urgent, and system health is healthy, route to
+   fast_track_extract.
+4. If the document is complex, system health is degraded, or this document type
+   has failed multiple times before, route to chunked_processing.
+5. Otherwise, route to standard_extract.
+6. After extraction:
+   - If extraction fails because of data quality, route to manual_review.
+   - If timeout risk is detected and no usable text has been extracted, route to
+     chunked_processing.
+   - Otherwise, route to validate_clauses.
+7. During validation:
+   - If the external legal database is healthy, validate against that database.
+   - If the database is unavailable, use the internal clause library fallback.
+8. After validation:
+   - If risk is high and attorney review is required, route to manual_review.
+   - Otherwise, route to generate_summary.
+9. End after either generate_summary or manual_review.
+
+Flowchart:
+
+START
+  -> assess_document
+  -> corrupted or unreadable?
+      -> yes: manual_review -> END
+      -> no:
+  -> simple + rush + healthy?
+      -> yes: fast_track_extract
+      -> no:
+  -> complex OR degraded system OR repeated prior failures?
+      -> yes: chunked_processing
+      -> no: standard_extract
+  -> extraction usable?
+      -> no: manual_review -> END
+      -> timeout risk: chunked_processing
+      -> yes: validate_clauses
+  -> validation high risk?
+      -> yes: manual_review -> END
+      -> no: generate_summary -> END
+
+
+4. Resilience Rationale
+
+This design improves reliability because failures are treated as expected
+workflow conditions instead of unexpected crashes. Every major node records what
+happened, when it happened, which source was used, and whether fallback logic was
+required.
+
+External service failures do not stop processing. OCR can fall back to embedded
+text extraction, and the external legal database can fall back to an internal
+clause library. This allows the firm to continue receiving useful contract
+summaries during service outages.
+
+Data quality problems are handled more cautiously. If the document is corrupted
+or unreadable, the workflow routes to manual review instead of producing
+unreliable legal conclusions. This protects the firm from acting on bad
+extractions.
+
+Timeout risk is handled through chunked processing. Complex contracts can still
+produce partial extraction results and risk signals, even if full-document
+processing would exceed the time limit.
+
+The routing logic adapts to operational context. It considers urgency, document
+complexity, service health, and prior failures. Simple urgent documents can move
+quickly through a fast-track path, while complex or failure-prone documents use
+more conservative processing.
+
+Overall, the workflow maintains reliability by combining adaptive routing,
+fallback mechanisms, manual-review escalation, detailed error logs, and a
+complete compliance audit trail.
+
+
+Completion Criteria Check
+
+- Comprehensive state schema: The schema includes business outputs, execution
+  tracking, error handling, fallback tracking, and compliance audit fields.
+- Realistic error handling: The design covers external API failure, data quality
+  issues, and processing timeout with detection methods and fallback strategies.
+- Conditional routing: The workflow considers document complexity, system
+  health, processing history, and urgency.
+- Reliability explanation: The rationale explains how fallbacks, manual review,
+  audit trails, and adaptive routing keep the system reliable.

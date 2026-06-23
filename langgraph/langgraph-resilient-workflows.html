@@ -1,0 +1,770 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="color-scheme" content="light dark" />
+<title>LangGraph — Resilient Workflows</title>
+<meta name="description" content="A worked LangGraph example: design a workflow that keeps producing useful results through API failures, bad input, and timeouts — instead of crashing." />
+
+<!-- Theme flash-prevention: set data-theme BEFORE first paint -->
+<script>
+  (function () {
+    try {
+      var stored = localStorage.getItem('theme');
+      var pref = stored || 'system';
+      var resolved = pref;
+      if (pref === 'system') {
+        resolved = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      }
+      document.documentElement.setAttribute('data-theme', resolved);
+      document.documentElement.setAttribute('data-theme-pref', pref);
+    } catch (e) {
+      document.documentElement.setAttribute('data-theme', 'light');
+      document.documentElement.setAttribute('data-theme-pref', 'system');
+    }
+  })();
+</script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Caveat:wght@500;700&display=swap" rel="stylesheet" />
+
+<style>
+:root[data-theme="light"] {
+  --bg-base: #F4F6FB; --bg-mesh-1: #E0DCFF; --bg-mesh-2: #D1F0EC; --bg-mesh-3: #FFE4D6;
+  --surface: #FFFFFF; --surface-strong: #FFFFFF; --surface-muted: #F7F8FC; --surface-hover: #EEF1FB;
+  --border: rgba(15,18,38,0.08); --border-strong: rgba(15,18,38,0.10); --ring: rgba(91,63,255,0.35);
+  --ink: #0F1226; --ink-soft: #3D3F62; --ink-mute: #6B6E8E; --accent: #5B3FFF; --accent-2: #1FB5A8;
+  --warn: #E5484D; --sun: #F5B945;
+  --shadow-card: 0 8px 24px rgba(15,18,38,0.06), 0 1px 2px rgba(15,18,38,0.04);
+  --shadow-elevated: 0 24px 48px rgba(15,18,38,0.12);
+  --code-bg: rgba(15,18,38,0.92); --code-ink: #F2F3FB; --code-mute: #8B8FAD;
+  --code-key: #C9B8FF; --code-str: #4DDBCB; --code-comment: #6B6E8E;
+}
+:root[data-theme="dark"] {
+  --bg-base: #0A0B1A; --bg-mesh-1: #3B2A78; --bg-mesh-2: #0F4D49; --bg-mesh-3: #6B2A2A;
+  --surface: #111326; --surface-strong: #16192D; --surface-muted: #1D2138; --surface-hover: #252A45;
+  --border: rgba(255,255,255,0.12); --border-strong: rgba(255,255,255,0.18); --ring: rgba(141,121,255,0.55);
+  --ink: #F2F3FB; --ink-soft: #C2C5DC; --ink-mute: #8B8FAD; --accent: #8D79FF; --accent-2: #4DDBCB;
+  --warn: #FF6B6B; --sun: #FFD56B;
+  --shadow-card: 0 8px 24px rgba(0,0,0,0.35), 0 1px 2px rgba(0,0,0,0.25);
+  --shadow-elevated: 0 24px 48px rgba(0,0,0,0.55);
+  --code-bg: rgba(0,0,0,0.45); --code-ink: #F2F3FB; --code-mute: #8B8FAD;
+  --code-key: #C9B8FF; --code-str: #4DDBCB; --code-comment: #6B6E8E;
+}
+:root {
+  --r-sm: 10px; --r-md: 16px; --r-lg: 24px; --r-pill: 999px;
+  --maxw-content: 920px; --maxw-wide: 1100px; --space-section: 88px;
+  --serif: "Instrument Serif", "Iowan Old Style", Georgia, serif;
+  --sans: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, "Cascadia Code", Menlo, monospace;
+  --hand: "Caveat", "Patrick Hand", cursive;
+}
+*, *::before, *::after { box-sizing: border-box; }
+html { scroll-behavior: smooth; scroll-padding-top: 88px; }
+body { margin: 0; font-family: var(--sans); font-size: 16px; line-height: 1.6; color: var(--ink); background: var(--bg-base); -webkit-font-smoothing: antialiased; min-height: 100vh; overflow-x: hidden; }
+::selection { background: var(--accent); color: white; }
+a { color: var(--accent); text-decoration: none; border-bottom: 1px solid transparent; transition: border-color .2s ease, color .2s ease; }
+a:hover { border-bottom-color: var(--accent); }
+a:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; border-radius: 4px; }
+button { font-family: inherit; font-size: inherit; cursor: pointer; border: none; background: none; color: inherit; }
+button:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; border-radius: 8px; }
+h1, h2, h3, h4 { margin: 0; font-weight: 600; letter-spacing: -0.01em; color: var(--ink); }
+p { margin: 0 0 1em; color: var(--ink-soft); }
+ul, ol { margin: 0 0 1em; padding-left: 1.25em; color: var(--ink-soft); }
+li { margin-bottom: 0.4em; }
+code, pre { font-family: var(--mono); font-size: 0.9em; }
+
+.mesh { position: fixed; inset: 0; z-index: -1;
+  background: radial-gradient(60vw 60vw at 8% 12%, var(--bg-mesh-1), transparent 70%),
+    radial-gradient(55vw 55vw at 92% 30%, var(--bg-mesh-2), transparent 70%),
+    radial-gradient(70vw 70vw at 60% 95%, var(--bg-mesh-3), transparent 70%), var(--bg-base);
+  filter: saturate(115%); animation: meshDrift 40s ease-in-out infinite alternate; will-change: background-position; }
+@keyframes meshDrift { 0% { background-position: 0 0,0 0,0 0,0 0; transform: scale(1); } 100% { background-position: -8% 6%,6% -4%,-4% 8%,0 0; transform: scale(1.04); } }
+@media (prefers-reduced-motion: reduce) { .mesh { animation: none; } html { scroll-behavior: auto; } }
+.mesh.is-paused { animation-play-state: paused; }
+
+.glass { background: var(--surface); border: 1px solid var(--border); box-shadow: var(--shadow-card); border-radius: var(--r-md); }
+.glass-strong { background: var(--surface-strong); border: 1px solid var(--border-strong); box-shadow: var(--shadow-elevated); border-radius: var(--r-lg); }
+
+.site-header { position: sticky; top: 0; z-index: 50; padding: 14px 24px; display: flex; align-items: center; justify-content: space-between; gap: 16px; background: var(--surface); border-bottom: 1px solid var(--border); }
+.brand { display: flex; align-items: center; gap: 10px; font-weight: 600; color: var(--ink); border: none; }
+.brand:hover { border: none; }
+.brand-mark { width: 32px; height: 32px; flex: none; border-radius: 10px; background: linear-gradient(135deg, var(--accent), var(--accent-2)); display: grid; place-items: center; box-shadow: 0 4px 14px var(--ring); }
+.brand-mark svg { width: 18px; height: 18px; color: white; }
+.brand-text { display: flex; flex-direction: column; line-height: 1.1; }
+.brand-text small { color: var(--ink-mute); font-size: 11px; font-weight: 500; }
+.section-nav { display: none; gap: 4px; align-items: center; overflow-x: auto; max-width: 54vw; }
+.section-nav a { font-size: 13px; color: var(--ink-soft); padding: 6px 10px; border-radius: 8px; border: none; white-space: nowrap; }
+.section-nav a:hover { background: var(--surface-hover); color: var(--ink); }
+@media (min-width: 1024px) { .section-nav { display: flex; } }
+.theme-toggle { display: inline-flex; align-items: center; background: var(--surface-strong); border: 1px solid var(--border-strong); border-radius: var(--r-pill); padding: 3px; gap: 2px; }
+.theme-toggle button { border-radius: var(--r-pill); padding: 6px 10px; font-size: 12px; font-weight: 500; color: var(--ink-mute); display: inline-flex; align-items: center; gap: 4px; transition: background .18s ease, color .18s ease; }
+.theme-toggle button:hover { color: var(--ink); }
+.theme-toggle button[aria-pressed="true"] { background: var(--accent); color: white; box-shadow: 0 2px 8px var(--ring); }
+.theme-toggle svg { width: 14px; height: 14px; }
+.theme-toggle .label-txt { display: none; }
+@media (min-width: 640px) { .theme-toggle .label-txt { display: inline; } }
+
+main { position: relative; }
+.container { max-width: var(--maxw-wide); margin: 0 auto; padding: 0 24px; }
+.container-narrow { max-width: var(--maxw-content); margin: 0 auto; padding: 0 24px; }
+section.block { padding-top: var(--space-section); scroll-margin-top: 88px; }
+.eyebrow { font-size: 13px; font-weight: 600; color: var(--accent); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+.eyebrow .num { display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 7px; background: var(--accent); color: #fff; font-size: 12px; }
+section.block h2 { font-family: var(--serif); font-weight: 400; font-size: clamp(28px, 4vw, 44px); line-height: 1.1; margin-bottom: 12px; }
+.lede { font-size: 18px; color: var(--ink-soft); max-width: 70ch; }
+
+.hero { padding-top: 72px; padding-bottom: 8px; }
+.hero-eyebrow { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 500; color: var(--ink-mute); background: var(--surface); border: 1px solid var(--border); padding: 6px 12px; border-radius: var(--r-pill); margin-bottom: 22px; }
+.hero-eyebrow .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent-2); box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent-2) 25%, transparent); }
+.hero h1 { font-family: var(--serif); font-weight: 400; font-size: clamp(40px, 7vw, 76px); line-height: 1.02; letter-spacing: -0.02em; margin-bottom: 18px; }
+.hero h1 em { font-style: italic; color: var(--accent); }
+.hero-sub { font-size: clamp(17px, 2.2vw, 20px); color: var(--ink-soft); max-width: 64ch; margin-bottom: 26px; }
+.hero-chips { display: flex; flex-wrap: wrap; gap: 10px; }
+.chip { font-size: 13px; font-weight: 500; color: var(--ink-soft); background: var(--surface); border: 1px solid var(--border); padding: 7px 13px; border-radius: var(--r-pill); display: inline-flex; align-items: center; gap: 7px; }
+.chip b { color: var(--ink); font-weight: 600; }
+
+.grid { display: grid; gap: 18px; }
+@media (min-width: 720px) { .grid.cols-2 { grid-template-columns: 1fr 1fr; } .grid.cols-3 { grid-template-columns: repeat(3,1fr); } }
+.card { padding: 22px; }
+.card h3 { font-size: 18px; margin-bottom: 8px; display: flex; align-items: center; gap: 9px; }
+.card p:last-child { margin-bottom: 0; }
+.card .ic { width: 30px; height: 30px; flex: none; border-radius: 9px; display: grid; place-items: center; background: color-mix(in srgb, var(--accent) 14%, transparent); color: var(--accent); }
+.card .ic svg { width: 17px; height: 17px; }
+.card .stepnum { width: 26px; height: 26px; flex: none; border-radius: 8px; background: color-mix(in srgb, var(--accent) 14%, transparent); color: var(--accent); display: grid; place-items: center; font-size: 12px; font-weight: 700; }
+
+.note { border-left: 3px solid var(--accent); background: var(--surface-muted); padding: 14px 16px; border-radius: 0 var(--r-sm) var(--r-sm) 0; margin: 18px 0; }
+.note.tip { border-left-color: var(--accent-2); }
+.note.warn { border-left-color: var(--warn); }
+.note .lbl { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--accent); display: block; margin-bottom: 4px; }
+.note.tip .lbl { color: var(--accent-2); }
+.note.warn .lbl { color: var(--warn); }
+.note p:last-child { margin-bottom: 0; }
+
+pre.code { background: var(--code-bg); color: var(--code-ink); border-radius: var(--r-md); padding: 18px 20px; overflow-x: auto; margin: 16px 0; border: 1px solid var(--border-strong); line-height: 1.55; }
+pre.code .k { color: var(--code-key); }
+pre.code .s { color: var(--code-str); }
+pre.code .c { color: var(--code-comment); font-style: italic; }
+pre.code .f { color: var(--sun); }
+code.inline { background: var(--surface-muted); border: 1px solid var(--border); padding: 1px 6px; border-radius: 6px; color: var(--ink); }
+
+/* run table */
+.runtable { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+.runtable th, .runtable td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
+.runtable th { color: var(--ink-mute); font-weight: 600; text-transform: uppercase; font-size: 11px; letter-spacing: .04em; }
+.runtable td.ticket { color: var(--ink-soft); max-width: 280px; }
+.pill { display: inline-flex; align-items: center; font-family: var(--mono); font-size: 11.5px; padding: 3px 9px; border-radius: var(--r-pill); background: var(--surface-muted); border: 1px solid var(--border); color: var(--accent-2); white-space: nowrap; }
+.pill.warn { color: var(--warn); border-color: color-mix(in srgb, var(--warn) 40%, var(--border)); }
+.pill.accent { color: var(--accent); }
+
+/* quiz (shared pattern) */
+.quiz-progress { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 18px; }
+.quiz-progress .score { font-family: var(--mono); font-size: 13px; color: var(--ink-soft); background: var(--surface); border: 1px solid var(--border-strong); padding: 6px 14px; border-radius: var(--r-pill); }
+.quiz-progress .score b { color: var(--accent); }
+.quiz { padding: 22px; }
+.quiz + .quiz { margin-top: 16px; }
+.quiz .qkind { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--ink-mute); margin-bottom: 8px; }
+.quiz .q { font-weight: 600; color: var(--ink); margin-bottom: 14px; font-size: 16px; }
+.quiz-opts { display: grid; gap: 10px; }
+.quiz-opt { text-align: left; padding: 13px 16px; border-radius: var(--r-md); background: var(--surface); border: 1px solid var(--border-strong); color: var(--ink-soft); font-size: 14px; transition: border-color .18s ease, background .18s ease; }
+.quiz-opt:hover { border-color: var(--accent); }
+.quiz-opt.correct { border-color: var(--accent-2); background: color-mix(in srgb, var(--accent-2) 12%, var(--surface)); color: var(--ink); }
+.quiz-opt.wrong { border-color: var(--warn); background: color-mix(in srgb, var(--warn) 10%, var(--surface)); }
+.quiz-fb { margin-top: 14px; font-size: 13.5px; color: var(--ink-soft); display: none; }
+.quiz-fb.show { display: block; }
+.reveal-btn { display: inline-flex; align-items: center; gap: 7px; padding: 9px 15px; border-radius: var(--r-pill); font-weight: 600; font-size: 13px; background: var(--surface); border: 1px solid var(--border-strong); color: var(--ink); }
+.reveal-btn:hover { background: var(--surface-hover); }
+
+/* node-flow diagram */
+.flow { display: flex; flex-direction: column; align-items: center; gap: 2px; margin: 28px 0 8px; }
+.fnode { padding: 12px 22px; border-radius: var(--r-md); background: var(--surface); border: 1px solid var(--border-strong); font-family: var(--mono); font-size: 13.5px; font-weight: 600; color: var(--ink); box-shadow: var(--shadow-card); text-align: center; transition: transform .15s ease, box-shadow .2s ease; }
+.fnode:hover { transform: translateY(-1px); box-shadow: var(--shadow-elevated); }
+.fnode.cap { background: var(--accent); color: #fff; border-color: transparent; font-family: var(--sans); font-weight: 700; font-size: 12px; letter-spacing: .04em; padding: 9px 26px; }
+.fnode.decision { position: relative; width: 230px; min-height: 96px; margin: 10px auto 14px; padding: 0 32px; display: flex; align-items: center; justify-content: center; background: var(--surface-muted); border: none; box-shadow: none; clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%); filter: drop-shadow(0 3px 7px rgb(0 0 0 / .14)); font-size: 12px; }
+.fnode.decision:hover { transform: translateY(-1px); }
+.fnode.skip { opacity: .55; font-style: italic; font-weight: 400; box-shadow: none; }
+.fnode.end { background: var(--surface-muted); border-style: dashed; color: var(--ink-mute); font-family: var(--sans); font-size: 11.5px; font-weight: 600; box-shadow: none; padding: 7px 18px; }
+.farrow { color: var(--ink-mute); font-size: 18px; line-height: 1.4; }
+.farrow.diag { font-size: 21px; }
+.fbranch { display: flex; gap: 28px; align-items: flex-start; justify-content: center; flex-wrap: wrap; margin: 0 0 2px; }
+.fpath { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.fcond { font-size: 11px; font-weight: 600; padding: 4px 11px; border-radius: var(--r-pill); background: var(--surface-muted); border: 1px solid var(--border); margin-bottom: 4px; white-space: nowrap; text-align: center; }
+.fcond.warn { color: var(--warn); border-color: color-mix(in srgb, var(--warn) 40%, var(--border)); }
+.fcond.ok { color: var(--accent-2); border-color: color-mix(in srgb, var(--accent-2) 40%, var(--border)); }
+.fcond.neutral { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 40%, var(--border)); }
+.fjoin { font-size: 12.5px; color: var(--ink-mute); text-align: center; margin: 6px 0; font-style: italic; }
+
+/* state trace */
+.state-trace { display: flex; gap: 14px; align-items: center; overflow-x: auto; padding: 6px 2px 14px; margin: 18px 0; }
+.state-step { flex: 0 0 auto; }
+.state-step .step-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--ink-mute); margin-bottom: 8px; text-align: center; }
+.state-step pre.code { margin: 0; padding: 14px 16px; font-size: 12px; min-width: 190px; line-height: 1.6; }
+.state-step pre.code .new { color: var(--accent-2); font-weight: 600; }
+.state-arrow { color: var(--ink-mute); font-size: 18px; flex: 0 0 auto; }
+
+/* failure scenario cards */
+.fail-card { padding: 22px; }
+.fail-card .fail-head { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.fail-card .fail-ic { width: 32px; height: 32px; flex: none; border-radius: 9px; display: grid; place-items: center; background: color-mix(in srgb, var(--warn) 14%, transparent); color: var(--warn); }
+.fail-card .fail-ic svg { width: 17px; height: 17px; }
+.fail-card h3 { font-size: 17px; }
+.fail-row { display: grid; grid-template-columns: 84px 1fr; gap: 10px; font-size: 13.5px; margin-bottom: 8px; }
+.fail-row .lbl2 { color: var(--ink-mute); font-weight: 600; font-size: 11.5px; text-transform: uppercase; letter-spacing: .04em; padding-top: 2px; }
+.fail-row p { margin: 0; font-size: 13.5px; }
+
+/* observability mini-dashboard */
+.obs-grid { display: grid; gap: 14px; margin: 22px 0; }
+@media (min-width: 720px) { .obs-grid { grid-template-columns: repeat(3,1fr); } }
+.obs-card { padding: 18px; text-align: center; }
+.obs-card .obs-num { font-family: var(--serif); font-size: 34px; color: var(--accent); line-height: 1; margin-bottom: 6px; }
+.obs-card .obs-lbl { font-size: 12.5px; color: var(--ink-mute); }
+
+.site-footer { margin-top: var(--space-section); border-top: 1px solid var(--border); padding: 40px 0 64px; }
+.site-footer .container { display: flex; flex-wrap: wrap; gap: 14px; justify-content: space-between; align-items: center; }
+.site-footer p { margin: 0; font-size: 13px; color: var(--ink-mute); }
+.kicker { font-family: var(--hand); font-size: 22px; color: var(--accent); transform: rotate(-2deg); display: inline-block; }
+.divider { height: 1px; background: var(--border); margin: 0; border: none; }
+</style>
+</head>
+<body>
+<div class="mesh" aria-hidden="true"></div>
+
+<header class="site-header">
+  <a class="brand" href="index.html" title="All LangGraph chapters">
+    <span class="brand-mark">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="3"/><circle cx="18" cy="18" r="3"/><circle cx="18" cy="6" r="3"/><path d="M9 6h6"/><path d="M6 9v6a3 3 0 0 0 3 3h6"/></svg>
+    </span>
+    <span class="brand-text">
+      <span>LangGraph · Ch. 04</span>
+      <small>Resilient Workflows</small>
+    </span>
+  </a>
+  <nav class="section-nav" aria-label="Sections">
+    <a href="#scenario">Scenario</a>
+    <a href="#state">State</a>
+    <a href="#failures">Error handling</a>
+    <a href="#flow">Graph</a>
+    <a href="#fallbacks">Fallbacks</a>
+    <a href="#observability">Observability</a>
+    <a href="#runs">Sample runs</a>
+    <a href="#quiz">Quiz</a>
+  </nav>
+  <div class="theme-toggle" role="group" aria-label="Theme">
+    <button type="button" data-theme-set="light" aria-pressed="false" title="Light theme">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
+      <span class="label-txt">Light</span>
+    </button>
+    <button type="button" data-theme-set="dark" aria-pressed="false" title="Dark theme">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+      <span class="label-txt">Dark</span>
+    </button>
+    <button type="button" data-theme-set="system" aria-pressed="false" title="System theme">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8"/><path d="M12 17v4"/></svg>
+      <span class="label-txt">Auto</span>
+    </button>
+  </div>
+</header>
+
+<main>
+  <section class="hero">
+    <div class="container">
+      <span class="hero-eyebrow"><span class="dot"></span> Chapter 04 · Worked example</span>
+      <h1>When things fail,<br/><em>keep</em> the workflow useful.</h1>
+      <p class="hero-sub">Real systems don't get a clean run every time. APIs go down, documents arrive corrupted, and some jobs are simply too big to finish in time. We'll build a LangGraph workflow for legal-contract processing that treats failure as a normal input — not an exception — and still hands back something a human can act on.</p>
+      <div class="hero-chips">
+        <span class="chip"><b>3</b> failure scenarios</span>
+        <span class="chip"><b>3</b> decision points</span>
+        <span class="chip"><b>5</b> quiz questions</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Scenario -->
+  <section class="block" id="scenario">
+    <div class="container">
+      <div class="eyebrow"><span class="num">1</span> The problem</div>
+      <h2>Resilience isn't a nice-to-have here</h2>
+      <p class="lede">A law firm runs hundreds of contracts a day through an automated pipeline: extract key fields, validate legal clauses, generate a summary. Every minute of downtime delays a deal. But the dependencies are flaky — OCR services blip, the external legal-clause database goes offline, and some contracts are simply too long to process whole within the time budget.</p>
+      <div class="grid cols-3" style="margin-top:22px">
+        <div class="glass card">
+          <h3>What "resilient" means here</h3>
+          <p>The system keeps producing <i>something useful</i> when a piece breaks — a partial extraction, a fallback source, or a clean hand-off to a human — instead of throwing an exception and stopping.</p>
+        </div>
+        <div class="glass card">
+          <h3>What it isn't</h3>
+          <p>Resilience isn't "never fails." It's having a planned, recorded response for each way the system <i>can</i> fail, so a failure degrades the result instead of destroying it.</p>
+        </div>
+        <div class="glass card">
+          <h3>Why a graph helps</h3>
+          <p>Each failure mode lives in its own node with its own conditional edge. You can reason about "what happens if OCR is down" without re-reading the whole pipeline.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- State schema -->
+  <section class="block" id="state">
+    <div class="container">
+      <div class="eyebrow"><span class="num">2</span> State</div>
+      <h2>State has two jobs, not one</h2>
+      <p class="lede">Most tutorials only model the business output. A resilient workflow's state also has to carry <i>how</i> the result was produced — what failed, what filled in for it, and who needs to see that.</p>
+      <pre class="code"><span class="k">class</span> <span class="f">LegalDocumentState</span>(TypedDict):
+    <span class="c"># --- business data ---</span>
+    document_id: str
+    document_content: str
+    status: NotRequired[Literal[<span class="s">"processing"</span>, <span class="s">"completed"</span>, <span class="s">"partial"</span>, <span class="s">"manual_review"</span>]]
+    extracted_fields: NotRequired[dict]
+    validation_results: NotRequired[dict]
+    summary: NotRequired[str]
+
+    <span class="c"># --- operating context ---</span>
+    urgency: Literal[<span class="s">"standard"</span>, <span class="s">"rush"</span>]
+    system_health: Literal[<span class="s">"healthy"</span>, <span class="s">"degraded"</span>, <span class="s">"offline"</span>]
+    processing_history: dict   <span class="c"># prior_failures for this doc type</span>
+
+    <span class="c"># --- resilience tracking ---</span>
+    retry_counts: NotRequired[dict[str, int]]
+    fallback_usage: NotRequired[list[str]]
+    error_logs: NotRequired[list[dict]]
+
+    <span class="c"># --- compliance / observability ---</span>
+    audit_trail: NotRequired[list[dict]]
+    data_sources_used: NotRequired[list[str]]
+    compliance_notes: NotRequired[list[str]]</pre>
+      <div class="grid cols-2" style="margin-top:4px">
+        <div class="glass card">
+          <h3>Business fields</h3>
+          <p>What the user actually wants: the extracted fields, the validation results, the summary. This is the part most state schemas stop at.</p>
+        </div>
+        <div class="glass card">
+          <h3>Resilience fields</h3>
+          <p><code class="inline">retry_counts</code>, <code class="inline">fallback_usage</code>, and <code class="inline">error_logs</code> exist purely so the workflow — and a human later — can answer "why does this result look the way it does?"</p>
+        </div>
+      </div>
+      <div class="note tip">
+        <span class="lbl">The pattern, generalized</span>
+        <p>Any resilient agent state needs the same three layers:</p>
+        <ul>
+          <li><b>What happened</b> — the business output.</li>
+          <li><b>What almost didn't happen</b> — errors, retries, fallbacks.</li>
+          <li><b>Who needs to know</b> — audit trail, compliance notes.</li>
+        </ul>
+        <p>Skip the last two and your system can still recover from failures — it just can't explain how, which makes debugging and trust-building much harder later.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Error handling -->
+  <section class="block" id="failures">
+    <div class="container">
+      <div class="eyebrow"><span class="num">3</span> Error handling strategies</div>
+      <h2>Three failure modes, three plans</h2>
+      <p class="lede">"Handle errors" is too vague to build from. A resilient node needs a concrete answer to three questions: how do you <i>detect</i> the failure, what's the <i>fallback</i>, and what gets <i>recorded</i> about it.</p>
+      <div class="grid cols-3" style="margin-top:22px">
+        <div class="glass fail-card">
+          <div class="fail-head">
+            <span class="fail-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"/><path d="M12 2v10"/></svg></span>
+            <h3>External API failure</h3>
+          </div>
+          <div class="fail-row"><span class="lbl2">Detect</span><p>OCR service or legal database reports <code class="inline">degraded</code>/<code class="inline">offline</code>, or the call itself errors out.</p></div>
+          <div class="fail-row"><span class="lbl2">Fallback</span><p>OCR down → use embedded document text. Legal DB down → validate against an internal clause library instead.</p></div>
+          <div class="fail-row"><span class="lbl2">Record</span><p>Increment <code class="inline">retry_counts</code>, log the error, append the fallback name, continue with <code class="inline">status: partial</code>.</p></div>
+        </div>
+        <div class="glass fail-card">
+          <div class="fail-head">
+            <span class="fail-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg></span>
+            <h3>Data quality issue</h3>
+          </div>
+          <div class="fail-row"><span class="lbl2">Detect</span><p>Empty content, or a corrupted/unreadable scan that extraction can't make sense of.</p></div>
+          <div class="fail-row"><span class="lbl2">Fallback</span><p>None, by design — don't let a model guess at legal conclusions from broken input. Route straight to <code class="inline">manual_review</code>.</p></div>
+          <div class="fail-row"><span class="lbl2">Record</span><p>Set <code class="inline">status: manual_review</code>, log the failed step, add a compliance note explaining why automation stopped.</p></div>
+        </div>
+        <div class="glass fail-card">
+          <div class="fail-head">
+            <span class="fail-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></span>
+            <h3>Processing timeout</h3>
+          </div>
+          <div class="fail-row"><span class="lbl2">Detect</span><p>Document is long or flagged complex (multi-party, MSA language) before you've even started extracting.</p></div>
+          <div class="fail-row"><span class="lbl2">Fallback</span><p>Switch to chunked processing — work the document in pieces and return a partial-but-useful extraction instead of timing out on the whole thing.</p></div>
+          <div class="fail-row"><span class="lbl2">Record</span><p>Log the timeout risk, mark <code class="inline">chunked_processing</code> as a fallback, note the result may be partial.</p></div>
+        </div>
+      </div>
+      <div class="note">
+        <span class="lbl">The shape repeats</span>
+        <p>Notice all three follow the same three-part template, just with different answers each time:</p>
+        <ul>
+          <li><b>Detect</b> — what tells you this failure is happening right now.</li>
+          <li><b>Fallback</b> — the alternative path that still produces a usable result.</li>
+          <li><b>Record</b> — what gets written to state so the failure is visible later.</li>
+        </ul>
+        <p>Once you have that template, "handling a new failure mode" means filling in three blanks, not redesigning the graph.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Visual graph -->
+  <section class="block" id="flow">
+    <div class="container">
+      <div class="eyebrow"><span class="num">4</span> The graph, visually</div>
+      <h2>Three decision points, one spine</h2>
+      <p class="lede">Unlike a single-branch workflow, this graph has to decide three separate times: which way to start, what to do if extraction struggled, and whether the result is trustworthy enough to finish automatically.</p>
+
+      <div class="flow">
+        <div class="fnode cap">START</div>
+        <div class="farrow">↓</div>
+        <div class="fnode">assess_document</div>
+        <div class="farrow">↓</div>
+        <div class="fnode decision">choose_initial_path()</div>
+        <div class="fbranch">
+          <div class="fpath">
+            <div class="farrow diag">↙</div>
+            <span class="fcond warn">corrupted / unreadable</span>
+            <div class="farrow">↓</div>
+            <div class="fnode">manual_review</div>
+            <div class="farrow">↓</div>
+            <div class="fnode end">END</div>
+          </div>
+          <div class="fpath">
+            <div class="farrow">↓</div>
+            <span class="fcond ok">simple + rush + healthy</span>
+            <div class="farrow">↓</div>
+            <div class="fnode">fast_track_extract</div>
+          </div>
+          <div class="fpath">
+            <div class="farrow">↓</div>
+            <span class="fcond neutral">otherwise</span>
+            <div class="farrow">↓</div>
+            <div class="fnode">standard_extract</div>
+          </div>
+          <div class="fpath">
+            <div class="farrow diag">↘</div>
+            <span class="fcond warn">complex / degraded / repeat failures</span>
+            <div class="farrow">↓</div>
+            <div class="fnode">chunked_processing</div>
+          </div>
+        </div>
+
+        <div class="fjoin">fast_track_extract &amp; standard_extract converge here — chunked_processing skips straight to validate_clauses</div>
+        <div class="fnode decision">choose_after_extraction()</div>
+        <div class="fbranch">
+          <div class="fpath">
+            <div class="farrow diag">↙</div>
+            <span class="fcond warn">extraction failed</span>
+            <div class="farrow">↓</div>
+            <div class="fnode">manual_review</div>
+          </div>
+          <div class="fpath">
+            <div class="farrow">↓</div>
+            <span class="fcond ok">usable text</span>
+            <div class="farrow">↓</div>
+            <div class="fnode">validate_clauses</div>
+          </div>
+          <div class="fpath">
+            <div class="farrow diag">↘</div>
+            <span class="fcond neutral">timeout risk, no text yet</span>
+            <div class="farrow">↓</div>
+            <div class="fnode skip">→ chunked_processing</div>
+          </div>
+        </div>
+
+        <div class="fjoin">validate_clauses runs next for every surviving path</div>
+        <div class="fnode decision">choose_completion_path()</div>
+        <div class="fbranch">
+          <div class="fpath">
+            <div class="farrow diag">↙</div>
+            <span class="fcond warn">high risk, attorney review needed</span>
+            <div class="farrow">↓</div>
+            <div class="fnode">manual_review</div>
+          </div>
+          <div class="fpath">
+            <div class="farrow diag">↘</div>
+            <span class="fcond ok">acceptable risk</span>
+            <div class="farrow">↓</div>
+            <div class="fnode">generate_summary</div>
+          </div>
+        </div>
+        <div class="farrow">↓</div>
+        <div class="fnode cap">END</div>
+      </div>
+
+      <div class="note tip">
+        <span class="lbl">Read this as</span>
+        <p>Every path eventually reaches either <code class="inline">generate_summary</code> or <code class="inline">manual_review</code> — there's no dead end. The graph has three forks, but exactly two destinations.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Fallback mechanisms -->
+  <section class="block" id="fallbacks">
+    <div class="container">
+      <div class="eyebrow"><span class="num">5</span> Fallback mechanisms</div>
+      <h2>A fallback is a planned downgrade, not a hope</h2>
+      <p class="lede">"Fallback" gets used loosely. In a resilient workflow it means something specific: a pre-built, lower-cost alternative path that's wired into the graph <i>before</i> anything breaks — not error-handling code bolted on after.</p>
+      <div class="grid cols-2" style="margin-top:22px">
+        <div class="glass card">
+          <h3>In this workflow</h3>
+          <ul>
+            <li><b>Embedded text extraction</b> stands in for OCR when the OCR service is down.</li>
+            <li><b>Internal clause library</b> stands in for the external legal database.</li>
+            <li><b>Chunked processing</b> stands in for full-document extraction when the document is too big to finish in time.</li>
+          </ul>
+          <p>Each is a real, working alternative — just narrower than the primary path.</p>
+        </div>
+        <div class="glass card">
+          <h3>In a typical LLM agent</h3>
+          <p>The same pattern shows up as:</p>
+          <ul>
+            <li>A smaller/cheaper model as a backup when the primary model errors or rate-limits.</li>
+            <li><b>Retry with exponential backoff</b> for transient network errors.</li>
+            <li>A cached or templated response when a live generation call can't complete in time.</li>
+          </ul>
+        </div>
+      </div>
+      <pre class="code"><span class="c"># the general shape of a fallback, independent of domain</span>
+<span class="k">def</span> <span class="f">call_with_fallback</span>(primary, fallback, *args):
+    <span class="k">try</span>:
+        <span class="k">return</span> retry_with_backoff(primary, *args, max_attempts=3)
+    <span class="k">except</span> ServiceUnavailable:
+        result = fallback(*args)
+        log_fallback_used(name=fallback.__name__)
+        <span class="k">return</span> result</pre>
+      <div class="note warn">
+        <span class="lbl">Fallbacks have a ceiling</span>
+        <p>A fallback buys you continuity, not parity. The internal clause library is less thorough than the live legal database — that's why <code class="inline">validate_clauses</code> still raises <code class="inline">requires_attorney_review</code> more often when it had to use the fallback. A good fallback admits it's a downgrade in the state, instead of pretending the result is as strong as the primary path.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Observability -->
+  <section class="block" id="observability">
+    <div class="container">
+      <div class="eyebrow"><span class="num">6</span> Observability for improvement</div>
+      <h2>If you can't see the failure, you can't fix it</h2>
+      <p class="lede">Resilience and observability are two sides of the same coin. Handling a failure gracefully in the moment is only half the job — the workflow also needs to leave a trail so someone can later ask "how often does this happen, and where?"</p>
+      <div class="obs-grid">
+        <div class="glass obs-card">
+          <div class="obs-num">processing_steps</div>
+          <div class="obs-lbl">Which node ran, when, success / fallback / failure — replay the whole run after the fact.</div>
+        </div>
+        <div class="glass obs-card">
+          <div class="obs-num">error_logs</div>
+          <div class="obs-lbl">Node, error type, message, retry count, whether a fallback covered it — the raw material for a "what's breaking" dashboard.</div>
+        </div>
+        <div class="glass obs-card">
+          <div class="obs-num">audit_trail</div>
+          <div class="obs-lbl">Event, actor, timestamp, data sources used — the compliance answer to "what did the system rely on for this decision?"</div>
+        </div>
+      </div>
+      <div class="note">
+        <span class="lbl">From log line to dashboard</span>
+        <p>None of this is useful trapped inside one run's state. The reason to write <code class="inline">error_logs</code> and <code class="inline">fallback_usage</code> as structured fields — not free-text print statements — is so they can be streamed out and aggregated downstream into questions like:</p>
+        <ul>
+          <li>Which node fails most often?</li>
+          <li>Which fallback gets used most often?</li>
+          <li>Does a particular document type keep landing in <code class="inline">manual_review</code>?</li>
+        </ul>
+        <p>That aggregate view is what tells you where to actually invest engineering effort next, instead of guessing.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Sample runs -->
+  <section class="block" id="runs">
+    <div class="container">
+      <div class="eyebrow"><span class="num">7</span> In action</div>
+      <h2>Four contracts, four outcomes</h2>
+      <p class="lede">Same graph, four different conditions going in — watch how the outcome tracks the failure, not just the contract content.</p>
+      <div class="glass" style="padding:6px;overflow-x:auto;margin-top:18px">
+        <table class="runtable">
+          <thead><tr><th>Document</th><th>Conditions</th><th>Path taken</th><th>Outcome</th></tr></thead>
+          <tbody>
+            <tr>
+              <td class="ticket">CON-001 — standard NDA, parties / dates / clauses all present</td>
+              <td>rush, system healthy, 0 prior failures</td>
+              <td><span class="pill">standard_extract → validate_clauses</span></td>
+              <td><span class="pill accent">completed</span></td>
+            </tr>
+            <tr>
+              <td class="ticket">CON-002 — service agreement, missing a liability clause</td>
+              <td>standard, system <span class="pill warn">offline</span>, 1 prior failure</td>
+              <td><span class="pill">standard_extract (OCR fallback) → validate_clauses (DB fallback)</span></td>
+              <td><span class="pill accent">partial</span> · 2 fallbacks used</td>
+            </tr>
+            <tr>
+              <td class="ticket">CON-003 — long multi-party master services agreement</td>
+              <td>standard, system <span class="pill warn">degraded</span>, 2 prior failures</td>
+              <td><span class="pill">chunked_processing → validate_clauses</span></td>
+              <td><span class="pill warn">manual_review</span> · high risk from partial extraction</td>
+            </tr>
+            <tr>
+              <td class="ticket">CON-004 — "CORRUPTED UNREADABLE SCAN"</td>
+              <td>rush, system healthy, 0 prior failures</td>
+              <td><span class="pill warn">manual_review</span> (immediately, no extraction attempted)</td>
+              <td><span class="pill warn">manual_review</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="note warn" style="margin-top:18px">
+        <span class="lbl">The interesting one</span>
+        <p>CON-003 isn't broken input — every field is technically readable. It lands in <code class="inline">manual_review</code> because <i>complexity + a degraded system + a history of failures</i> combine to force chunked (partial) processing, and the partial extraction then trips the high-risk threshold during validation. Three separate "minor" pressures compounded into an escalation — exactly the kind of failure a purely linear pipeline wouldn't have caught.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Quiz -->
+  <section class="block" id="quiz">
+    <div class="container-narrow">
+      <div class="eyebrow"><span class="num">✓</span> Practice</div>
+      <h2>Quick check</h2>
+      <p class="lede">Five multiple-choice questions on the resilience patterns behind this workflow.</p>
+
+      <div class="quiz-progress">
+        <span class="score">Score: <b id="score-val">0</b> / 5</span>
+        <button class="reveal-btn" id="quiz-reset">Reset quiz</button>
+      </div>
+
+      <div class="glass quiz" data-kind="scored">
+        <div class="qkind">Multiple choice</div>
+        <div class="q">What's the key difference between "graceful degradation" and a system that just logs an error and stops?</div>
+        <div class="quiz-opts">
+          <button class="quiz-opt" data-correct="false">There is no difference — both produce no output</button>
+          <button class="quiz-opt" data-correct="true">Graceful degradation keeps producing a useful, lower-quality result instead of halting entirely</button>
+          <button class="quiz-opt" data-correct="false">Graceful degradation always retries until it succeeds, no matter how long it takes</button>
+          <button class="quiz-opt" data-correct="false">Graceful degradation skips logging to save time</button>
+        </div>
+        <div class="quiz-fb"></div>
+      </div>
+
+      <div class="glass quiz" data-kind="scored">
+        <div class="qkind">Multiple choice</div>
+        <div class="q">A document's content is empty or unreadable. What should the workflow do, and why?</div>
+        <div class="quiz-opts">
+          <button class="quiz-opt" data-correct="false">Run it through extraction anyway and hope the result is close enough</button>
+          <button class="quiz-opt" data-correct="false">Retry with exponential backoff until the content becomes readable</button>
+          <button class="quiz-opt" data-correct="true">Route straight to manual_review — don't generate legal conclusions from unreliable source material</button>
+          <button class="quiz-opt" data-correct="false">Use the internal clause library as a substitute for the missing content</button>
+        </div>
+        <div class="quiz-fb"></div>
+      </div>
+
+      <div class="glass quiz" data-kind="scored">
+        <div class="qkind">Multiple choice</div>
+        <div class="q">The external legal-clause database is offline. What's the fallback in this design?</div>
+        <div class="quiz-opts">
+          <button class="quiz-opt" data-correct="false">Skip validation entirely and go straight to generate_summary</button>
+          <button class="quiz-opt" data-correct="true">Validate against an internal clause library instead</button>
+          <button class="quiz-opt" data-correct="false">Re-run OCR to try to recover the missing clauses</button>
+          <button class="quiz-opt" data-correct="false">Route to fast_track_extract</button>
+        </div>
+        <div class="quiz-fb"></div>
+      </div>
+
+      <div class="glass quiz" data-kind="scored">
+        <div class="qkind">Multiple choice</div>
+        <div class="q">Which combination of signals sends a document into chunked_processing?</div>
+        <div class="quiz-opts">
+          <button class="quiz-opt" data-correct="false">The document is simple and the system is healthy</button>
+          <button class="quiz-opt" data-correct="true">The document is complex, or the system is degraded, or this document type has failed repeatedly before</button>
+          <button class="quiz-opt" data-correct="false">The document is marked rush priority</button>
+          <button class="quiz-opt" data-correct="false">The legal database is unavailable</button>
+        </div>
+        <div class="quiz-fb"></div>
+      </div>
+
+      <div class="glass quiz" data-kind="scored">
+        <div class="qkind">Multiple choice</div>
+        <div class="q">Why record error_logs and fallback_usage as structured state fields instead of just printing them to the console?</div>
+        <div class="quiz-opts">
+          <button class="quiz-opt" data-correct="false">Structured fields run faster than print statements</button>
+          <button class="quiz-opt" data-correct="false">It's required syntax in LangGraph and has no other benefit</button>
+          <button class="quiz-opt" data-correct="true">They can be aggregated downstream into dashboards that show which nodes fail most and which fallbacks get used — the basis for observability and future fixes</button>
+          <button class="quiz-opt" data-correct="false">It prevents the workflow from ever failing again</button>
+        </div>
+        <div class="quiz-fb"></div>
+      </div>
+
+      <div style="margin-top:30px;text-align:center">
+        <span class="kicker">failure handled, deal still closes on time 🎉</span>
+      </div>
+    </div>
+  </section>
+
+  <hr class="divider"/>
+  <footer class="site-footer">
+    <div class="container">
+      <p>Chapter 04 · Resilient Workflows. Back to <a href="index.html">all LangGraph chapters</a> · part of the <a href="../architecture.html">LLM → Agent</a> platform.</p>
+      <p>Built to be clicked. Toggle the theme up top.</p>
+    </div>
+  </footer>
+</main>
+
+<script>
+(function () {
+  'use strict';
+  var root = document.documentElement;
+
+  /* ---------- Theme toggle ---------- */
+  var buttons = document.querySelectorAll('[data-theme-set]');
+  var mq = window.matchMedia('(prefers-color-scheme: dark)');
+  function getPref(){ return root.getAttribute('data-theme-pref') || 'system'; }
+  function applyPref(pref){
+    var resolved = pref === 'system' ? (mq.matches ? 'dark':'light') : pref;
+    root.setAttribute('data-theme', resolved);
+    root.setAttribute('data-theme-pref', pref);
+    try { localStorage.setItem('theme', pref); } catch(e){}
+    updateButtons(pref);
+  }
+  function updateButtons(pref){ buttons.forEach(function(b){ b.setAttribute('aria-pressed', b.getAttribute('data-theme-set')===pref ? 'true':'false'); }); }
+  buttons.forEach(function(b){ b.addEventListener('click', function(){ applyPref(b.getAttribute('data-theme-set')); }); });
+  mq.addEventListener && mq.addEventListener('change', function(){ if (getPref()==='system') applyPref('system'); });
+  updateButtons(getPref());
+
+  /* ---------- Mesh perf ---------- */
+  var mesh = document.querySelector('.mesh');
+  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)');
+  if (reduce.matches && mesh) mesh.classList.add('is-paused');
+  document.addEventListener('visibilitychange', function(){
+    if (!mesh) return;
+    if (document.hidden) mesh.classList.add('is-paused');
+    else if (!reduce.matches) mesh.classList.remove('is-paused');
+  });
+
+  /* ---------- Quiz (scored questions) ---------- */
+  var scoreVal = document.getElementById('score-val');
+  var score = 0;
+  var scoredBlocks = document.querySelectorAll('.quiz[data-kind="scored"]');
+  var answeredFlags = [];
+
+  scoredBlocks.forEach(function(block, idx){
+    answeredFlags[idx] = false;
+    var opts = block.querySelectorAll('.quiz-opt');
+    var fb = block.querySelector('.quiz-fb');
+    opts.forEach(function(opt){
+      opt.addEventListener('click', function(){
+        if (answeredFlags[idx]) return;
+        answeredFlags[idx] = true;
+        var correct = opt.getAttribute('data-correct') === 'true';
+        opts.forEach(function(o){ if (o.getAttribute('data-correct') === 'true') o.classList.add('correct'); });
+        if (!correct) opt.classList.add('wrong');
+        else { score++; scoreVal.textContent = score; }
+        fb.textContent = correct ? '✓ Correct.' : '✗ Not quite — the correct answer is highlighted above.';
+        fb.classList.add('show');
+      });
+    });
+  });
+
+  /* ---------- Reset ---------- */
+  document.getElementById('quiz-reset').addEventListener('click', function(){
+    score = 0;
+    scoreVal.textContent = '0';
+    answeredFlags = answeredFlags.map(function(){ return false; });
+    document.querySelectorAll('.quiz-opt').forEach(function(o){ o.classList.remove('correct','wrong'); });
+    document.querySelectorAll('.quiz-fb').forEach(function(f){ f.classList.remove('show'); f.textContent=''; });
+  });
+})();
+</script>
+</body>
+</html>

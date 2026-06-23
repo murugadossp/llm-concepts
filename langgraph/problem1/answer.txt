@@ -1,0 +1,17 @@
+I chose a mostly simple flow with one adaptive branch:
+
+classifier -> urgency assessor -> conditional review/router -> router
+
+A fully linear workflow would be easier to understand and maintain, but it would treat every ticket the same way. That could miss important cases, such as unclear tickets that need review or technical tickets with urgent production impact. Adding conditional edges makes the workflow more adaptable because low-confidence or unknown tickets can go through additional review before final routing.
+
+The classifier -> urgency -> router design keeps each node focused. The classifier only decides the topic, the urgency node only decides priority, and the router combines both signals to choose the final team. This improves maintainability because each node can be tested and improved independently. The trade-off is latency: every ticket must pass through multiple steps, and tickets that need review take even longer. In production, I would need to balance accuracy and speed.
+
+Confidence handling improves correctness because the system does not blindly trust uncertain classifications. If the category is "other" or the confidence is low, the workflow sends the ticket to additional review. This reduces the risk of routing a customer issue to the wrong team. However, too many low-confidence tickets could create a review backlog, so the threshold would need to be monitored and tuned.
+
+For failure paths, I would add timeout handling, fallback routing, and escalation rules. If classification fails or times out, the ticket should not disappear. It should be marked for manual triage. If a ticket is urgent, production-related, or mentions an outage, it should be escalated even if the category is unclear. These rules improve safety but add complexity.
+
+In production, I would track telemetry such as classification confidence, routing decision, urgency level, time spent in each node, number of tickets sent to review, escalation rate, and final resolution outcome. I would also track whether agents reassign tickets after routing, because that is a strong signal that the model or rules made a mistake.
+
+For human-in-the-loop checkpoints, I would add review queues for low-confidence classifications, urgent unclear tickets, and repeated customer complaints. Support agents should be able to correct the category, urgency, and routing decision. Those corrections could be stored as feedback data to improve the classifier and routing rules over time.
+
+Overall, the branching graph is slightly more complex than a simple linear process, but it is safer and more realistic for production because it handles uncertainty, urgency, and escalation explicitly.
