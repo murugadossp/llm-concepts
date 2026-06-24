@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="color-scheme" content="light dark" />
+<title>LangGraph — Coordinator Pattern</title>
+<meta name="description" content="Learn the coordinator pattern for multi-agent systems in LangGraph using a customer refund workflow." />
+<script>(function(){try{var stored=localStorage.getItem('theme');var pref=stored||'system';var resolved=pref==='system'?(window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'):pref;document.documentElement.setAttribute('data-theme',resolved);document.documentElement.setAttribute('data-theme-pref',pref);}catch(e){document.documentElement.setAttribute('data-theme','light');document.documentElement.setAttribute('data-theme-pref','system');}})();</script>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Caveat:wght@500;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="multi-agent-series.css" />
+</head>
+<body>
+<div class="mesh" aria-hidden="true"></div>
+<header class="site-header">
+  <a class="brand" href="index.html"><span class="brand-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="6" cy="6" r="3"/><circle cx="18" cy="18" r="3"/><circle cx="18" cy="6" r="3"/><path d="M9 6h6"/><path d="M6 9v6a3 3 0 0 0 3 3h6"/></svg></span><span class="brand-text"><span>LangGraph</span><small>Coordinator pattern</small></span></a>
+  <nav class="section-nav" aria-label="Sections"><a href="#why">Why</a><a href="#flow">Flow</a><a href="#code">Code</a><a href="#quiz">Quiz</a></nav>
+  <div class="theme-toggle" role="group" aria-label="Theme"><button type="button" data-theme-set="light" aria-pressed="false" title="Light theme">Light</button><button type="button" data-theme-set="dark" aria-pressed="false" title="Dark theme">Dark</button><button type="button" data-theme-set="system" aria-pressed="false" title="System theme">Auto</button></div>
+</header>
+<main>
+  <section class="hero"><div class="container"><span class="hero-eyebrow"><span class="dot"></span> Chapter 06 · Pattern 1</span><h1>The coordinator keeps the <em>whole workflow</em> in view.</h1><p class="hero-sub">Use this pattern when the work has a clear order. In our refund workflow, one coordinator decides whether the order agent, policy agent, quality agent, or response agent should act next.</p><div class="hero-chips"><span class="chip">Central routing</span><span class="chip">Conditional edges</span><span class="chip"><b>4</b> quiz questions</span></div></div></section>
+
+  <section class="block" id="why"><div class="container-narrow"><div class="eyebrow"><span class="num">1</span> Why it exists</div><h2>Dependencies are easier when one node owns the sequence.</h2><p class="lede">The coordinator pattern is useful when every step depends on the previous step. You should not check refund policy before you know the order status, and you should not write the final response before quality risk is settled.</p><div class="note"><span class="lbl">Trade-off</span><p>The coordinator reduces confusion, but it can become too important. If every tiny decision passes through one node, the graph may become slower and harder to change.</p></div></div></section>
+
+  <section class="block" id="flow"><div class="container"><div class="eyebrow"><span class="num">2</span> Click-through flow</div><h2>Watch the coordinator route a refund case.</h2><p class="lede">The coordinator is the only agent that talks to every worker. Worker agents update the shared state, then control returns to the coordinator. They do not call each other directly.</p>
+    <div class="hub-diagram" aria-label="Coordinator hub routes to specialist worker agents">
+      <div class="hub-top"><div class="hub-node">Coordinator agent<br/><span class="pill accent" style="margin-top:8px">reads state · chooses next worker</span></div></div>
+      <div class="hub-lines" aria-hidden="true"></div>
+      <div class="hub-agents">
+        <div class="hub-agent">Order agent<span>order facts</span></div>
+        <div class="hub-agent">Policy agent<span>refund rules</span></div>
+        <div class="hub-agent">Quality agent<span>defect check</span></div>
+        <div class="hub-agent">Response agent<span>customer reply</span></div>
+      </div>
+      <p class="hub-caption">All arrows conceptually go through the coordinator: coordinator → worker → coordinator → next worker. This is the key difference from a simple pipeline.</p>
+    </div>
+    <div class="glass" data-stepper style="padding:18px;margin-top:22px">
+      <div class="trace">
+        <div class="trace-step" data-step><h3>1. Start</h3><p>The customer says: "My blender arrived cracked. I want a refund."</p><pre class="code">{ customer_message: <span class="s">"arrived cracked"</span>, stage: <span class="s">"initial"</span> }</pre></div>
+        <div class="trace-step" data-step><h3>2. Coordinator → Order agent → Coordinator</h3><p>The coordinator routes to the order agent because no order facts exist yet. The order agent writes facts, then returns control.</p><pre class="code">{ stage: <span class="s">"order_checked"</span>, order_status: <span class="s">"delivered yesterday"</span> }</pre></div>
+        <div class="trace-step" data-step><h3>3. Coordinator → Policy agent → Coordinator</h3><p>The coordinator sees order facts are present, then asks the policy agent to check refund eligibility.</p><pre class="code">{ stage: <span class="s">"policy_checked"</span>, policy_result: <span class="s">"eligible"</span> }</pre></div>
+        <div class="trace-step" data-step><h3>4. Coordinator → Quality agent → Coordinator</h3><p>Because the message mentions damage, the coordinator adds a quality review before final response.</p><pre class="code">{ stage: <span class="s">"quality_checked"</span>, defect_found: true }</pre></div>
+        <div class="trace-step" data-step><h3>5. Coordinator → Response agent</h3><p>The coordinator sends the completed case file to the response agent, which writes the customer-safe reply.</p><pre class="code">{ stage: <span class="s">"done"</span>, final_response: <span class="s">"refund approved"</span> }</pre></div>
+      </div>
+      <div class="trace-controls"><span class="pill accent">Step <span data-step-count></span></span><div class="trace-buttons"><button class="btn" data-step-prev>Back</button><button class="btn primary" data-step-next>Next</button></div></div>
+    </div>
+  </div></section>
+
+  <section class="block" id="code"><div class="container-narrow"><div class="eyebrow"><span class="num">3</span> Code shape</div><h2>The coordinator is mostly routing logic.</h2><pre class="code"><span class="k">def</span> <span class="f">coordinator</span>(state: RefundState) -> str:
+    <span class="k">if</span> state[<span class="s">"order_status"</span>] is None:
+        <span class="k">return</span> <span class="s">"order_agent"</span>
+    <span class="k">if</span> state[<span class="s">"policy_result"</span>] is None:
+        <span class="k">return</span> <span class="s">"policy_agent"</span>
+    <span class="k">if</span> state[<span class="s">"defect_claimed"</span>] and state[<span class="s">"defect_found"</span>] is None:
+        <span class="k">return</span> <span class="s">"quality_agent"</span>
+    <span class="k">return</span> <span class="s">"response_agent"</span></pre><p>The graph loops through the coordinator after each worker. That gives one place to manage dependencies and stop conditions.</p></div></section>
+
+  <section class="block" id="quiz"><div class="container-narrow"><div class="eyebrow"><span class="num">✓</span> Practice</div><h2>Coordinator quiz</h2><div class="quiz-progress"><span class="score">Score: <b id="score-val">0</b> / <b id="score-total">5</b></span><button class="btn" id="quiz-reset">Reset quiz</button></div>
+    <div class="glass quiz" data-kind="scored"><div class="qkind">Multiple choice</div><div class="q">When is the coordinator pattern a good fit?</div><div class="quiz-opts"><button class="quiz-opt" data-correct="true">When the workflow has ordered dependencies</button><button class="quiz-opt" data-correct="false">When agents should never share state</button><button class="quiz-opt" data-correct="false">When every agent should run randomly</button><button class="quiz-opt" data-correct="false">When no routing decisions exist</button></div><div class="quiz-fb"></div></div>
+    <div class="glass quiz" data-kind="scored"><div class="qkind">Multiple choice</div><div class="q">What does the coordinator read to decide the next agent?</div><div class="quiz-opts"><button class="quiz-opt" data-correct="false">Only the CSS theme</button><button class="quiz-opt" data-correct="true">The current graph state</button><button class="quiz-opt" data-correct="false">Only the final response</button><button class="quiz-opt" data-correct="false">A hidden spreadsheet</button></div><div class="quiz-fb"></div></div>
+    <div class="glass quiz" data-kind="scored"><div class="qkind">Multiple choice</div><div class="q">What makes LangGraph's conditional logic more powerful than simple if-then statements?</div><div class="quiz-opts"><button class="quiz-opt" data-correct="false">It always executes faster than traditional conditional logic</button><button class="quiz-opt" data-correct="false">It uses machine learning to make every routing decision automatically</button><button class="quiz-opt" data-correct="true">It can evaluate multiple state fields together for complex routing decisions</button><button class="quiz-opt" data-correct="false">It requires less code in every workflow</button></div><div class="quiz-fb"></div></div>
+    <div class="glass quiz" data-kind="scored"><div class="qkind">Multiple choice</div><div class="q">Why does the quality agent run in the example?</div><div class="quiz-opts"><button class="quiz-opt" data-correct="false">Every refund requires quality review</button><button class="quiz-opt" data-correct="true">The customer claimed the product arrived damaged</button><button class="quiz-opt" data-correct="false">The policy agent failed</button><button class="quiz-opt" data-correct="false">The response was already sent</button></div><div class="quiz-fb"></div></div>
+    <div class="glass quiz" data-kind="scored"><div class="qkind">Multiple choice</div><div class="q">What is the main risk of this pattern?</div><div class="quiz-opts"><button class="quiz-opt" data-correct="false">It cannot use conditional edges</button><button class="quiz-opt" data-correct="false">It prevents state updates</button><button class="quiz-opt" data-correct="true">The coordinator can become a bottleneck</button><button class="quiz-opt" data-correct="false">It requires every worker to be identical</button></div><div class="quiz-fb"></div></div>
+  </div></section>
+  <hr class="divider"/><footer class="site-footer"><div class="container"><p>Chapter 06 · Coordinator Pattern. Next: <a href="langgraph-specialist-team-pattern.html">Specialist Team Pattern</a>.</p><p>Back to <a href="index.html">all LangGraph chapters</a>.</p></div></footer>
+</main>
+<script src="multi-agent-series.js"></script>
+</body>
+</html>

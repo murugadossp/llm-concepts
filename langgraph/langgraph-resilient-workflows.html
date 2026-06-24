@@ -272,7 +272,7 @@ code.inline { background: var(--surface-muted); border: 1px solid var(--border);
     <div class="container">
       <span class="hero-eyebrow"><span class="dot"></span> Chapter 04 · Worked example</span>
       <h1>When things fail,<br/><em>keep</em> the workflow useful.</h1>
-      <p class="hero-sub">Real systems don't get a clean run every time. APIs go down, documents arrive corrupted, and some jobs are simply too big to finish in time. We'll build a LangGraph workflow for legal-contract processing that treats failure as a normal input — not an exception — and still hands back something a human can act on.</p>
+      <p class="hero-sub">Real systems don't get a clean run every time. Application programming interfaces (APIs) go down, documents arrive corrupted, and some jobs are too big to finish in time. We'll build a LangGraph workflow for legal-contract processing that treats failure as a normal input — not an exception — and still hands back something a human can act on.</p>
       <div class="hero-chips">
         <span class="chip"><b>3</b> failure scenarios</span>
         <span class="chip"><b>3</b> decision points</span>
@@ -286,7 +286,7 @@ code.inline { background: var(--surface-muted); border: 1px solid var(--border);
     <div class="container">
       <div class="eyebrow"><span class="num">1</span> The problem</div>
       <h2>Resilience isn't a nice-to-have here</h2>
-      <p class="lede">A law firm runs hundreds of contracts a day through an automated pipeline: extract key fields, validate legal clauses, generate a summary. Every minute of downtime delays a deal. But the dependencies are flaky — OCR services blip, the external legal-clause database goes offline, and some contracts are simply too long to process whole within the time budget.</p>
+      <p class="lede">A law firm runs hundreds of contracts a day through an automated pipeline: extract key fields, validate legal clauses, generate a summary. Every minute of downtime delays a deal. But the dependencies are flaky — optical character recognition (OCR) services blip, the external legal-clause database goes offline, and some contracts are too long to process whole within the time budget.</p>
       <div class="grid cols-3" style="margin-top:22px">
         <div class="glass card">
           <h3>What "resilient" means here</h3>
@@ -351,7 +351,7 @@ code.inline { background: var(--surface-muted); border: 1px solid var(--border);
           <li><b>What almost didn't happen</b> — errors, retries, fallbacks.</li>
           <li><b>Who needs to know</b> — audit trail, compliance notes.</li>
         </ul>
-        <p>Skip the last two and your system can still recover from failures — it just can't explain how, which makes debugging and trust-building much harder later.</p>
+        <p>Skip the last two and your system can still recover from failures — it cannot explain how, which makes debugging and trust-building much harder later.</p>
       </div>
     </div>
   </section>
@@ -369,7 +369,7 @@ code.inline { background: var(--surface-muted); border: 1px solid var(--border);
             <h3>External API failure</h3>
           </div>
           <div class="fail-row"><span class="lbl2">Detect</span><p>OCR service or legal database reports <code class="inline">degraded</code>/<code class="inline">offline</code>, or the call itself errors out.</p></div>
-          <div class="fail-row"><span class="lbl2">Fallback</span><p>OCR down → use embedded document text. Legal DB down → validate against an internal clause library instead.</p></div>
+          <div class="fail-row"><span class="lbl2">Fallback</span><p>OCR down → use embedded document text. Legal database down → validate against an internal clause library instead.</p></div>
           <div class="fail-row"><span class="lbl2">Record</span><p>Increment <code class="inline">retry_counts</code>, log the error, append the fallback name, continue with <code class="inline">status: partial</code>.</p></div>
         </div>
         <div class="glass fail-card">
@@ -386,14 +386,14 @@ code.inline { background: var(--surface-muted); border: 1px solid var(--border);
             <span class="fail-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></span>
             <h3>Processing timeout</h3>
           </div>
-          <div class="fail-row"><span class="lbl2">Detect</span><p>Document is long or flagged complex (multi-party, MSA language) before you've even started extracting.</p></div>
+          <div class="fail-row"><span class="lbl2">Detect</span><p>Document is long or flagged complex (multi-party, master service agreement language) before you've even started extracting.</p></div>
           <div class="fail-row"><span class="lbl2">Fallback</span><p>Switch to chunked processing — work the document in pieces and return a partial-but-useful extraction instead of timing out on the whole thing.</p></div>
           <div class="fail-row"><span class="lbl2">Record</span><p>Log the timeout risk, mark <code class="inline">chunked_processing</code> as a fallback, note the result may be partial.</p></div>
         </div>
       </div>
       <div class="note">
         <span class="lbl">The shape repeats</span>
-        <p>Notice all three follow the same three-part template, just with different answers each time:</p>
+        <p>Notice all three follow the same three-part template, with different answers each time:</p>
         <ul>
           <li><b>Detect</b> — what tells you this failure is happening right now.</li>
           <li><b>Fallback</b> — the alternative path that still produces a usable result.</li>
@@ -417,9 +417,9 @@ code.inline { background: var(--surface-muted); border: 1px solid var(--border);
         <div class="fnode">assess_document</div>
         <div class="farrow">↓</div>
         <div class="fnode decision">choose_initial_path()</div>
+        <div class="fjoin">routes to one path based on document quality, urgency, health, and history</div>
         <div class="fbranch">
           <div class="fpath">
-            <div class="farrow diag">↙</div>
             <span class="fcond warn">corrupted / unreadable</span>
             <div class="farrow">↓</div>
             <div class="fnode">manual_review</div>
@@ -427,19 +427,16 @@ code.inline { background: var(--surface-muted); border: 1px solid var(--border);
             <div class="fnode end">END</div>
           </div>
           <div class="fpath">
-            <div class="farrow">↓</div>
             <span class="fcond ok">simple + rush + healthy</span>
             <div class="farrow">↓</div>
             <div class="fnode">fast_track_extract</div>
           </div>
           <div class="fpath">
-            <div class="farrow">↓</div>
             <span class="fcond neutral">otherwise</span>
             <div class="farrow">↓</div>
             <div class="fnode">standard_extract</div>
           </div>
           <div class="fpath">
-            <div class="farrow diag">↘</div>
             <span class="fcond warn">complex / degraded / repeat failures</span>
             <div class="farrow">↓</div>
             <div class="fnode">chunked_processing</div>
@@ -448,21 +445,19 @@ code.inline { background: var(--surface-muted); border: 1px solid var(--border);
 
         <div class="fjoin">fast_track_extract &amp; standard_extract converge here — chunked_processing skips straight to validate_clauses</div>
         <div class="fnode decision">choose_after_extraction()</div>
+        <div class="fjoin">routes based on whether extraction produced usable text or needs recovery</div>
         <div class="fbranch">
           <div class="fpath">
-            <div class="farrow diag">↙</div>
             <span class="fcond warn">extraction failed</span>
             <div class="farrow">↓</div>
             <div class="fnode">manual_review</div>
           </div>
           <div class="fpath">
-            <div class="farrow">↓</div>
             <span class="fcond ok">usable text</span>
             <div class="farrow">↓</div>
             <div class="fnode">validate_clauses</div>
           </div>
           <div class="fpath">
-            <div class="farrow diag">↘</div>
             <span class="fcond neutral">timeout risk, no text yet</span>
             <div class="farrow">↓</div>
             <div class="fnode skip">→ chunked_processing</div>
@@ -471,15 +466,14 @@ code.inline { background: var(--surface-muted); border: 1px solid var(--border);
 
         <div class="fjoin">validate_clauses runs next for every surviving path</div>
         <div class="fnode decision">choose_completion_path()</div>
+        <div class="fjoin">routes to summary or review based on the validated risk</div>
         <div class="fbranch">
           <div class="fpath">
-            <div class="farrow diag">↙</div>
             <span class="fcond warn">high risk, attorney review needed</span>
             <div class="farrow">↓</div>
             <div class="fnode">manual_review</div>
           </div>
           <div class="fpath">
-            <div class="farrow diag">↘</div>
             <span class="fcond ok">acceptable risk</span>
             <div class="farrow">↓</div>
             <div class="fnode">generate_summary</div>
@@ -493,6 +487,45 @@ code.inline { background: var(--surface-muted); border: 1px solid var(--border);
         <span class="lbl">Read this as</span>
         <p>Every path eventually reaches either <code class="inline">generate_summary</code> or <code class="inline">manual_review</code> — there's no dead end. The graph has three forks, but exactly two destinations.</p>
       </div>
+      <pre class="code"><span class="c"># the LangGraph wiring: state, nodes, and conditional edges</span>
+<span class="k">from</span> langgraph.graph <span class="k">import</span> END, START, StateGraph
+
+workflow = StateGraph(LegalDocumentState)
+workflow.add_node(<span class="s">"assess_document"</span>, assess_document)
+workflow.add_node(<span class="s">"fast_track_extract"</span>, fast_track_extract)
+workflow.add_node(<span class="s">"standard_extract"</span>, standard_extract)
+workflow.add_node(<span class="s">"chunked_processing"</span>, chunked_processing)
+workflow.add_node(<span class="s">"validate_clauses"</span>, validate_clauses)
+workflow.add_node(<span class="s">"generate_summary"</span>, generate_summary)
+workflow.add_node(<span class="s">"manual_review"</span>, manual_review)
+
+workflow.add_edge(START, <span class="s">"assess_document"</span>)
+workflow.add_conditional_edges(
+    <span class="s">"assess_document"</span>,
+    choose_initial_path,
+    {
+        <span class="s">"manual_review"</span>: <span class="s">"manual_review"</span>,
+        <span class="s">"fast_track"</span>: <span class="s">"fast_track_extract"</span>,
+        <span class="s">"standard"</span>: <span class="s">"standard_extract"</span>,
+        <span class="s">"chunked"</span>: <span class="s">"chunked_processing"</span>,
+    },
+)
+workflow.add_conditional_edges(
+    <span class="s">"standard_extract"</span>,
+    choose_after_extraction,
+    {<span class="s">"manual_review"</span>: <span class="s">"manual_review"</span>, <span class="s">"validate"</span>: <span class="s">"validate_clauses"</span>, <span class="s">"chunked"</span>: <span class="s">"chunked_processing"</span>},
+)
+workflow.add_edge(<span class="s">"fast_track_extract"</span>, <span class="s">"validate_clauses"</span>)
+workflow.add_edge(<span class="s">"chunked_processing"</span>, <span class="s">"validate_clauses"</span>)
+workflow.add_conditional_edges(
+    <span class="s">"validate_clauses"</span>,
+    choose_completion_path,
+    {<span class="s">"summarize"</span>: <span class="s">"generate_summary"</span>, <span class="s">"manual_review"</span>: <span class="s">"manual_review"</span>},
+)
+workflow.add_edge(<span class="s">"generate_summary"</span>, END)
+workflow.add_edge(<span class="s">"manual_review"</span>, END)
+
+app = workflow.compile()</pre>
     </div>
   </section>
 
@@ -510,10 +543,10 @@ code.inline { background: var(--surface-muted); border: 1px solid var(--border);
             <li><b>Internal clause library</b> stands in for the external legal database.</li>
             <li><b>Chunked processing</b> stands in for full-document extraction when the document is too big to finish in time.</li>
           </ul>
-          <p>Each is a real, working alternative — just narrower than the primary path.</p>
+          <p>Each is a real, working alternative — narrower than the primary path, but still useful.</p>
         </div>
         <div class="glass card">
-          <h3>In a typical LLM agent</h3>
+          <h3>In a typical large language model (LLM) agent</h3>
           <p>The same pattern shows up as:</p>
           <ul>
             <li>A smaller/cheaper model as a backup when the primary model errors or rate-limits.</li>
@@ -575,21 +608,21 @@ code.inline { background: var(--surface-muted); border: 1px solid var(--border);
     <div class="container">
       <div class="eyebrow"><span class="num">7</span> In action</div>
       <h2>Four contracts, four outcomes</h2>
-      <p class="lede">Same graph, four different conditions going in — watch how the outcome tracks the failure, not just the contract content.</p>
+      <p class="lede">Same graph, four different conditions going in — watch how the outcome tracks the failure, not only the contract content.</p>
       <div class="glass" style="padding:6px;overflow-x:auto;margin-top:18px">
         <table class="runtable">
           <thead><tr><th>Document</th><th>Conditions</th><th>Path taken</th><th>Outcome</th></tr></thead>
           <tbody>
             <tr>
-              <td class="ticket">CON-001 — standard NDA, parties / dates / clauses all present</td>
+              <td class="ticket">CON-001 — standard non-disclosure agreement (NDA), parties / dates / clauses all present</td>
               <td>rush, system healthy, 0 prior failures</td>
-              <td><span class="pill">standard_extract → validate_clauses</span></td>
+              <td><span class="pill">fast_track_extract → validate_clauses</span></td>
               <td><span class="pill accent">completed</span></td>
             </tr>
             <tr>
               <td class="ticket">CON-002 — service agreement, missing a liability clause</td>
               <td>standard, system <span class="pill warn">offline</span>, 1 prior failure</td>
-              <td><span class="pill">standard_extract (OCR fallback) → validate_clauses (DB fallback)</span></td>
+              <td><span class="pill">standard_extract (OCR fallback) → validate_clauses (database fallback)</span></td>
               <td><span class="pill accent">partial</span> · 2 fallbacks used</td>
             </tr>
             <tr>
@@ -619,16 +652,16 @@ code.inline { background: var(--surface-muted); border: 1px solid var(--border);
     <div class="container-narrow">
       <div class="eyebrow"><span class="num">✓</span> Practice</div>
       <h2>Quick check</h2>
-      <p class="lede">Five multiple-choice questions on the resilience patterns behind this workflow.</p>
+      <p class="lede">Seven multiple-choice questions on the resilience patterns behind this workflow.</p>
 
       <div class="quiz-progress">
-        <span class="score">Score: <b id="score-val">0</b> / 5</span>
+        <span class="score">Score: <b id="score-val">0</b> / 7</span>
         <button class="reveal-btn" id="quiz-reset">Reset quiz</button>
       </div>
 
       <div class="glass quiz" data-kind="scored">
         <div class="qkind">Multiple choice</div>
-        <div class="q">What's the key difference between "graceful degradation" and a system that just logs an error and stops?</div>
+        <div class="q">What's the key difference between "graceful degradation" and a system that logs an error and stops?</div>
         <div class="quiz-opts">
           <button class="quiz-opt" data-correct="false">There is no difference — both produce no output</button>
           <button class="quiz-opt" data-correct="true">Graceful degradation keeps producing a useful, lower-quality result instead of halting entirely</button>
@@ -646,6 +679,18 @@ code.inline { background: var(--surface-muted); border: 1px solid var(--border);
           <button class="quiz-opt" data-correct="false">Retry with exponential backoff until the content becomes readable</button>
           <button class="quiz-opt" data-correct="true">Route straight to manual_review — don't generate legal conclusions from unreliable source material</button>
           <button class="quiz-opt" data-correct="false">Use the internal clause library as a substitute for the missing content</button>
+        </div>
+        <div class="quiz-fb"></div>
+      </div>
+
+      <div class="glass quiz" data-kind="scored">
+        <div class="qkind">Multiple choice</div>
+        <div class="q">What is the primary goal of graceful degradation in LangGraph workflows?</div>
+        <div class="quiz-opts">
+          <button class="quiz-opt" data-correct="false">To improve system performance above all else</button>
+          <button class="quiz-opt" data-correct="false">To reduce computational costs</button>
+          <button class="quiz-opt" data-correct="true">To maintain useful functionality when components fail</button>
+          <button class="quiz-opt" data-correct="false">To simplify workflow design by removing fallback paths</button>
         </div>
         <div class="quiz-fb"></div>
       </div>
@@ -676,7 +721,7 @@ code.inline { background: var(--surface-muted); border: 1px solid var(--border);
 
       <div class="glass quiz" data-kind="scored">
         <div class="qkind">Multiple choice</div>
-        <div class="q">Why record error_logs and fallback_usage as structured state fields instead of just printing them to the console?</div>
+        <div class="q">Why record error_logs and fallback_usage as structured state fields instead of printing them to the console?</div>
         <div class="quiz-opts">
           <button class="quiz-opt" data-correct="false">Structured fields run faster than print statements</button>
           <button class="quiz-opt" data-correct="false">It's required syntax in LangGraph and has no other benefit</button>

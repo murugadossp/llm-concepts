@@ -179,7 +179,7 @@ a.chapter:hover{transform:translateY(-3px);box-shadow:var(--shadow-elevated);bor
 <main>
   <section class="hero">
     <div class="container">
-      <span class="hero-eyebrow"><span class="dot"></span> Interactive learning library · updated 2026-06-18</span>
+      <span class="hero-eyebrow"><span class="dot"></span> Interactive learning library · updated 2026-06-23</span>
       <h1>LangGraph,<br/>one <em>chapter</em> at a time.</h1>
       <p class="hero-sub">A growing collection of LangGraph concepts and worked examples. Each chapter is hands-on — click through graphs, step through workflows, and break things safely. Start anywhere.</p>
       <div class="hero-chips">
@@ -298,23 +298,129 @@ a.chapter:hover{transform:translateY(-3px);box-shadow:var(--shadow-elevated);bor
           </span>
         </a>
 
-        <!-- Coming soon cards (template for future chapters) -->
-        <div class="chapter locked" aria-disabled="true">
-          <div class="top"><span class="ch-num">Chapter 05</span><span class="ch-status soon">Coming soon</span></div>
-          <h3>Multi-Agent Orchestration</h3>
-          <p>Supervisor + worker agents as subgraphs, handing off tasks through shared state. When to split one graph into many.</p>
-          <div class="tags"><span class="tag">subgraphs</span><span class="tag">supervisor pattern</span><span class="tag">hand-offs</span></div>
-        </div>
+        <!-- Chapter 5 — live -->
+        <a class="chapter" href="langgraph-multi-agent-intro.html">
+          <div class="top">
+            <span class="ch-num">Chapter 05</span>
+            <span class="ch-status live">● Live</span>
+          </div>
+          <h3>Multi-Agent Patterns Intro</h3>
+          <p>A beginner-friendly map of multi-agent systems in LangGraph: coordinator, specialist teams, and event-driven collaboration, all taught with a customer refund workflow.</p>
+          <div class="tags">
+            <span class="tag">multi-agent</span>
+            <span class="tag">patterns</span>
+            <span class="tag">refund workflow</span>
+            <span class="tag">quiz</span>
+          </div>
+          <span class="go">Open chapter
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+          </span>
+        </a>
+
+        <!-- Chapter 6 — live -->
+        <a class="chapter" href="langgraph-coordinator-pattern.html">
+          <div class="top">
+            <span class="ch-num">Chapter 06</span>
+            <span class="ch-status live">● Live</span>
+          </div>
+          <h3>Coordinator Pattern</h3>
+          <p>One coordinator keeps the overall refund workflow in view, manages dependencies, and routes to order, policy, quality, and response agents.</p>
+          <div class="tags">
+            <span class="tag">orchestration</span>
+            <span class="tag">conditional edges</span>
+            <span class="tag">step-through</span>
+            <span class="tag">quiz</span>
+          </div>
+          <span class="go">Open chapter
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+          </span>
+        </a>
+
+        <!-- Chapter 7 — live -->
+        <a class="chapter" href="langgraph-specialist-team-pattern.html">
+          <div class="top">
+            <span class="ch-num">Chapter 07</span>
+            <span class="ch-status live">● Live</span>
+          </div>
+          <h3>Specialist Team Pattern</h3>
+          <p>Agents group into order, quality, and retention teams, each with internal coordination and a clean interface back to the parent graph.</p>
+          <div class="tags">
+            <span class="tag">subgraphs</span>
+            <span class="tag">team interfaces</span>
+            <span class="tag">scenario chooser</span>
+            <span class="tag">quiz</span>
+          </div>
+          <span class="go">Open chapter
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+          </span>
+        </a>
+
+        <!-- Chapter 8 — live -->
+        <a class="chapter" href="langgraph-event-driven-collaboration.html">
+          <div class="top">
+            <span class="ch-num">Chapter 08</span>
+            <span class="ch-status live">● Live</span>
+          </div>
+          <h3>Event-Driven Collaboration</h3>
+          <p>Agents communicate through events and triggers: refund requested, defect found, and customer escalated each wake the right responders.</p>
+          <div class="tags">
+            <span class="tag">events</span>
+            <span class="tag">fan-out</span>
+            <span class="tag">conditional subscribers</span>
+            <span class="tag">quiz</span>
+          </div>
+          <span class="go">Open chapter
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+          </span>
+        </a>
+
+        <!-- Chapter 9 — live -->
+        <a class="chapter" href="langgraph-advanced-coordination.html">
+          <div class="top">
+            <span class="ch-num">Chapter 09</span>
+            <span class="ch-status live">● Live</span>
+          </div>
+          <h3>Advanced Multi-Agent Coordination</h3>
+          <p>Shared understanding, collaborative state building, dynamic role adaptation, and adaptive workflow generation for complex multi-agent systems.</p>
+          <div class="tags">
+            <span class="tag">shared state</span>
+            <span class="tag">dynamic roles</span>
+            <span class="tag">adaptive planning</span>
+            <span class="tag">quiz</span>
+          </div>
+          <span class="go">Open chapter
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+          </span>
+        </a>
+
+        <!-- Chapter 10 — live -->
+        <a class="chapter" href="langgraph-pattern-selection.html">
+          <div class="top">
+            <span class="ch-num">Chapter 10</span>
+            <span class="ch-status live">● Live</span>
+          </div>
+          <h3>Pattern Selection Strategy</h3>
+          <p>A final decision guide: when to use coordinators, when to use specialist teams, when to use events, and when to combine patterns.</p>
+          <div class="tags">
+            <span class="tag">selection strategy</span>
+            <span class="tag">trade-offs</span>
+            <span class="tag">related patterns</span>
+            <span class="tag">scenario quiz</span>
+          </div>
+          <span class="go">Open chapter
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+          </span>
+        </a>
 
         <div class="chapter locked" aria-disabled="true">
-          <div class="top"><span class="ch-num">Chapter 06</span><span class="ch-status soon">Coming soon</span></div>
+          <div class="top"><span class="ch-num">Chapter 11</span><span class="ch-status soon">Coming soon</span></div>
           <h3>Streaming &amp; LangSmith Tracing</h3>
           <p>Stream modes (updates / values / messages), token-by-token UIs, and a clickable run timeline for debugging and audit.</p>
           <div class="tags"><span class="tag">streaming</span><span class="tag">observability</span><span class="tag">debugging</span></div>
         </div>
 
         <div class="chapter locked" aria-disabled="true">
-          <div class="top"><span class="ch-num">Chapter 07</span><span class="ch-status soon">Coming soon</span></div>
+          <div class="top"><span class="ch-num">Chapter 12</span><span class="ch-status soon">Coming soon</span></div>
           <h3>RAG Agent with Tools</h3>
           <p>A retrieval loop as a graph: retrieve → grade → answer or re-query, with tool calls and a self-correction cycle.</p>
           <div class="tags"><span class="tag">RAG</span><span class="tag">tool calls</span><span class="tag">self-correction</span></div>

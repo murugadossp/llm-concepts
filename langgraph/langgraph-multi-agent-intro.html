@@ -1,0 +1,260 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="color-scheme" content="light dark" />
+<title>LangGraph — Multi-Agent Patterns Intro</title>
+<meta name="description" content="A beginner-friendly introduction to multi-agent system patterns in LangGraph: coordinator, specialist teams, event-driven collaboration, and how to choose between them." />
+<script>
+  (function(){try{var stored=localStorage.getItem('theme');var pref=stored||'system';var resolved=pref==='system'?(window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'):pref;document.documentElement.setAttribute('data-theme',resolved);document.documentElement.setAttribute('data-theme-pref',pref);}catch(e){document.documentElement.setAttribute('data-theme','light');document.documentElement.setAttribute('data-theme-pref','system');}})();
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Caveat:wght@500;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="multi-agent-series.css" />
+</head>
+<body>
+<div class="mesh" aria-hidden="true"></div>
+<header class="site-header">
+  <a class="brand" href="index.html">
+    <span class="brand-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="6" cy="6" r="3"/><circle cx="18" cy="18" r="3"/><circle cx="18" cy="6" r="3"/><path d="M9 6h6"/><path d="M6 9v6a3 3 0 0 0 3 3h6"/></svg></span>
+    <span class="brand-text"><span>LangGraph</span><small>Multi-agent patterns</small></span>
+  </a>
+  <nav class="section-nav" aria-label="Sections">
+    <a href="#mental-model">Model</a><a href="#why-not-one">Why not one?</a><a href="#enterprise">Enterprise</a><a href="#patterns">Patterns</a><a href="#langgraph">LangGraph</a><a href="#quiz">Quiz</a>
+  </nav>
+  <div class="theme-toggle" role="group" aria-label="Theme">
+    <button type="button" data-theme-set="light" aria-pressed="false" title="Light theme"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="M2 12h2"/><path d="M20 12h2"/></svg><span class="label-txt">Light</span></button>
+    <button type="button" data-theme-set="dark" aria-pressed="false" title="Dark theme"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg><span class="label-txt">Dark</span></button>
+    <button type="button" data-theme-set="system" aria-pressed="false" title="System theme"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8"/><path d="M12 17v4"/></svg><span class="label-txt">Auto</span></button>
+  </div>
+</header>
+
+<main>
+  <section class="hero">
+    <div class="container">
+      <span class="hero-eyebrow"><span class="dot"></span> Chapter 05 · Series intro</span>
+      <h1>Multi-agent systems,<br/>without the <em>mystery fog</em>.</h1>
+      <p class="hero-sub">A multi-agent system is a group of agents that divide work, share state, and coordinate decisions. This series teaches the three patterns you saw in the slides using one common example: customer refund requests.</p>
+      <div class="hero-chips">
+        <span class="chip"><b>3</b> core patterns</span>
+        <span class="chip">Refund workflow example</span>
+        <span class="chip"><b>4</b> quiz questions</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="block" id="mental-model">
+    <div class="container-narrow">
+      <div class="eyebrow"><span class="num">1</span> Mental model</div>
+      <h2>One agent is a worker. A graph is the operating model.</h2>
+      <p class="lede">When a customer asks for a refund, one agent could try to do everything. But real work usually has dependencies: check the order, read the policy, inspect the defect claim, decide whether to escalate, and write the final response.</p>
+      <div class="note tip">
+        <span class="lbl">Plain English</span>
+        <p>LangGraph helps you make that work visible. Each agent becomes a node, the shared case file becomes state, and the arrows decide who works next.</p>
+      </div>
+      <div class="flow" aria-label="Refund request high-level flow">
+        <div class="flow-row"><div class="flow-node accent">Refund request</div><span class="flow-arrow">→</span><div class="flow-node">Order facts</div><span class="flow-arrow">→</span><div class="flow-node">Policy check</div></div>
+        <div class="flow-down"></div>
+        <div class="flow-row"><div class="flow-node ok">Quality review if needed</div><span class="flow-arrow">→</span><div class="flow-node warn">Escalation if risky</div><span class="flow-arrow">→</span><div class="flow-node accent">Customer reply</div></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="block" id="why-not-one">
+    <div class="container-narrow">
+      <div class="eyebrow"><span class="num">2</span> Why not one agent?</div>
+      <h2>A single agent is fine until the work needs control.</h2>
+      <p class="lede">For a tiny task, one agent is often enough. But refund handling is not one tiny task. It mixes order lookup, policy reasoning, defect analysis, escalation judgment, and customer communication. When one agent owns all of that, mistakes become harder to spot and harder to recover from.</p>
+      <div class="grid cols-2" style="margin-top:22px">
+        <div class="glass card">
+          <h3><span class="stepnum">1</span> Reliability</h3>
+          <p>Smaller agents have narrower jobs. If the quality check fails, the graph can retry that step or route to review without rerunning the whole workflow.</p>
+        </div>
+        <div class="glass card">
+          <h3><span class="stepnum">2</span> Observability</h3>
+          <p>You can see which step produced which fact: order status, policy result, defect decision, escalation reason, and final response.</p>
+        </div>
+        <div class="glass card">
+          <h3><span class="stepnum">3</span> Specialization</h3>
+          <p>The policy agent can be strict, the response agent can be empathetic, and the quality agent can focus on evidence instead of tone.</p>
+        </div>
+        <div class="glass card">
+          <h3><span class="stepnum">4</span> Safer handoffs</h3>
+          <p>Each agent writes structured state, so later agents do not need to guess why a decision was made.</p>
+        </div>
+      </div>
+      <div class="note warn">
+        <span class="lbl">Important trade-off</span>
+        <p>Multi-agent systems are not automatically better. They add coordination cost, latency, and more places to test. Use them when the work has real boundaries, risk, or routing decisions.</p>
+      </div>
+      <div class="note">
+        <span class="lbl">The N-squared problem</span>
+        <p>If every agent can talk directly to every other agent, communication grows fast. The formula for directed handoffs is <code class="inline">n * (n - 1)</code>. The arrows below show why this gets messy.</p>
+      </div>
+      <div class="n2-visual" aria-label="N-squared communication examples">
+        <div class="glass n2-card">
+          <h3>3 agents</h3>
+          <p>Still understandable: order, policy, and response can each hand work to the others.</p>
+          <div class="agent-net" aria-label="3 agents with 6 directed handoffs">
+            <svg viewBox="0 0 320 260" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <defs><marker id="arrow3" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0 L8 4 L0 8 Z" fill="currentColor"/></marker></defs>
+              <path d="M100 78 C150 40 200 40 220 78" marker-end="url(#arrow3)"/>
+              <path d="M220 92 C190 132 140 132 100 92" marker-end="url(#arrow3)"/>
+              <path d="M85 105 C55 150 70 195 138 210" marker-end="url(#arrow3)"/>
+              <path d="M156 198 C126 155 106 128 95 105" marker-end="url(#arrow3)"/>
+              <path d="M236 105 C270 154 246 198 180 210" marker-end="url(#arrow3)"/>
+              <path d="M170 198 C202 152 222 126 230 105" marker-end="url(#arrow3)"/>
+            </svg>
+            <div class="agent-dot" style="left:28%;top:34%">Order</div>
+            <div class="agent-dot" style="left:72%;top:34%">Policy</div>
+            <div class="agent-dot" style="left:50%;top:80%">Response</div>
+          </div>
+          <div class="n2-formula"><span>3 * 2</span><span>=</span><strong>6 handoffs</strong></div>
+        </div>
+        <div class="glass n2-card">
+          <h3>6 agents</h3>
+          <p>Now the same rule creates a crowded graph. Testing every possible handoff is already harder.</p>
+          <div class="agent-net" aria-label="6 agents with many directed handoffs">
+            <svg viewBox="0 0 320 260" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <defs><marker id="arrow6" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto"><path d="M0 0 L7 3.5 L0 7 Z" fill="currentColor"/></marker></defs>
+              <path d="M78 62 C132 28 188 28 242 62" marker-end="url(#arrow6)"/>
+              <path d="M242 70 C188 102 132 102 78 70" marker-end="url(#arrow6)"/>
+              <path d="M70 78 C44 118 44 148 70 188" marker-end="url(#arrow6)"/>
+              <path d="M84 188 C110 145 110 118 84 78" marker-end="url(#arrow6)"/>
+              <path d="M250 78 C280 118 280 148 250 188" marker-end="url(#arrow6)"/>
+              <path d="M236 188 C208 146 208 118 236 78" marker-end="url(#arrow6)"/>
+              <path d="M82 70 C120 112 120 150 82 190" marker-end="url(#arrow6)"/>
+              <path d="M238 70 C200 112 200 150 238 190" marker-end="url(#arrow6)"/>
+              <path d="M92 206 C132 236 188 236 228 206" marker-end="url(#arrow6)"/>
+              <path d="M228 198 C188 168 132 168 92 198" marker-end="url(#arrow6)"/>
+              <path d="M94 88 C150 118 170 142 226 178" marker-end="url(#arrow6)"/>
+              <path d="M226 88 C170 118 150 142 94 178" marker-end="url(#arrow6)"/>
+              <path d="M160 54 C125 94 120 158 160 206" marker-end="url(#arrow6)"/>
+              <path d="M160 206 C200 158 195 94 160 54" marker-end="url(#arrow6)"/>
+              <path d="M74 200 C112 112 205 112 246 200" marker-end="url(#arrow6)"/>
+            </svg>
+            <div class="agent-dot" style="left:24%;top:26%">Order</div>
+            <div class="agent-dot" style="left:50%;top:20%">Policy</div>
+            <div class="agent-dot" style="left:76%;top:26%">Quality</div>
+            <div class="agent-dot" style="left:24%;top:76%">Fraud</div>
+            <div class="agent-dot" style="left:50%;top:84%">Retention</div>
+            <div class="agent-dot" style="left:76%;top:76%">Response</div>
+          </div>
+          <div class="n2-formula"><span>6 * 5</span><span>=</span><strong>30 handoffs</strong></div>
+        </div>
+      </div>
+      <div class="glass card" style="margin-top:18px">
+        <h3><span class="stepnum">?</span> Why call it N-squared?</h3>
+        <p>The exact formula for directed handoffs is <code class="inline">N * (N - 1)</code>, which expands to <code class="inline">N² - N</code>. For small systems, the minus <code class="inline">N</code> matters. As <code class="inline">N</code> grows, the <code class="inline">N²</code> part dominates, so people call it <b>N-squared growth</b> or <b>quadratic growth</b>.</p>
+        <div class="table-wrap" style="margin-top:14px">
+          <table class="compare">
+            <thead><tr><th>Agents</th><th>Calculation</th><th>Possible directed handoffs</th></tr></thead>
+            <tbody>
+              <tr><td>3</td><td><code class="inline">3 * 2</code></td><td>6</td></tr>
+              <tr><td>6</td><td><code class="inline">6 * 5</code></td><td>30</td></tr>
+              <tr><td>10</td><td><code class="inline">10 * 9</code></td><td>90</td></tr>
+              <tr><td>100</td><td><code class="inline">100 * 99</code></td><td>9,900</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="note tip">
+        <span class="lbl">Why patterns help</span>
+        <ul>
+          <li><b>Coordinator:</b> reduces the graph to worker handoffs through one hub.</li>
+          <li><b>Specialist teams:</b> hide internal links behind team interfaces.</li>
+          <li><b>Event-driven designs:</b> let agents subscribe only to the events they care about.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="block" id="enterprise">
+    <div class="container-narrow">
+      <div class="eyebrow"><span class="num">2B</span> Why LangGraph helps</div>
+      <h2>Enterprise workflows need more than a clever prompt.</h2>
+      <p class="lede">A production refund system is not only asking a model to answer. It needs to remember facts, call different capabilities, branch when risk appears, and let humans review sensitive decisions.</p>
+      <div class="grid cols-2" style="margin-top:22px">
+        <div class="glass card">
+          <h3><span class="stepnum">1</span> Stateful processing</h3>
+          <p>The graph carries a shared case file from step to step, so each agent builds on known facts instead of starting fresh.</p>
+        </div>
+        <div class="glass card">
+          <h3><span class="stepnum">2</span> Modular agents</h3>
+          <p>Order, policy, quality, and response logic can evolve independently instead of living inside one giant prompt.</p>
+        </div>
+        <div class="glass card">
+          <h3><span class="stepnum">3</span> Dynamic routing</h3>
+          <p>Conditional edges let the workflow change path when a defect, escalation, or policy exception appears.</p>
+        </div>
+        <div class="glass card">
+          <h3><span class="stepnum">4</span> Human feedback loops</h3>
+          <p>The graph can pause for approval before issuing high-value refunds, goodwill credits, or risky customer messages.</p>
+        </div>
+      </div>
+      <div class="note">
+        <span class="lbl">Traditional LLM limits</span>
+        <ul>
+          <li><b>Context management:</b> one prompt can lose track of which facts are settled and which are uncertain.</li>
+          <li><b>Coordination complexity:</b> as agents grow, direct handoffs become hard to trace.</li>
+          <li><b>Workflow rigidity:</b> fixed chains struggle when different cases need different paths.</li>
+          <li><b>Integration hurdles:</b> real systems need tools, APIs, databases, and review steps around the model.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="block" id="patterns">
+    <div class="container">
+      <div class="eyebrow"><span class="num">3</span> The map</div>
+      <h2>Three patterns cover most beginner use cases.</h2>
+      <p class="lede">They are not enemies. A mature system often combines them. For learning, we separate them so you can see the job each one does.</p>
+      <div class="grid cols-3" style="margin-top:22px">
+        <div class="glass card"><h3><span class="stepnum">1</span> Coordinator</h3><p>A central coordinator reads the current state and routes the workflow to the next agent. Best when the order matters.</p><span class="pill accent">central control</span></div>
+        <div class="glass card"><h3><span class="stepnum">2</span> Specialist teams</h3><p>Agents are grouped into focused teams, like order, quality, and retention. Best when work maps to departments.</p><span class="pill ok">structured teams</span></div>
+        <div class="glass card"><h3><span class="stepnum">3</span> Event-driven</h3><p>Agents wake up when the state records an event they care about. Best when work is reactive and conditional.</p><span class="pill warn">responsive</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="block" id="langgraph">
+    <div class="container-narrow">
+      <div class="eyebrow"><span class="num">4</span> LangGraph pieces</div>
+      <h2>The same building blocks keep showing up.</h2>
+      <pre class="code"><span class="k">class</span> <span class="f">RefundState</span>(TypedDict):
+    customer_message: str
+    order_status: str | None
+    policy_result: str | None
+    defect_found: bool
+    escalation_level: str | None
+    events: list[str]
+    final_response: str | None</pre>
+      <div class="grid cols-2">
+        <div class="glass card"><h3><span class="stepnum">A</span> State</h3><p>The shared case file. Every node can read what earlier agents learned and write its own update.</p></div>
+        <div class="glass card"><h3><span class="stepnum">B</span> Conditional edges</h3><p>The routing logic. They answer questions like: did we find a defect, should retention join, is this ready for final response?</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="block" id="quiz">
+    <div class="container-narrow">
+      <div class="eyebrow"><span class="num">✓</span> Practice</div>
+      <h2>Warm-up quiz</h2>
+      <div class="quiz-progress"><span class="score">Score: <b id="score-val">0</b> / <b id="score-total">6</b></span><button class="btn" id="quiz-reset">Reset quiz</button></div>
+      <div class="glass quiz" data-kind="scored"><div class="qkind">Multiple choice</div><div class="q">In LangGraph, what usually represents the shared case file that all agents read and update?</div><div class="quiz-opts"><button class="quiz-opt" data-correct="false">The page title</button><button class="quiz-opt" data-correct="true">The graph state</button><button class="quiz-opt" data-correct="false">The browser theme</button><button class="quiz-opt" data-correct="false">The final answer only</button></div><div class="quiz-fb"></div></div>
+      <div class="glass quiz" data-kind="scored"><div class="qkind">Multiple choice</div><div class="q">What is the key advantage of LangGraph's approach to state management?</div><div class="quiz-opts"><button class="quiz-opt" data-correct="false">It uses less memory than traditional approaches</button><button class="quiz-opt" data-correct="false">It processes requests faster by default</button><button class="quiz-opt" data-correct="true">It maintains persistent context across workflow steps and interactions</button><button class="quiz-opt" data-correct="false">It removes the need to define a schema</button></div><div class="quiz-fb"></div></div>
+      <div class="glass quiz" data-kind="scored"><div class="qkind">Multiple choice</div><div class="q">Which example is easiest for teaching all three patterns in this series?</div><div class="quiz-opts"><button class="quiz-opt" data-correct="false">Optical character recognition only</button><button class="quiz-opt" data-correct="true">A customer refund request</button><button class="quiz-opt" data-correct="false">A GPU kernel scheduler</button><button class="quiz-opt" data-correct="false">A database vacuum process</button></div><div class="quiz-fb"></div></div>
+      <div class="glass quiz" data-kind="scored"><div class="qkind">Multiple choice</div><div class="q">What is the main reason to split work across multiple agents?</div><div class="quiz-opts"><button class="quiz-opt" data-correct="false">To make the graph harder to debug</button><button class="quiz-opt" data-correct="false">To avoid storing state</button><button class="quiz-opt" data-correct="true">To separate responsibilities and route work based on what is known</button><button class="quiz-opt" data-correct="false">To remove conditional logic completely</button></div><div class="quiz-fb"></div></div>
+      <div class="glass quiz" data-kind="scored"><div class="qkind">Multiple choice</div><div class="q">What is the key difference between having multiple agents and having a true multi-agent system?</div><div class="quiz-opts"><button class="quiz-opt" data-correct="false">The number of agents involved</button><button class="quiz-opt" data-correct="false">The complexity of each individual agent's task</button><button class="quiz-opt" data-correct="true">The coordination and communication between agents</button><button class="quiz-opt" data-correct="false">The amount of compute required</button></div><div class="quiz-fb"></div></div>
+      <div class="glass quiz" data-kind="scored"><div class="qkind">Multiple choice</div><div class="q">What is the best reason to avoid using multiple agents for every task?</div><div class="quiz-opts"><button class="quiz-opt" data-correct="false">Single agents are always more accurate</button><button class="quiz-opt" data-correct="true">Multi-agent systems add coordination cost, latency, and more test surface</button><button class="quiz-opt" data-correct="false">LangGraph cannot route between agents</button><button class="quiz-opt" data-correct="false">Agents cannot share state</button></div><div class="quiz-fb"></div></div>
+    </div>
+  </section>
+
+  <hr class="divider"/>
+  <footer class="site-footer"><div class="container"><p>Chapter 05 · Multi-Agent Patterns Intro. Next: <a href="langgraph-coordinator-pattern.html">Coordinator Pattern</a>.</p><p>Back to <a href="index.html">all LangGraph chapters</a>.</p></div></footer>
+</main>
+<script src="multi-agent-series.js"></script>
+</body>
+</html>
