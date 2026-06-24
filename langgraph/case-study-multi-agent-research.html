@@ -1,0 +1,288 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="color-scheme" content="light dark" />
+<title>LangGraph Case Study — Multi-Agent Market Research</title>
+<meta name="description" content="Design a multi-agent market research system step by step through interactive architecture, state, coordination, workflow, and failure decisions." />
+<script>(function(){try{var stored=localStorage.getItem('theme');var pref=stored||'system';var resolved=pref==='system'?(window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'):pref;document.documentElement.setAttribute('data-theme',resolved);document.documentElement.setAttribute('data-theme-pref',pref);}catch(e){document.documentElement.setAttribute('data-theme','light');document.documentElement.setAttribute('data-theme-pref','system');}})();</script>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Caveat:wght@500;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="multi-agent-series.css" />
+</head>
+<body>
+<div class="mesh" aria-hidden="true"></div>
+<header class="site-header">
+  <a class="brand" href="case-studies.html"><span class="brand-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="6" cy="6" r="3"/><circle cx="18" cy="18" r="3"/><circle cx="18" cy="6" r="3"/><path d="M9 6h6"/><path d="M6 9v6a3 3 0 0 0 3 3h6"/></svg></span><span class="brand-text"><span>LangGraph</span><small>Case Study 01</small></span></a>
+  <nav class="section-nav" aria-label="Sections"><a href="#problem">Problem</a><a href="#architecture">Architecture</a><a href="#state">State</a><a href="#agents">Agents</a><a href="#workflow">Workflow</a><a href="#failure">Failure</a><a href="#synthesis">Synthesis</a><a href="#quiz">Review</a></nav>
+  <div class="theme-toggle" role="group" aria-label="Theme"><button type="button" data-theme-set="light" aria-pressed="false">Light</button><button type="button" data-theme-set="dark" aria-pressed="false">Dark</button><button type="button" data-theme-set="system" aria-pressed="false">Auto</button></div>
+</header>
+<main>
+  <section class="hero">
+    <div class="container">
+      <span class="hero-eyebrow"><span class="dot"></span> Case Study 01 · Advanced · 25 minutes</span>
+      <h1>Design a multi-agent <em>research system</em>.</h1>
+      <ul class="bullet-lede">
+        <li>Problem: produce interconnected market analysis, not five separate summaries.</li>
+        <li>Challenge: coordinate specialists without uncontrolled communication or bloated state.</li>
+        <li>Goal: make every architectural decision explainable, observable, and testable.</li>
+      </ul>
+      <div class="hero-chips" style="margin-top:24px"><span class="chip">5 specialist agents</span><span class="chip">Collaborative state</span><span class="chip">Adaptive workflow</span><span class="chip"><b>5</b> review questions</span></div>
+    </div>
+  </section>
+
+  <section class="block" id="problem">
+    <div class="container">
+      <div class="eyebrow"><span class="num">1</span> Frame the problem</div>
+      <h2>What must the system accomplish?</h2>
+      <div class="grid cols-2" style="margin-top:22px">
+        <div class="glass card">
+          <h3>Business need</h3>
+          <ul>
+            <li>Consulting clients need comprehensive market reports.</li>
+            <li>Claims need evidence, context, and implications.</li>
+            <li>Findings must connect across research domains.</li>
+            <li>The final report must expose uncertainty.</li>
+          </ul>
+        </div>
+        <div class="glass card">
+          <h3>System design pressure</h3>
+          <ul>
+            <li>Specialists depend on one another's findings.</li>
+            <li>Some work can run in parallel; some cannot.</li>
+            <li>New evidence can trigger more investigation.</li>
+            <li>Synthesis must wait for evidence maturity.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="note warn"><span class="lbl">Anti-goal</span><ul><li>Do not run five agents independently and concatenate their answers.</li><li>That creates multiple outputs, not collaborative intelligence.</li></ul></div>
+      <div class="glass design-board">
+        <div class="design-question"><h3>Design checkpoint: what are we optimizing for?</h3></div>
+        <div class="grid cols-3">
+          <div class="card" style="padding:14px"><b>Quality</b><ul><li>Connected reasoning</li><li>Source traceability</li></ul></div>
+          <div class="card" style="padding:14px"><b>Control</b><ul><li>Clear ownership</li><li>Bounded handoffs</li></ul></div>
+          <div class="card" style="padding:14px"><b>Adaptability</b><ul><li>Question-specific teams</li><li>Backtracking</li></ul></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="block" id="architecture">
+    <div class="container">
+      <div class="eyebrow"><span class="num">2</span> Choose the architecture</div>
+      <h2>Should every agent talk to every other agent?</h2>
+      <ul class="bullet-lede">
+        <li>Direct communication looks flexible at small scale.</li>
+        <li>Five agents can create 20 directed relationships.</li>
+        <li>A coordinator reduces the control surface to explicit worker handoffs.</li>
+      </ul>
+      <div class="glass design-board" data-architecture-chooser>
+        <div class="design-question">
+          <h3>Compare the two designs</h3>
+          <div class="choice-row"><button class="choice-btn" data-architecture-choice="mesh">Every agent talks</button><button class="choice-btn" data-architecture-choice="hub">Coordinator hub</button></div>
+        </div>
+        <div class="architecture-stage">
+          <div class="architecture-view" data-architecture-view="mesh">
+            <div class="mesh-network" aria-label="Five agents connected directly">
+              <svg viewBox="0 0 800 290" fill="none" stroke="currentColor" stroke-width="2" opacity=".65">
+                <path d="M400 35 155 118M400 35 645 118M400 35 245 250M400 35 555 250M155 118 645 118M155 118 245 250M155 118 555 250M645 118 245 250M645 118 555 250M245 250 555 250"/>
+              </svg>
+              <span class="mesh-agent" style="left:50%;top:12%">Web research</span>
+              <span class="mesh-agent" style="left:19%;top:41%">Data analysis</span>
+              <span class="mesh-agent" style="left:81%;top:41%">Trend analysis</span>
+              <span class="mesh-agent" style="left:30%;top:86%">Competitive intel</span>
+              <span class="mesh-agent" style="left:70%;top:86%">Synthesis</span>
+            </div>
+            <div class="architecture-caption"><span class="pill warn">High coupling</span><ul><li>Many communication contracts</li><li>Harder ownership and tracing</li><li>Conflicting updates become likely</li></ul></div>
+          </div>
+          <div class="architecture-view" data-architecture-view="hub">
+            <div class="coordinator-map" aria-label="Coordinator connected to five specialist agents">
+              <div class="coordinator-head">Research coordinator</div><div class="coordinator-rail"></div>
+              <div class="coordinator-workers"><div class="worker-node">Web research<span>sources</span></div><div class="worker-node">Data analysis<span>metrics</span></div><div class="worker-node">Trend analysis<span>projections</span></div><div class="worker-node">Competitive intel<span>strategy</span></div><div class="worker-node">Synthesis<span>report</span></div></div>
+            </div>
+            <div class="architecture-caption"><span class="pill ok">Selected</span><ul><li>Coordinator owns routing and readiness</li><li>Workers have bounded responsibilities</li><li>Shared state carries collaboration context</li></ul></div>
+          </div>
+        </div>
+      </div>
+      <div class="note tip"><span class="lbl">Decision</span><ul><li>Use a coordinator for control and observability.</li><li>Allow collaboration through structured state and explicit events.</li><li>Do not make the coordinator perform specialist analysis.</li></ul></div>
+    </div>
+  </section>
+
+  <section class="block" id="state">
+    <div class="container">
+      <div class="eyebrow"><span class="num">3</span> Build the collaborative state</div>
+      <h2>State is the collaboration contract.</h2>
+      <ul class="bullet-lede">
+        <li>Each layer answers a different design question.</li>
+        <li>Build the layers in order to see how facts become shared reasoning.</li>
+      </ul>
+      <div class="state-workbench" data-state-workbench>
+        <div class="state-controls">
+          <button class="state-layer-btn" data-state-add="context">1. Research context<span>What are we solving?</span></button>
+          <button class="state-layer-btn" data-state-add="contributions">2. Contributions<span>What did each agent find?</span></button>
+          <button class="state-layer-btn" data-state-add="insights">3. Cross-agent insights<span>How do findings connect?</span></button>
+          <button class="state-layer-btn" data-state-add="reasoning">4. Collaborative reasoning<span>What do we believe together?</span></button>
+          <button class="state-layer-btn" data-state-add="threads">5. Synthesis threads<span>What belongs in the report?</span></button>
+          <button class="btn" data-state-reset>Reset state</button>
+        </div>
+        <div class="glass state-canvas">
+          <div class="state-empty" data-state-empty><div><b>Empty shared state</b><br/>Add the first layer to begin the design.</div></div>
+          <div class="state-stack">
+            <div class="state-layer" data-state-layer="context"><b>Shared research context</b><ul><li>question</li><li>client_objective</li><li>scope</li><li>geography</li><li>time_horizon</li><li>constraints</li></ul></div>
+            <div class="state-layer" data-state-layer="contributions"><b>Agent contributions</b><ul><li>agent_id</li><li>finding</li><li>evidence</li><li>source</li><li>confidence</li><li>assumptions</li></ul></div>
+            <div class="state-layer" data-state-layer="insights"><b>Cross-agent insights</b><ul><li>linked_findings</li><li>relationship</li><li>explanation</li><li>supporting_agents</li></ul></div>
+            <div class="state-layer" data-state-layer="reasoning"><b>Collaborative reasoning</b><ul><li>hypotheses</li><li>confirmations</li><li>contradictions</li><li>open_questions</li></ul></div>
+            <div class="state-layer" data-state-layer="threads"><b>Synthesis threads</b><ul><li>claim</li><li>supporting_evidence</li><li>implication</li><li>risk</li><li>unresolved_items</li></ul></div>
+          </div>
+        </div>
+      </div>
+      <div class="grid cols-3" style="margin-top:18px">
+        <div class="glass card"><h3>Append</h3><ul><li>Preserve prior findings</li><li>Keep provenance</li></ul></div>
+        <div class="glass card"><h3>Link</h3><ul><li>Connect related evidence</li><li>Record contradictions</li></ul></div>
+        <div class="glass card"><h3>Promote</h3><ul><li>Move validated reasoning</li><li>Create report threads</li></ul></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="block" id="agents">
+    <div class="container">
+      <div class="eyebrow"><span class="num">4</span> Define agent contracts</div>
+      <h2>Every specialist needs a bounded interface.</h2>
+      <ul class="bullet-lede"><li>Click an agent to inspect what it needs, writes, responds to, and signals.</li></ul>
+      <div class="agent-inspector" data-agent-inspector>
+        <div class="agent-list">
+          <button class="agent-pick" data-agent-pick data-name="Web Research Agent" data-role="Finds credible external evidence." data-needs="Research question and scope|Search terms|Open evidence gaps" data-writes="Sources and citations|Extracted facts|Source quality|Confidence" data-triggers="New research task|Claim needs verification|Evidence gap" data-signals="Source found|Weak source|Conflicting evidence">Web Research<span>Evidence collector</span></button>
+          <button class="agent-pick" data-agent-pick data-name="Data Analysis Agent" data-role="Tests quantitative claims and patterns." data-needs="Datasets|Metric definitions|Web findings|Questions to test" data-writes="Calculations|Comparisons|Anomalies|Data limitations" data-triggers="Dataset available|Quantitative claim|Regional gap" data-signals="Pattern found|Outlier detected|Insufficient data">Data Analysis<span>Quantitative validator</span></button>
+          <button class="agent-pick" data-agent-pick data-name="Trend Analysis Agent" data-role="Builds scenarios and projections." data-needs="Baseline evidence|Data results|Time horizon|Known drivers" data-writes="Trends|Scenarios|Projections|Uncertainty" data-triggers="Baseline stable|Material change signal|Projection request" data-signals="Emerging trend|Turning point|Projection risk">Trend Analysis<span>Future interpreter</span></button>
+          <button class="agent-pick" data-agent-pick data-name="Competitive Intelligence Agent" data-role="Connects market evidence to competitor behavior." data-needs="Company evidence|Market metrics|Trend findings|Strategic question" data-writes="Competitor moves|Positioning|Capability gaps|Implications" data-triggers="Competitor event|Strategic shift|Trend impact" data-signals="Market response|Strategy conflict|Competitive gap">Competitive Intelligence<span>Strategy observer</span></button>
+          <button class="agent-pick" data-agent-pick data-name="Synthesis Agent" data-role="Creates one evidence-backed report." data-needs="Validated findings|Cross-agent insights|Open issues|Synthesis threads" data-writes="Integrated narrative|Implications|Recommendations|Disclosures" data-triggers="Coverage complete|Contradictions bounded|Readiness gate passes" data-signals="Draft ready|Narrative gap|Human review needed">Synthesis<span>Report integrator</span></button>
+        </div>
+        <div class="glass agent-contract">
+          <div class="contract-head"><div><h3 data-contract-name></h3><span data-contract-role style="color:var(--ink-mute)"></span></div><span class="pill accent">Agent contract</span></div>
+          <div class="contract-grid">
+            <div class="contract-cell"><h4>Needs</h4><ul data-contract-needs></ul></div>
+            <div class="contract-cell"><h4>Writes</h4><ul data-contract-writes></ul></div>
+            <div class="contract-cell"><h4>Responds to</h4><ul data-contract-triggers></ul></div>
+            <div class="contract-cell"><h4>Signals</h4><ul data-contract-signals></ul></div>
+          </div>
+        </div>
+      </div>
+      <div class="note"><span class="lbl">Contract test</span><ul><li>Can another agent understand the output without reading the prompt?</li><li>Can the coordinator trace each claim to its source and owner?</li></ul></div>
+    </div>
+  </section>
+
+  <section class="block" id="workflow">
+    <div class="container">
+      <div class="eyebrow"><span class="num">5</span> Choose the execution strategy</div>
+      <h2>The research question shapes the graph.</h2>
+      <ul class="bullet-lede">
+        <li>Parallel: independent evidence can be collected together.</li>
+        <li>Sequential: later analysis depends on earlier findings.</li>
+        <li>Targeted: activate only the expertise the question requires.</li>
+      </ul>
+      <div class="strategy-console" data-strategy-console>
+        <div class="question-menu">
+          <button class="question-pick" data-question-pick data-title="Estimate current market size" data-pattern="Parallel → gate → synthesis" data-reason="Web and data agents can collect independent evidence at the same time." data-flow="Web Research + Data Analysis|Coverage Gate|Synthesis">Current market size</button>
+          <button class="question-pick" data-question-pick data-title="Project the next three years" data-pattern="Hybrid sequence" data-reason="Trend analysis needs a validated evidence baseline before projection." data-flow="Web Research + Data Analysis|Trend Analysis|Confidence Gate|Synthesis">Future outlook</button>
+          <button class="question-pick" data-question-pick data-title="Analyze competitor strategy" data-pattern="Targeted sequence" data-reason="Competitive intelligence leads, then requests market or trend context when needed." data-flow="Web Research + Competitive Intel|Trend Context|Synthesis">Competitor strategy</button>
+          <button class="question-pick" data-question-pick data-title="Produce a comprehensive market report" data-pattern="Parallel evidence + dependent interpretation" data-reason="Evidence collection fans out; trends and competition build on validated findings." data-flow="Web Research + Data Analysis|Trend + Competitive Intel|Readiness Gate|Synthesis">Full market report</button>
+        </div>
+        <div class="glass strategy-result">
+          <div class="strategy-badge"><span class="pill accent" data-strategy-pattern></span></div>
+          <h3 data-strategy-title></h3>
+          <div class="strategy-flow" data-strategy-flow></div>
+          <div class="note tip"><span class="lbl">Why this route?</span><ul><li data-strategy-reason></li></ul></div>
+        </div>
+      </div>
+      <div class="note warn"><span class="lbl">Synthesis readiness gate</span><ul><li>Required domains are covered.</li><li>Important claims have evidence.</li><li>Critical contradictions are resolved or disclosed.</li><li>No blocking research task remains.</li></ul></div>
+    </div>
+  </section>
+
+  <section class="block" id="failure">
+    <div class="container">
+      <div class="eyebrow"><span class="num">6</span> Design for failure and backtracking</div>
+      <h2>A research graph needs recovery loops.</h2>
+      <ul class="bullet-lede"><li>Select a failure to see how the system detects, routes, and records recovery.</li></ul>
+      <div class="glass failure-lab" data-failure-lab>
+        <div class="choice-row">
+          <button class="choice-btn" data-failure-choice data-detected="A strategic claim has no reliable source." data-recovery="Create a targeted verification task for Web Research." data-result="Keep the claim out of synthesis until verified.">Missing evidence</button>
+          <button class="choice-btn" data-failure-choice data-detected="Two sources report incompatible market sizes." data-recovery="Data Analysis reconciles definitions, dates, and units." data-result="Preserve both figures and record the resolution.">Conflicting data</button>
+          <button class="choice-btn" data-failure-choice data-detected="A projection relies on weak assumptions." data-recovery="Trend Analysis creates bounded scenarios." data-result="Report uncertainty instead of one false-precision forecast.">Low confidence</button>
+          <button class="choice-btn" data-failure-choice data-detected="A report thread lacks business implication." data-recovery="Synthesis returns the thread to the relevant specialist." data-result="Complete the evidence → meaning → action chain.">Narrative gap</button>
+        </div>
+        <div class="failure-map">
+          <div class="failure-node is-alert"><b>Detect</b><br/><span data-failure-detected></span></div>
+          <div class="failure-arrow">→</div>
+          <div class="failure-node"><b>Route</b><br/><span data-failure-recovery></span></div>
+          <div class="failure-node is-recovery"><b>Record</b><br/><span data-failure-result></span></div>
+          <div class="failure-arrow">↺</div>
+          <div class="failure-node"><b>Recheck gate</b><br/>Coverage · confidence · contradictions</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="block" id="synthesis">
+    <div class="container">
+      <div class="eyebrow"><span class="num">7</span> Produce collaborative intelligence</div>
+      <h2>Trace how one strategic insight emerges.</h2>
+      <ul class="bullet-lede">
+        <li>Question: where should an electric-vehicle charging provider invest?</li>
+        <li>No agent owns the complete answer.</li>
+      </ul>
+      <div class="insight-chain">
+        <div class="insight-card"><b>Web research</b><span>Policy incentives are expanding.</span></div>
+        <div class="insight-card"><b>Data analysis</b><span>Sales growth varies sharply by region.</span></div>
+        <div class="insight-card"><b>Trend analysis</b><span>Adoption may accelerate, but infrastructure is a constraint.</span></div>
+        <div class="insight-card"><b>Competitive intel</b><span>Competitors are shifting investment toward charging capacity.</span></div>
+        <div class="insight-card final"><b>Synthesis</b><span>Infrastructure availability determines where demand converts into adoption.</span></div>
+      </div>
+      <div class="grid cols-3" style="margin-top:22px">
+        <div class="glass card"><h3>Evidence</h3><ul><li>Policy</li><li>Sales data</li><li>Competitor actions</li></ul></div>
+        <div class="glass card"><h3>Connection</h3><ul><li>Regional gap</li><li>Infrastructure capacity</li><li>Investment response</li></ul></div>
+        <div class="glass card"><h3>Decision value</h3><ul><li>Prioritize infrastructure-constrained growth regions</li></ul></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="block" id="review">
+    <div class="container">
+      <div class="eyebrow"><span class="num">8</span> Review the complete design</div>
+      <h2>Can the system answer these design questions?</h2>
+      <div class="table-wrap">
+        <table class="compare">
+          <thead><tr><th>Design question</th><th>Decision</th><th>Why it matters</th></tr></thead>
+          <tbody>
+            <tr><td>Who owns workflow control?</td><td>Research coordinator</td><td>Clear routing and readiness ownership</td></tr>
+            <tr><td>How do agents collaborate?</td><td>Typed shared state + explicit events</td><td>Traceable, bounded communication</td></tr>
+            <tr><td>When do agents run?</td><td>Question-dependent strategy</td><td>Avoid unnecessary cost and dependencies</td></tr>
+            <tr><td>When can synthesis start?</td><td>Coverage and quality gate</td><td>Prevent premature narratives</td></tr>
+            <tr><td>How does the system recover?</td><td>Targeted backtracking tasks</td><td>Preserve useful work while fixing gaps</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="note tip"><span class="lbl">Remember</span><ul><li>Architecture controls communication.</li><li>State controls shared understanding.</li><li>Contracts control ownership.</li><li>Routing controls dependencies.</li><li>Gates control quality.</li></ul></div>
+    </div>
+  </section>
+
+  <section class="block" id="quiz">
+    <div class="container-narrow">
+      <div class="eyebrow"><span class="num">✓</span> Design review</div>
+      <h2>Defend the architecture</h2>
+      <div class="quiz-progress"><span class="score">Score: <b id="score-val">0</b> / <b id="score-total">5</b></span><button class="btn" id="quiz-reset">Reset quiz</button></div>
+      <div class="glass quiz" data-kind="scored"><div class="qkind">Architecture</div><div class="q">Why is a coordinator preferred over unrestricted agent-to-agent communication here?</div><div class="quiz-opts"><button class="quiz-opt" data-correct="false">It lets the coordinator perform every specialist task</button><button class="quiz-opt" data-correct="true">It centralizes routing and readiness while keeping specialist responsibilities bounded</button><button class="quiz-opt" data-correct="false">It removes the need for shared state</button><button class="quiz-opt" data-correct="false">It guarantees every task runs sequentially</button></div><div class="quiz-fb"></div></div>
+      <div class="glass quiz" data-kind="scored"><div class="qkind">State</div><div class="q">Which state layer records relationships discovered between different agents' findings?</div><div class="quiz-opts"><button class="quiz-opt" data-correct="false">Shared research context</button><button class="quiz-opt" data-correct="false">Agent contributions</button><button class="quiz-opt" data-correct="true">Cross-agent insights</button><button class="quiz-opt" data-correct="false">Final formatting</button></div><div class="quiz-fb"></div></div>
+      <div class="glass quiz" data-kind="scored"><div class="qkind">Workflow</div><div class="q">When should Web Research and Data Analysis run in parallel?</div><div class="quiz-opts"><button class="quiz-opt" data-correct="true">When both can collect independent evidence from the same stable context</button><button class="quiz-opt" data-correct="false">When Data Analysis needs Web Research's completed result first</button><button class="quiz-opt" data-correct="false">Only after synthesis begins</button><button class="quiz-opt" data-correct="false">For every request regardless of scope</button></div><div class="quiz-fb"></div></div>
+      <div class="glass quiz" data-kind="scored"><div class="qkind">Reliability</div><div class="q">What should happen when two market-size sources conflict?</div><div class="quiz-opts"><button class="quiz-opt" data-correct="false">Silently keep the larger number</button><button class="quiz-opt" data-correct="false">Discard both findings</button><button class="quiz-opt" data-correct="true">Preserve both, reconcile definitions and units, then record the resolution</button><button class="quiz-opt" data-correct="false">Ask the synthesis agent to guess</button></div><div class="quiz-fb"></div></div>
+      <div class="glass quiz" data-kind="scored"><div class="qkind">Synthesis</div><div class="q">What makes the final infrastructure conclusion collaborative intelligence?</div><div class="quiz-opts"><button class="quiz-opt" data-correct="false">It was written by the agent with the longest prompt</button><button class="quiz-opt" data-correct="true">It connects policy, quantitative, trend, and competitor evidence into a new strategic implication</button><button class="quiz-opt" data-correct="false">It combines five summaries without changing them</button><button class="quiz-opt" data-correct="false">It avoids uncertainty</button></div><div class="quiz-fb"></div></div>
+    </div>
+  </section>
+
+  <hr class="divider"/>
+  <footer class="site-footer"><div class="container"><p>Case Study 01 · Multi-Agent Market Research System.</p><p>Back to <a href="case-studies.html">case studies</a> or <a href="index.html">all chapters</a>.</p></div></footer>
+</main>
+<script src="multi-agent-series.js"></script>
+</body>
+</html>

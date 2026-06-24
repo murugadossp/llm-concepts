@@ -179,12 +179,13 @@ a.chapter:hover{transform:translateY(-3px);box-shadow:var(--shadow-elevated);bor
 <main>
   <section class="hero">
     <div class="container">
-      <span class="hero-eyebrow"><span class="dot"></span> Interactive learning library · updated 2026-06-23</span>
+      <span class="hero-eyebrow"><span class="dot"></span> Interactive learning library · updated 2026-06-24</span>
       <h1>LangGraph,<br/>one <em>chapter</em> at a time.</h1>
       <p class="hero-sub">A growing collection of LangGraph concepts and worked examples. Each chapter is hands-on — click through graphs, step through workflows, and break things safely. Start anywhere.</p>
       <div class="hero-chips">
         <span class="chip"><b id="ch-live">1</b> live chapter</span>
         <span class="chip"><b id="ch-soon">4</b> in the works</span>
+        <span class="chip"><b>1</b> system design case</span>
         <span class="chip">Learn by building</span>
       </div>
     </div>
@@ -429,6 +430,32 @@ a.chapter:hover{transform:translateY(-3px);box-shadow:var(--shadow-elevated);bor
     </div>
   </section>
 
+  <section class="section" id="case-studies">
+    <div class="container">
+      <div class="section-head">
+        <h2>System design case studies</h2>
+        <a class="meta" href="case-studies.html">Open case study hub →</a>
+      </div>
+      <a class="chapter" href="case-study-multi-agent-research.html">
+        <div class="top">
+          <span class="ch-num">Case Study 01</span>
+          <span class="ch-status live">● Interactive</span>
+        </div>
+        <h3>Multi-Agent Market Research System</h3>
+        <p>Put on the system designer hat: choose the architecture, assemble collaborative state, inspect agent contracts, route different research questions, and design recovery loops.</p>
+        <div class="tags">
+          <span class="tag">system design</span>
+          <span class="tag">interactive decisions</span>
+          <span class="tag">shared state</span>
+          <span class="tag">failure recovery</span>
+        </div>
+        <span class="go">Open case study
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+        </span>
+      </a>
+    </div>
+  </section>
+
   <footer class="site-footer">
     <div class="container">
       <p><span class="kicker">learn by building</span> — part of the <a href="../architecture.html">LLM → Agent</a> platform.</p>
@@ -457,8 +484,8 @@ a.chapter:hover{transform:translateY(-3px);box-shadow:var(--shadow-elevated);bor
   update(getPref());
 
   // keep the hero counters honest if cards change
-  document.getElementById('ch-live').textContent=document.querySelectorAll('.chapter:not(.locked)').length;
-  document.getElementById('ch-soon').textContent=document.querySelectorAll('.chapter.locked').length;
+  document.getElementById('ch-live').textContent=document.querySelectorAll('#chapters .chapter:not(.locked)').length;
+  document.getElementById('ch-soon').textContent=document.querySelectorAll('#chapters .chapter.locked').length;
 
   var mesh=document.querySelector('.mesh');
   document.addEventListener('visibilitychange',function(){

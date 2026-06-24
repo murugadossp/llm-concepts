@@ -65,6 +65,119 @@
     if (tabs[0]) show(tabs[0].getAttribute('data-scenario-tab'));
   });
 
+  document.querySelectorAll('[data-architecture-chooser]').forEach(function (wrap) {
+    var buttons = Array.prototype.slice.call(wrap.querySelectorAll('[data-architecture-choice]'));
+    var views = Array.prototype.slice.call(wrap.querySelectorAll('[data-architecture-view]'));
+    function show(name) {
+      buttons.forEach(function (button) {
+        button.setAttribute('aria-pressed', button.getAttribute('data-architecture-choice') === name ? 'true' : 'false');
+      });
+      views.forEach(function (view) {
+        view.classList.toggle('is-active', view.getAttribute('data-architecture-view') === name);
+      });
+    }
+    buttons.forEach(function (button) {
+      button.addEventListener('click', function () { show(button.getAttribute('data-architecture-choice')); });
+    });
+    if (buttons[0]) show(buttons[0].getAttribute('data-architecture-choice'));
+  });
+
+  document.querySelectorAll('[data-state-workbench]').forEach(function (wrap) {
+    var buttons = Array.prototype.slice.call(wrap.querySelectorAll('[data-state-add]'));
+    var layers = Array.prototype.slice.call(wrap.querySelectorAll('[data-state-layer]'));
+    var resetState = wrap.querySelector('[data-state-reset]');
+    var empty = wrap.querySelector('[data-state-empty]');
+    function refreshEmpty() {
+      if (empty) empty.style.display = layers.some(function (layer) { return layer.classList.contains('is-visible'); }) ? 'none' : 'grid';
+    }
+    buttons.forEach(function (button) {
+      button.addEventListener('click', function () {
+        var name = button.getAttribute('data-state-add');
+        buttons.forEach(function (item) { item.classList.toggle('is-active', item === button); });
+        var layer = wrap.querySelector('[data-state-layer="' + name + '"]');
+        if (layer) layer.classList.add('is-visible');
+        button.classList.add('is-complete');
+        refreshEmpty();
+      });
+    });
+    if (resetState) resetState.addEventListener('click', function () {
+      buttons.forEach(function (button) { button.classList.remove('is-active', 'is-complete'); });
+      layers.forEach(function (layer) { layer.classList.remove('is-visible'); });
+      refreshEmpty();
+    });
+    refreshEmpty();
+  });
+
+  document.querySelectorAll('[data-agent-inspector]').forEach(function (wrap) {
+    var buttons = Array.prototype.slice.call(wrap.querySelectorAll('[data-agent-pick]'));
+    var name = wrap.querySelector('[data-contract-name]');
+    var role = wrap.querySelector('[data-contract-role]');
+    var fields = ['needs', 'writes', 'triggers', 'signals'];
+    function show(button) {
+      buttons.forEach(function (item) { item.setAttribute('aria-pressed', item === button ? 'true' : 'false'); });
+      if (name) name.textContent = button.getAttribute('data-name');
+      if (role) role.textContent = button.getAttribute('data-role');
+      fields.forEach(function (field) {
+        var target = wrap.querySelector('[data-contract-' + field + ']');
+        if (!target) return;
+        target.innerHTML = '';
+        (button.getAttribute('data-' + field) || '').split('|').forEach(function (text) {
+          var li = document.createElement('li');
+          li.textContent = text;
+          target.appendChild(li);
+        });
+      });
+    }
+    buttons.forEach(function (button) { button.addEventListener('click', function () { show(button); }); });
+    if (buttons[0]) show(buttons[0]);
+  });
+
+  document.querySelectorAll('[data-strategy-console]').forEach(function (wrap) {
+    var buttons = Array.prototype.slice.call(wrap.querySelectorAll('[data-question-pick]'));
+    var title = wrap.querySelector('[data-strategy-title]');
+    var pattern = wrap.querySelector('[data-strategy-pattern]');
+    var reason = wrap.querySelector('[data-strategy-reason]');
+    var flow = wrap.querySelector('[data-strategy-flow]');
+    function show(button) {
+      buttons.forEach(function (item) { item.setAttribute('aria-pressed', item === button ? 'true' : 'false'); });
+      if (title) title.textContent = button.getAttribute('data-title');
+      if (pattern) pattern.textContent = button.getAttribute('data-pattern');
+      if (reason) reason.textContent = button.getAttribute('data-reason');
+      if (flow) {
+        flow.innerHTML = '';
+        (button.getAttribute('data-flow') || '').split('|').forEach(function (step, index, all) {
+          var node = document.createElement('div');
+          node.className = 'strategy-node' + (step.indexOf('+') >= 0 ? ' is-parallel' : '') + (step.indexOf('Gate') >= 0 ? ' is-gate' : '');
+          node.textContent = step;
+          flow.appendChild(node);
+          if (index < all.length - 1) {
+            var arrowNode = document.createElement('span');
+            arrowNode.className = 'strategy-arrow';
+            arrowNode.textContent = '→';
+            flow.appendChild(arrowNode);
+          }
+        });
+      }
+    }
+    buttons.forEach(function (button) { button.addEventListener('click', function () { show(button); }); });
+    if (buttons[0]) show(buttons[0]);
+  });
+
+  document.querySelectorAll('[data-failure-lab]').forEach(function (wrap) {
+    var buttons = Array.prototype.slice.call(wrap.querySelectorAll('[data-failure-choice]'));
+    var detected = wrap.querySelector('[data-failure-detected]');
+    var recovery = wrap.querySelector('[data-failure-recovery]');
+    var result = wrap.querySelector('[data-failure-result]');
+    function show(button) {
+      buttons.forEach(function (item) { item.setAttribute('aria-pressed', item === button ? 'true' : 'false'); });
+      if (detected) detected.textContent = button.getAttribute('data-detected');
+      if (recovery) recovery.textContent = button.getAttribute('data-recovery');
+      if (result) result.textContent = button.getAttribute('data-result');
+    }
+    buttons.forEach(function (button) { button.addEventListener('click', function () { show(button); }); });
+    if (buttons[0]) show(buttons[0]);
+  });
+
   var quizBlocks = Array.prototype.slice.call(document.querySelectorAll('.quiz[data-kind="scored"]'));
   var scoreVal = document.getElementById('score-val');
   var totalVal = document.getElementById('score-total');
