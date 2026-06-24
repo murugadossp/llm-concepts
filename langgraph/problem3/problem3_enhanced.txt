@@ -1,0 +1,134 @@
+Designing a Multi-Agent Research System
+
+Objective
+The most powerful AI systems aren't single agents working in isolation—they're
+teams of specialized agents that can coordinate, collaborate, and build on
+each other's expertise to solve complex problems that no individual agent
+could handle alone.
+
+Scenario
+You're building an AI research assistant for a consulting firm that needs to
+produce comprehensive market analysis reports. The system must coordinate
+multiple specialized agents: 
+    a web research agent that finds relevant articles and data sources, 
+    a data analysis agent that processes quantitative information, 
+    a trend analysis agent that identifies patterns and projections, 
+    a competitive intelligence agent that analyzes competitor activities, and 
+    a synthesis agent that weaves everything together into coherent reports.
+
+The challenge is that these agents must work together intelligently. The web
+research agent's findings should inform what the data analysis agent focuses
+on. The trend analysis should build on both web research and data analysis.
+The competitive intelligence should consider trends and market data. And the
+synthesis agent needs to understand the reasoning and connections from all
+other agents to create truly insightful reports.
+
+Your firm's clients expect reports that demonstrate deep, interconnected
+analysis—not just collections of separate findings. The system must coordinate
+agents to produce collaborative intelligence that exceeds what any individual
+agent could achieve.
+Design a sophisticated multi-agent system that coordinates specialized
+agents to produce comprehensive, interconnected market analysis reports through collaborative intelligence.
+
+Task 1: Design Collaborative State Architecture
+
+Create a state structure that enables true collaboration between agents:
+- Shared Research Context: Information that all agents can build upon
+- Agent Contributions: Structured findings from each specialized agent
+- Cross-Agent Insights: Connections and relationships discovered
+  between different agents' work
+- Collaborative Reasoning: Shared understanding that emerges from
+  agent interactions
+- Synthesis Threads: Narrative threads that connect findings across
+  different domains
+
+Task 2: Define Agent Coordination Patterns
+
+Design coordination strategies for your five specialized agents:
+
+    **Web Research Agent**: Finds articles, reports, and online sources  
+    **Data Analysis Agent**: Processes quantitative data and statistics  
+    **Trend Analysis Agent**: Identifies patterns and future projections  
+    **Competitive Intelligence Agent**: Analyzes competitor activities and market positioning  
+    **Synthesis Agent**: Weaves findings into coherent, insightful reports
+
+    For each node, define:
+    - What information it needs from other agents to work effectively
+    - How it contributes to the shared understanding
+    - What triggers or events it responds to from other agents
+    - How it signals important findings to other agents
+
+Task 3: Create Dynamic Workflow Logic
+
+    Design the coordination logic that determines how agents work together
+    based on the research question and emerging findings:
+    How does the system decide which agents to activate for different
+    types of research questions?
+    When should agents work in parallel vs. sequence?
+    How do agents trigger additional investigation by other agents?
+    What conditions determine when the synthesis agent should begin its
+    work?
+
+Create a decision framework that adapts the collaboration pattern based
+on the complexity and requirements of each research request.
+
+Submission Guidelines
+Submit a comprehensive design document (PDF, Word, or well-structured text)
+containing:
+Collaborative State Schema: Complete state structure with detailed field
+descriptions
+Agent Coordination Matrix: How each agent interacts with and depends
+on others
+Dynamic Workflow Logic: Decision framework for adaptive collaboration
+patterns
+Collaboration Rationale: Explanation of how your design creates
+emergent intelligence
+
+Completion Criteria
+State architecture that enables true collaborative intelligence, not just data
+sharing
+Clear coordination patterns that show how agents build on each other's work
+Dynamic workflow logic that adapts collaboration based on research
+complexity
+Compelling explanation of how the system creates insights beyond individual
+agent capabilities
+
+
+
+Requirements
+- Agents must operate asynchronously with proper synchronization
+- Shared knowledge base for inter-agent communication
+- Error handling for failed external API calls
+- Support for multi-step reasoning and backtracking
+- Final report generation in structured format (e.g., Markdown or HTML)
+
+Implementation Notes
+- Use asyncio for managing agent concurrency and synchronization
+- Design a thread-safe shared knowledge base (e.g., using asyncio.Lock or concurrent.futures)
+- Implement retry logic with exponential backoff for API calls
+- Create a reasoning engine that supports stateful multi-step processing
+- Define a consistent data schema for inter-agent communication
+- Ensure proper exception handling and logging throughout the agent pipeline
+
+Output Format
+- Generate comprehensive market analysis reports in Markdown format
+- Include structured sections: Executive Summary, Market Overview, Competitive Landscape, Trends & Projections, Data Insights, Conclusion
+- Support both HTML and Markdown output formats with proper escaping
+- Include citations and source references for all external data
+- Allow configurable report depth (summary vs. full technical report)
+
+Testing Strategy
+- Unit tests for each agent's core functionality and error handling
+- Integration tests for inter-agent communication via the shared knowledge base
+- End-to-end tests simulating complete report generation workflows
+- Performance benchmarks for asynchronous execution and API rate limiting
+- Validation tests for output format compliance (Markdown syntax, citation formatting)
+
+Implementation Example
+- Define data schemas using Pydantic models for type safety
+- Implement agent classes with async methods and retry decorators
+- Use asyncio.gather for parallel agent execution with timeout handling
+- Create a KnowledgeBase class with async read/write operations protected by asyncio.Lock
+- Build a ReportGenerator class that formats Markdown with proper escaping and citation management
+    
+
