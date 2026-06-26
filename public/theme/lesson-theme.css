@@ -1,0 +1,275 @@
+/* Canonical lesson theme shared by the Next.js app and standalone HTML lessons. */
+
+:root[data-theme="light"] {
+  --bg-base: #f4f6fb;
+  --bg-mesh-1: #e0dcff;
+  --bg-mesh-2: #d1f0ec;
+  --bg-mesh-3: #ffe4d6;
+  --surface: #ffffff;
+  --surface-strong: #ffffff;
+  --surface-muted: #f7f8fc;
+  --surface-hover: #eef1fb;
+  --border: rgba(15, 18, 38, 0.08);
+  --border-strong: rgba(15, 18, 38, 0.1);
+  --ring: rgba(91, 63, 255, 0.35);
+  --ink: #0f1226;
+  --ink-soft: #3d3f62;
+  --ink-mute: #6b6e8e;
+  --accent: #5b3fff;
+  --accent-2: #1fb5a8;
+  --warn: #e5484d;
+  --sun: #f5b945;
+  --ok: #1fb5a8;
+  --shadow-card: 0 8px 24px rgba(15, 18, 38, 0.06), 0 1px 2px rgba(15, 18, 38, 0.04);
+  --shadow-elevated: 0 24px 48px rgba(15, 18, 38, 0.12);
+  --code-bg: rgba(15, 18, 38, 0.92);
+  --code-ink: #f2f3fb;
+  --code-mute: #8b8fad;
+  --code-key: #c9b8ff;
+  --code-str: #4ddbcb;
+  --code-comment: #9aa0c2;
+}
+
+:root[data-theme="dark"] {
+  --bg-base: #0a0b1a;
+  --bg-mesh-1: #3b2a78;
+  --bg-mesh-2: #0f4d49;
+  --bg-mesh-3: #6b2a2a;
+  --surface: #111326;
+  --surface-strong: #16192d;
+  --surface-muted: #1d2138;
+  --surface-hover: #252a45;
+  --border: rgba(255, 255, 255, 0.12);
+  --border-strong: rgba(255, 255, 255, 0.18);
+  --ring: rgba(141, 121, 255, 0.55);
+  --ink: #f2f3fb;
+  --ink-soft: #c2c5dc;
+  --ink-mute: #8b8fad;
+  --accent: #8d79ff;
+  --accent-2: #4ddbcb;
+  --warn: #ff6b6b;
+  --sun: #ffd56b;
+  --ok: #4ddbcb;
+  --shadow-card: 0 8px 24px rgba(0, 0, 0, 0.35), 0 1px 2px rgba(0, 0, 0, 0.25);
+  --shadow-elevated: 0 24px 48px rgba(0, 0, 0, 0.55);
+  --code-bg: rgba(0, 0, 0, 0.45);
+  --code-ink: #f2f3fb;
+  --code-mute: #8b8fad;
+  --code-key: #c9b8ff;
+  --code-str: #4ddbcb;
+  --code-comment: #8b8fad;
+}
+
+:root {
+  --r-sm: 10px;
+  --r-md: 16px;
+  --r-lg: 24px;
+  --r-pill: 999px;
+  --maxw-content: 920px;
+  --maxw-wide: 1100px;
+  --space-section: 84px;
+  --serif: "Instrument Serif", "Iowan Old Style", Georgia, serif;
+  --sans: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, "Cascadia Code", Menlo, monospace;
+  --hand: "Caveat", "Patrick Hand", cursive;
+}
+
+html {
+  color-scheme: light dark;
+  scroll-behavior: smooth;
+  scroll-padding-top: 88px;
+}
+
+body {
+  background: var(--bg-base);
+  color: var(--ink);
+}
+
+::selection {
+  background: var(--accent);
+  color: #fff;
+}
+
+*:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+.mesh {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: radial-gradient(60vw 60vw at 8% 12%, var(--bg-mesh-1), transparent 70%),
+    radial-gradient(55vw 55vw at 92% 30%, var(--bg-mesh-2), transparent 70%),
+    radial-gradient(70vw 70vw at 60% 95%, var(--bg-mesh-3), transparent 70%), var(--bg-base);
+  filter: saturate(115%);
+  animation: meshDrift 40s ease-in-out infinite alternate;
+  will-change: transform, background-position;
+}
+
+@keyframes meshDrift {
+  0% {
+    background-position: 0 0, 0 0, 0 0, 0 0;
+    transform: scale(1);
+  }
+  100% {
+    background-position: -8% 6%, 6% -4%, -4% 8%, 0 0;
+    transform: scale(1.04);
+  }
+}
+
+.mesh.is-paused {
+  animation-play-state: paused;
+}
+
+.glass {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-card);
+  border-radius: var(--r-md);
+}
+
+.glass-strong {
+  background: var(--surface-strong);
+  border: 1px solid var(--border-strong);
+  box-shadow: var(--shadow-elevated);
+  border-radius: var(--r-lg);
+}
+
+.font-display {
+  font-family: var(--font-instrument-serif, var(--serif));
+}
+
+.font-mono {
+  font-family: var(--font-jetbrains, var(--mono));
+}
+
+.comic-dialogue {
+  font-family: var(--font-caveat, var(--hand));
+}
+
+.site-container {
+  width: min(calc(100% - 2rem), var(--maxw-wide));
+  margin-inline: auto;
+}
+
+.site-container-narrow {
+  width: min(calc(100% - 2rem), var(--maxw-content));
+  margin-inline: auto;
+}
+
+.editorial-title {
+  font-family: var(--font-instrument-serif, var(--serif));
+  font-weight: 400;
+  line-height: 1.04;
+  letter-spacing: -0.02em;
+}
+
+.eyebrow-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: var(--r-pill);
+  background: var(--surface);
+  padding: 0.375rem 0.75rem;
+  color: var(--ink-mute);
+  font-size: 0.8125rem;
+  font-weight: 500;
+}
+
+.eyebrow-dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 999px;
+  background: var(--accent-2);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent-2) 25%, transparent);
+}
+
+.lesson-card {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow-card);
+  transition: transform 180ms ease, box-shadow 250ms ease, border-color 200ms ease;
+}
+
+.lesson-card::before {
+  position: absolute;
+  inset: 0 0 auto;
+  height: 4px;
+  background: linear-gradient(90deg, var(--accent), var(--accent-2));
+  content: "";
+}
+
+a.lesson-card:hover {
+  transform: translateY(-3px);
+  border-color: var(--accent);
+  box-shadow: var(--shadow-elevated);
+}
+
+.lesson-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  border: 1px solid var(--border);
+  border-radius: var(--r-pill);
+  background: var(--surface-muted);
+  padding: 0.25rem 0.625rem;
+  color: var(--ink-soft);
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.lesson-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-pill);
+  background: var(--surface);
+  padding: 0.625rem 1rem;
+  color: var(--ink);
+  font-size: 0.8125rem;
+  font-weight: 650;
+  transition: border-color 180ms ease, background 180ms ease, transform 180ms ease;
+}
+
+.lesson-button:hover {
+  transform: translateY(-1px);
+  border-color: var(--accent);
+  background: var(--surface-hover);
+}
+
+.lesson-button-primary {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: #fff;
+}
+
+.lesson-button-primary:hover {
+  background: var(--accent);
+  color: #fff;
+}
+
+@media (max-width: 640px) {
+  .site-container,
+  .site-container-narrow {
+    width: min(calc(100% - 2.25rem), var(--maxw-wide));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  .mesh {
+    animation: none;
+  }
+}
