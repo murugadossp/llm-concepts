@@ -9,6 +9,7 @@
   --surface-strong: #ffffff;
   --surface-muted: #f7f8fc;
   --surface-hover: #eef1fb;
+  --surface-flat: #ffffff;
   --border: rgba(15, 18, 38, 0.08);
   --border-strong: rgba(15, 18, 38, 0.1);
   --ring: rgba(91, 63, 255, 0.35);
@@ -39,6 +40,7 @@
   --surface-strong: #16192d;
   --surface-muted: #1d2138;
   --surface-hover: #252a45;
+  --surface-flat: #16192d;
   --border: rgba(255, 255, 255, 0.12);
   --border-strong: rgba(255, 255, 255, 0.18);
   --ring: rgba(141, 121, 255, 0.55);
@@ -81,8 +83,15 @@ html {
 }
 
 body {
+  margin: 0;
+  min-height: 100vh;
   background: var(--bg-base);
   color: var(--ink);
+  font-family: var(--font-inter, var(--sans));
+  font-size: 16px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
 }
 
 ::selection {
@@ -93,6 +102,55 @@ body {
 *:focus-visible {
   outline: 2px solid var(--ring);
   outline-offset: 2px;
+}
+
+a {
+  color: var(--accent);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: border-color 0.2s ease, color 0.2s ease;
+}
+
+a:hover {
+  border-bottom-color: var(--accent);
+}
+
+button {
+  border: none;
+  background: none;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  margin: 0;
+  color: var(--ink);
+}
+
+p {
+  margin: 0 0 1em;
+  color: var(--ink-soft);
+}
+
+ul,
+ol {
+  margin: 0 0 1em;
+  padding-left: 1.25em;
+  color: var(--ink-soft);
+}
+
+li {
+  margin-bottom: 0.4em;
+}
+
+code,
+pre {
+  font-family: var(--font-jetbrains, var(--mono));
+  font-size: 0.9em;
 }
 
 .mesh {
