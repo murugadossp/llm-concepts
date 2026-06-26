@@ -1,0 +1,43 @@
+.glass {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-card);
+  border-radius: var(--r-md);
+}
+
+.glass-strong {
+  background: var(--surface-strong);
+  border: 1px solid var(--border-strong);
+  box-shadow: var(--shadow-elevated);
+  border-radius: var(--r-lg);
+}
+
+.mesh {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: radial-gradient(60vw 60vw at 8% 12%, var(--bg-mesh-1), transparent 70%),
+    radial-gradient(55vw 55vw at 92% 30%, var(--bg-mesh-2), transparent 70%),
+    radial-gradient(70vw 70vw at 60% 95%, var(--bg-mesh-3), transparent 70%), var(--bg-base);
+  filter: saturate(115%);
+  animation: mesh-drift 40s ease-in-out infinite alternate;
+  will-change: transform, background-position;
+}
+
+@keyframes mesh-drift {
+  from {
+    background-position: 0 0, 0 0, 0 0, 0 0;
+    transform: scale(1);
+  }
+  to {
+    background-position: -8% 6%, 6% -4%, -4% 8%, 0 0;
+    transform: scale(1.04);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mesh {
+    animation: none;
+  }
+}

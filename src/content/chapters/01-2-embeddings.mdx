@@ -1,0 +1,78 @@
+---
+slug: "01-2-embeddings"
+title: "Embeddings: Turning Tokens Into Meaning-Space"
+navTitle: "Embeddings"
+chapterNumber: 1
+lessonNumber: 2
+parentSlug: "01-foundations"
+section: "foundations"
+difficulty: "beginner"
+estimatedMinutes: 7
+tier: "free"
+prereqs: ["01-1-tokens"]
+characters: ["Tess", "Vector"]
+ogImageVariant: "foundations"
+suggestedPrompts:
+  - "How are embeddings different from token IDs?"
+  - "Why does king minus man plus woman equal queen work?"
+  - "What does 'meaning-space' actually mean?"
+  - "Why aren't individual embedding dimensions easy to interpret?"
+updatedAt: "2026-05-23"
+authors: ["murugadoss"]
+summary: >
+  Embeddings turn token IDs into learned vectors that carry usable meaning.
+---
+
+Token IDs are only lookup numbers. Embeddings are where the model starts to represent meaning.
+
+## TL;DR
+
+- An embedding is a list of numbers for a token.
+- Similar contexts tend to produce vectors that point in similar directions.
+- The map metaphor is useful, but real embeddings have many dimensions and messy distributed meaning.
+
+## Comic Script: Tess Meets Vector
+
+<ComicStrip>
+  <ComicPanel character="Vector" title="Tess Meets Vector">
+    <SpeechBubble speaker="Vector">This is where your meaning starts.</SpeechBubble>
+    **Visual action:** A soft glass map called "Embedding Space" with hills labeled royalty, animals, actions, and weather. Vector hands Tess a coordinate card covered in tiny numbers.
+    **Teaching point:** Embeddings place tokens in a geometric space where distance carries useful signal.
+  </ComicPanel>
+  <ComicPanel character="Tess" title="The Meaning Map">
+    <SpeechBubble speaker="Tess">So "king" and "queen" are neighbors on this map?</SpeechBubble>
+    **Visual action:** Tess walks toward a cluster of glowing pins labeled with royalty words. Animal tokens glow in a separate region.
+    **Teaching point:** Tokens used in similar contexts tend to have embeddings that point in similar directions.
+  </ComicPanel>
+</ComicStrip>
+
+## Coordinates For Meaning
+
+An embedding is a list of numbers that represents a token inside the model. You can think of it as coordinates on a map, except the real map has hundreds or thousands of dimensions instead of two.
+
+Tokens used in similar contexts tend to have embeddings that point in similar directions. That is why examples like `king`, `queen`, `man`, and `woman` are useful for intuition. The model learns patterns of relationship, not dictionary definitions written by hand.
+
+<ELI5Card title="Meaning becomes a location">
+  Imagine every token gets a pin on a giant map. Tokens about royalty gather in one area. Animal tokens gather somewhere else. The map is not drawn by a person. The model learns it from text.
+</ELI5Card>
+
+## Why This Matters In Apps
+
+Embeddings are not only inside language models. You will also use embedding models in retrieval-augmented generation. A support article, a policy paragraph, and a user question can all become vectors. Similar vectors can then be searched quickly.
+
+That is the bridge from this lesson to RAG later in the course: if meaning can become a vector, searching by meaning becomes possible.
+
+<DeepDive title="Why the map metaphor is useful but incomplete">
+  Embedding space is not a literal map with one axis for "royalty" and another for "gender." Individual dimensions are usually hard to interpret. Meaning is distributed across many numbers.
+
+  In a transformer, the initial embedding is only the starting point. Each layer updates the token representation using context from surrounding tokens.
+</DeepDive>
+
+## Remember
+
+<RememberCard>
+  - Token IDs point to learned embeddings.
+  - Embeddings are vectors, not dictionary definitions.
+  - Similarity in vector space can support semantic search.
+  - Context can update a token's representation later in the model.
+</RememberCard>

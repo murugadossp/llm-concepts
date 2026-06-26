@@ -1,0 +1,71 @@
+---
+slug: "01-4-context-windows"
+title: "Context Windows and Token Budgets"
+navTitle: "Context Windows"
+chapterNumber: 1
+lessonNumber: 4
+parentSlug: "01-foundations"
+section: "foundations"
+difficulty: "beginner"
+estimatedMinutes: 7
+tier: "free"
+prereqs: ["01-1-tokens"]
+characters: ["Tess"]
+ogImageVariant: "foundations"
+suggestedPrompts:
+  - "What actually counts toward the context window?"
+  - "Why do longer prompts cost more money?"
+  - "When should I use retrieval instead of stuffing everything in context?"
+  - "What is a key-value cache and why does it speed up generation?"
+updatedAt: "2026-05-23"
+authors: ["murugadoss"]
+summary: >
+  The context window is the model's working page: prompt, history, retrieved text, tools, and output all compete for space.
+---
+
+A context window is not just "how much text you can paste." It is the model's working page.
+
+## TL;DR
+
+- The context window includes input and generated output.
+- More context can help, but it costs more and can become noisy.
+- Token budgets shape product design, retrieval design, and agent memory.
+
+## The Model's Working Page
+
+The context window is how much text the model can consider at once. It includes your prompt, conversation history, tool results, retrieved documents, previous assistant messages, and the model's generated tokens.
+
+A bigger context window lets the model look at more material, but it also costs more. More tokens mean more computation. Long context can also become noisy if the important details are buried.
+
+<ELI5Card title="A desk with limited space">
+  The model can work with whatever fits on the desk. A bigger desk helps, but a messy desk can still hide the note you need.
+</ELI5Card>
+
+## What Competes For Space
+
+In a real app, context may contain:
+
+- System instructions.
+- Developer instructions.
+- User messages.
+- Conversation history.
+- Retrieved documents.
+- Tool outputs.
+- The model's own answer as it is being generated.
+
+This is why "just paste everything" is rarely the best strategy. Good LLM systems decide what deserves to be in the working page right now.
+
+<DeepDive title="Key-value cache">
+  During generation, the model produces one token at a time. The key-value cache stores attention data from earlier tokens so the model does not recompute the whole prefix from scratch for every new token.
+
+  This makes inference faster, especially for long prompts. The tradeoff is memory: cached keys and values take space.
+</DeepDive>
+
+## Remember
+
+<RememberCard>
+  - Context is shared working space.
+  - Bigger context is useful but not automatically better.
+  - Retrieval helps choose what enters context.
+  - Agents need context discipline because task histories get messy.
+</RememberCard>

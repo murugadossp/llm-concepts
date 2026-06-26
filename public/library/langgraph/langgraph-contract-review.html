@@ -1,0 +1,1190 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="color-scheme" content="light dark" />
+<title>LangGraph — Contract Review Workflow</title>
+<meta name="description" content="An interactive, hands-on walkthrough of building a contract review workflow with LangGraph: graph architecture, state & persistence, transparency, and workflow control." />
+
+<!-- Theme flash-prevention: set data-theme BEFORE first paint -->
+<script>
+  (function () {
+    try {
+      var stored = localStorage.getItem('theme');
+      var pref = stored || 'system';
+      var resolved = pref;
+      if (pref === 'system') {
+        resolved = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      }
+      document.documentElement.setAttribute('data-theme', resolved);
+      document.documentElement.setAttribute('data-theme-pref', pref);
+    } catch (e) {
+      document.documentElement.setAttribute('data-theme', 'light');
+      document.documentElement.setAttribute('data-theme-pref', 'system');
+    }
+  })();
+</script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Caveat:wght@500;700&display=swap" rel="stylesheet" />
+
+<style>
+/* ============================================================
+   Tokens — Daybreak (light) + Midnight (dark)
+   (shared with architecture.html)
+   ============================================================ */
+:root[data-theme="light"] {
+  --bg-base: #F4F6FB;
+  --bg-mesh-1: #E0DCFF;
+  --bg-mesh-2: #D1F0EC;
+  --bg-mesh-3: #FFE4D6;
+  --surface: #FFFFFF;
+  --surface-strong: #FFFFFF;
+  --surface-muted: #F7F8FC;
+  --surface-hover: #EEF1FB;
+  --surface-flat: #FFFFFF;
+  --border: rgba(15,18,38,0.08);
+  --border-strong: rgba(15,18,38,0.10);
+  --ring: rgba(91,63,255,0.35);
+  --ink: #0F1226;
+  --ink-soft: #3D3F62;
+  --ink-mute: #6B6E8E;
+  --accent: #5B3FFF;
+  --accent-2: #1FB5A8;
+  --warn: #E5484D;
+  --sun: #F5B945;
+  --shadow-card: 0 8px 24px rgba(15,18,38,0.06), 0 1px 2px rgba(15,18,38,0.04);
+  --shadow-elevated: 0 24px 48px rgba(15,18,38,0.12);
+  --code-bg: rgba(15,18,38,0.92);
+  --code-ink: #F2F3FB;
+  --code-mute: #8B8FAD;
+  --code-key: #C9B8FF;
+  --code-str: #4DDBCB;
+  --code-comment: #6B6E8E;
+}
+:root[data-theme="dark"] {
+  --bg-base: #0A0B1A;
+  --bg-mesh-1: #3B2A78;
+  --bg-mesh-2: #0F4D49;
+  --bg-mesh-3: #6B2A2A;
+  --surface: #111326;
+  --surface-strong: #16192D;
+  --surface-muted: #1D2138;
+  --surface-hover: #252A45;
+  --surface-flat: #16192D;
+  --border: rgba(255,255,255,0.12);
+  --border-strong: rgba(255,255,255,0.18);
+  --ring: rgba(141,121,255,0.55);
+  --ink: #F2F3FB;
+  --ink-soft: #C2C5DC;
+  --ink-mute: #8B8FAD;
+  --accent: #8D79FF;
+  --accent-2: #4DDBCB;
+  --warn: #FF6B6B;
+  --sun: #FFD56B;
+  --shadow-card: 0 8px 24px rgba(0,0,0,0.35), 0 1px 2px rgba(0,0,0,0.25);
+  --shadow-elevated: 0 24px 48px rgba(0,0,0,0.55);
+  --code-bg: rgba(0,0,0,0.45);
+  --code-ink: #F2F3FB;
+  --code-mute: #8B8FAD;
+  --code-key: #C9B8FF;
+  --code-str: #4DDBCB;
+  --code-comment: #6B6E8E;
+}
+:root {
+  --r-sm: 10px;
+  --r-md: 16px;
+  --r-lg: 24px;
+  --r-pill: 999px;
+  --maxw-content: 920px;
+  --maxw-wide: 1100px;
+  --space-section: 88px;
+  --serif: "Instrument Serif", "Iowan Old Style", Georgia, serif;
+  --sans: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, "Cascadia Code", Menlo, monospace;
+  --hand: "Caveat", "Patrick Hand", cursive;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+html { scroll-behavior: smooth; scroll-padding-top: 88px; }
+body {
+  margin: 0;
+  font-family: var(--sans);
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--ink);
+  background: var(--bg-base);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+::selection { background: var(--accent); color: white; }
+
+a { color: var(--accent); text-decoration: none; border-bottom: 1px solid transparent; transition: border-color .2s ease, color .2s ease; }
+a:hover { border-bottom-color: var(--accent); }
+a:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; border-radius: 4px; }
+
+button { font-family: inherit; font-size: inherit; cursor: pointer; border: none; background: none; color: inherit; }
+button:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; border-radius: 8px; }
+
+h1, h2, h3, h4 { margin: 0; font-weight: 600; letter-spacing: -0.01em; color: var(--ink); }
+p { margin: 0 0 1em; color: var(--ink-soft); }
+ul, ol { margin: 0 0 1em; padding-left: 1.25em; color: var(--ink-soft); }
+li { margin-bottom: 0.4em; }
+code, pre { font-family: var(--mono); font-size: 0.9em; }
+
+/* Mesh background */
+.mesh {
+  position: fixed; inset: 0; z-index: -1;
+  background:
+    radial-gradient(60vw 60vw at 8% 12%, var(--bg-mesh-1), transparent 70%),
+    radial-gradient(55vw 55vw at 92% 30%, var(--bg-mesh-2), transparent 70%),
+    radial-gradient(70vw 70vw at 60% 95%, var(--bg-mesh-3), transparent 70%),
+    var(--bg-base);
+  filter: saturate(115%);
+  animation: meshDrift 40s ease-in-out infinite alternate;
+  will-change: background-position;
+}
+@keyframes meshDrift {
+  0% { background-position: 0 0,0 0,0 0,0 0; transform: scale(1); }
+  100% { background-position: -8% 6%,6% -4%,-4% 8%,0 0; transform: scale(1.04); }
+}
+@media (prefers-reduced-motion: reduce) { .mesh { animation: none; } html { scroll-behavior: auto; } }
+.mesh.is-paused { animation-play-state: paused; }
+
+/* Surfaces */
+.glass { background: var(--surface); border: 1px solid var(--border); box-shadow: var(--shadow-card); border-radius: var(--r-md); }
+.glass-strong { background: var(--surface-strong); border: 1px solid var(--border-strong); box-shadow: var(--shadow-elevated); border-radius: var(--r-lg); }
+
+/* Header */
+.site-header {
+  position: sticky; top: 0; z-index: 50;
+  padding: 14px 24px;
+  display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  background: var(--surface); border-bottom: 1px solid var(--border);
+}
+.brand { display: flex; align-items: center; gap: 10px; font-weight: 600; color: var(--ink); border: none; }
+.brand:hover { border: none; }
+.brand-mark { width: 32px; height: 32px; flex: none; border-radius: 10px; background: linear-gradient(135deg, var(--accent), var(--accent-2)); display: grid; place-items: center; box-shadow: 0 4px 14px var(--ring); }
+.brand-mark svg { width: 18px; height: 18px; color: white; }
+.brand-text { display: flex; flex-direction: column; line-height: 1.1; }
+.brand-text small { color: var(--ink-mute); font-size: 11px; font-weight: 500; }
+
+.section-nav { display: none; gap: 4px; align-items: center; overflow-x: auto; max-width: 54vw; }
+.section-nav a { font-size: 13px; color: var(--ink-soft); padding: 6px 10px; border-radius: 8px; border: none; white-space: nowrap; }
+.section-nav a:hover { background: var(--surface-hover); color: var(--ink); }
+@media (min-width: 1024px) { .section-nav { display: flex; } }
+
+.theme-toggle { display: inline-flex; align-items: center; background: var(--surface-strong); border: 1px solid var(--border-strong); border-radius: var(--r-pill); padding: 3px; gap: 2px; }
+.theme-toggle button { border-radius: var(--r-pill); padding: 6px 10px; font-size: 12px; font-weight: 500; color: var(--ink-mute); display: inline-flex; align-items: center; gap: 4px; transition: background .18s ease, color .18s ease; }
+.theme-toggle button:hover { color: var(--ink); }
+.theme-toggle button[aria-pressed="true"] { background: var(--accent); color: white; box-shadow: 0 2px 8px var(--ring); }
+.theme-toggle svg { width: 14px; height: 14px; }
+.theme-toggle .label-txt { display: none; }
+@media (min-width: 640px) { .theme-toggle .label-txt { display: inline; } }
+
+/* Layout */
+main { position: relative; }
+.container { max-width: var(--maxw-wide); margin: 0 auto; padding: 0 24px; }
+.container-narrow { max-width: var(--maxw-content); margin: 0 auto; padding: 0 24px; }
+section.block { padding-top: var(--space-section); scroll-margin-top: 88px; }
+.eyebrow { font-size: 13px; font-weight: 600; color: var(--accent); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+.eyebrow .num { display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 7px; background: var(--accent); color: #fff; font-size: 12px; }
+section.block h2 { font-family: var(--serif); font-weight: 400; font-size: clamp(28px, 4vw, 44px); line-height: 1.1; margin-bottom: 12px; }
+.lede { font-size: 18px; color: var(--ink-soft); max-width: 70ch; }
+
+/* Hero */
+.hero { padding-top: 72px; padding-bottom: 8px; }
+.hero-eyebrow { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 500; color: var(--ink-mute); background: var(--surface); border: 1px solid var(--border); padding: 6px 12px; border-radius: var(--r-pill); margin-bottom: 22px; }
+.hero-eyebrow .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent-2); box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent-2) 25%, transparent); }
+.hero h1 { font-family: var(--serif); font-weight: 400; font-size: clamp(40px, 7vw, 76px); line-height: 1.02; letter-spacing: -0.02em; margin-bottom: 18px; }
+.hero h1 em { font-style: italic; color: var(--accent); }
+.hero-sub { font-size: clamp(17px, 2.2vw, 20px); color: var(--ink-soft); max-width: 64ch; margin-bottom: 26px; }
+.hero-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 28px; }
+.btn { display: inline-flex; align-items: center; gap: 8px; padding: 11px 18px; border-radius: var(--r-pill); font-weight: 600; font-size: 14px; border: 1px solid transparent; transition: transform .15s ease, box-shadow .2s ease, background .2s ease; }
+.btn svg { width: 16px; height: 16px; }
+.btn:hover { transform: translateY(-1px); border-bottom-color: transparent; }
+.btn-primary { background: var(--accent); color: #fff; box-shadow: 0 6px 18px var(--ring); }
+.btn-ghost { background: var(--surface); color: var(--ink); border-color: var(--border-strong); }
+
+.hero-chips { display: flex; flex-wrap: wrap; gap: 10px; }
+.chip { font-size: 13px; font-weight: 500; color: var(--ink-soft); background: var(--surface); border: 1px solid var(--border); padding: 7px 13px; border-radius: var(--r-pill); display: inline-flex; align-items: center; gap: 7px; }
+.chip b { color: var(--ink); font-weight: 600; }
+
+/* Generic card grid */
+.grid { display: grid; gap: 18px; }
+@media (min-width: 720px) { .grid.cols-2 { grid-template-columns: 1fr 1fr; } .grid.cols-3 { grid-template-columns: repeat(3,1fr); } }
+.card { padding: 22px; }
+.card h3 { font-size: 18px; margin-bottom: 8px; display: flex; align-items: center; gap: 9px; }
+.card p:last-child { margin-bottom: 0; }
+.card .ic { width: 30px; height: 30px; flex: none; border-radius: 9px; display: grid; place-items: center; background: color-mix(in srgb, var(--accent) 14%, transparent); color: var(--accent); }
+.card .ic svg { width: 17px; height: 17px; }
+
+/* Callouts */
+.note { border-left: 3px solid var(--accent); background: var(--surface-muted); padding: 14px 16px; border-radius: 0 var(--r-sm) var(--r-sm) 0; margin: 18px 0; }
+.note.tip { border-left-color: var(--accent-2); }
+.note.warn { border-left-color: var(--warn); }
+.note .lbl { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--accent); display: block; margin-bottom: 4px; }
+.note.tip .lbl { color: var(--accent-2); }
+.note.warn .lbl { color: var(--warn); }
+.note p:last-child { margin-bottom: 0; }
+
+/* Code blocks */
+pre.code { background: var(--code-bg); color: var(--code-ink); border-radius: var(--r-md); padding: 18px 20px; overflow-x: auto; margin: 16px 0; border: 1px solid var(--border-strong); line-height: 1.55; }
+pre.code .k { color: var(--code-key); }
+pre.code .s { color: var(--code-str); }
+pre.code .c { color: var(--code-comment); font-style: italic; }
+pre.code .f { color: var(--sun); }
+code.inline { background: var(--surface-muted); border: 1px solid var(--border); padding: 1px 6px; border-radius: 6px; color: var(--ink); }
+
+/* ====== Interactive graph ====== */
+.graph-wrap { display: grid; gap: 18px; }
+@media (min-width: 900px) { .graph-wrap { grid-template-columns: 1.45fr 1fr; align-items: start; } }
+.graph-stage { padding: 8px; position: relative; }
+.graph-svg { width: 100%; height: auto; display: block; }
+.gnode { cursor: pointer; }
+.gnode rect { fill: var(--surface-muted); stroke: var(--border-strong); stroke-width: 1.5; transition: fill .2s ease, stroke .2s ease, filter .2s ease; }
+.gnode text { fill: var(--ink); font-family: var(--sans); font-weight: 600; font-size: 13px; pointer-events: none; }
+.gnode .sub { fill: var(--ink-mute); font-weight: 500; font-size: 10.5px; }
+.gnode:hover rect { stroke: var(--accent); }
+.gnode.active rect { fill: color-mix(in srgb, var(--accent) 18%, var(--surface)); stroke: var(--accent); stroke-width: 2.5; filter: drop-shadow(0 0 10px var(--ring)); }
+.gnode.visited rect { stroke: var(--accent-2); }
+.gnode.terminal rect { fill: color-mix(in srgb, var(--accent-2) 14%, var(--surface)); }
+.gnode.legal rect { stroke-dasharray: 5 4; }
+.edge { stroke: var(--ink-mute); stroke-width: 1.8; fill: none; marker-end: url(#arrow); transition: stroke .2s ease, stroke-width .2s ease; }
+.edge.cond { stroke: var(--accent); stroke-dasharray: 6 5; marker-end: url(#arrow-accent); }
+.edge.flash { stroke: var(--accent); stroke-width: 3.5; marker-end: url(#arrow-accent); }
+.edge-label { fill: var(--ink-mute); font-family: var(--mono); font-size: 10px; }
+.edge-label.cond { fill: var(--accent); }
+
+.graph-detail { padding: 20px; min-height: 280px; }
+.graph-detail .badge { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; padding: 4px 10px; border-radius: var(--r-pill); background: color-mix(in srgb, var(--accent) 14%, transparent); color: var(--accent); margin-bottom: 12px; }
+.graph-detail h4 { font-size: 20px; margin-bottom: 8px; }
+.graph-detail .state-pill { font-family: var(--mono); font-size: 12px; background: var(--surface-muted); border: 1px solid var(--border); padding: 3px 8px; border-radius: 6px; color: var(--accent-2); }
+.graph-legend { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 6px; font-size: 12px; color: var(--ink-mute); }
+.graph-legend span { display: inline-flex; align-items: center; gap: 6px; }
+.lg-line { width: 22px; height: 0; border-top: 2px solid var(--ink-mute); }
+.lg-line.cond { border-top: 2px dashed var(--accent); }
+
+/* ====== Simulator ====== */
+.sim { padding: 22px; }
+.sim-controls { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 18px; }
+.sim-btn { display: inline-flex; align-items: center; gap: 7px; padding: 9px 15px; border-radius: var(--r-pill); font-weight: 600; font-size: 13px; background: var(--surface); border: 1px solid var(--border-strong); color: var(--ink); transition: transform .12s ease, background .2s ease; }
+.sim-btn:hover { transform: translateY(-1px); background: var(--surface-hover); }
+.sim-btn.primary { background: var(--accent); color: #fff; border-color: transparent; box-shadow: 0 4px 14px var(--ring); }
+.sim-btn:disabled { opacity: .45; cursor: not-allowed; transform: none; }
+.sim-toggle { margin-left: auto; display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: var(--ink-soft); }
+.switch { position: relative; width: 40px; height: 22px; border-radius: var(--r-pill); background: var(--border-strong); transition: background .2s ease; flex: none; }
+.switch[aria-pressed="true"] { background: var(--accent); }
+.switch::after { content: ""; position: absolute; top: 2px; left: 2px; width: 18px; height: 18px; border-radius: 50%; background: #fff; transition: transform .2s ease; box-shadow: 0 1px 3px rgba(0,0,0,.3); }
+.switch[aria-pressed="true"]::after { transform: translateX(18px); }
+
+.sim-grid { display: grid; gap: 18px; }
+@media (min-width: 860px) { .sim-grid { grid-template-columns: 1fr 1fr; } }
+
+/* live simulator graph */
+.sim-graph-wrap { background: var(--surface-muted); border: 1px solid var(--border); border-radius: var(--r-md); padding: 10px 8px; margin-bottom: 18px; }
+.sim-graph { width: 100%; height: auto; display: block; }
+.snode rect { fill: var(--surface); stroke: var(--border-strong); stroke-width: 1.5; transition: fill .25s ease, stroke .25s ease, filter .25s ease; }
+.snode text { fill: var(--ink-soft); font-family: var(--sans); font-weight: 600; font-size: 12px; pointer-events: none; transition: fill .25s ease; }
+.snode.terminal rect { fill: color-mix(in srgb, var(--accent-2) 12%, var(--surface)); }
+.snode.legal rect { stroke-dasharray: 5 4; }
+.snode.visited rect { stroke: var(--accent-2); }
+.snode.active rect { fill: color-mix(in srgb, var(--accent) 20%, var(--surface)); stroke: var(--accent); stroke-width: 2.5; filter: drop-shadow(0 0 9px var(--ring)); }
+.snode.active text { fill: var(--ink); }
+.snode.pulse rect { animation: snodePulse .6s ease; }
+@keyframes snodePulse { 0% { filter: drop-shadow(0 0 0 var(--ring)); } 50% { filter: drop-shadow(0 0 14px var(--ring)); } 100% { filter: drop-shadow(0 0 9px var(--ring)); } }
+.sim-graph .edge.flash { stroke: var(--accent); stroke-width: 3.2; marker-end: url(#s-arrow-accent); }
+.sim-graph .edge.cond.flash { marker-end: url(#s-arrow-accent); }
+@media (prefers-reduced-motion: reduce) { .snode.pulse rect { animation: none; } }
+
+.trace { background: var(--surface-muted); border: 1px solid var(--border); border-radius: var(--r-md); padding: 6px; max-height: 360px; overflow-y: auto; }
+.trace-item { display: flex; gap: 10px; padding: 10px 12px; border-radius: var(--r-sm); font-size: 13.5px; align-items: flex-start; opacity: 0; transform: translateY(6px); animation: traceIn .35s ease forwards; }
+@keyframes traceIn { to { opacity: 1; transform: none; } }
+.trace-item + .trace-item { margin-top: 2px; }
+.trace-item .tstep { font-family: var(--mono); font-size: 11px; color: var(--ink-mute); flex: none; width: 26px; text-align: right; padding-top: 2px; }
+.trace-item .tbody { flex: 1; }
+.trace-item .tnode { font-weight: 600; color: var(--ink); }
+.trace-item .tmsg { color: var(--ink-soft); font-size: 12.5px; }
+.trace-item .tdot { width: 9px; height: 9px; border-radius: 50%; margin-top: 5px; flex: none; background: var(--accent); }
+.trace-item.is-human .tdot { background: var(--sun); }
+.trace-item.is-legal .tdot { background: var(--warn); }
+.trace-item.is-end .tdot { background: var(--accent-2); }
+.trace-empty { padding: 28px 14px; text-align: center; color: var(--ink-mute); font-size: 13px; }
+
+.statepanel { background: var(--code-bg); color: var(--code-ink); border-radius: var(--r-md); padding: 16px 18px; border: 1px solid var(--border-strong); font-family: var(--mono); font-size: 12.5px; line-height: 1.7; min-height: 200px; }
+.statepanel .sk { color: var(--code-key); }
+.statepanel .sv { color: var(--code-str); }
+.statepanel .sn { color: var(--sun); }
+.statepanel .changed { background: color-mix(in srgb, var(--sun) 30%, transparent); border-radius: 4px; padding: 0 3px; transition: background 1.2s ease; }
+
+.iter-meter { display: flex; align-items: center; gap: 10px; margin-top: 14px; font-size: 12.5px; color: var(--ink-soft); }
+.iter-bar { flex: 1; height: 8px; border-radius: var(--r-pill); background: var(--surface-muted); border: 1px solid var(--border); overflow: hidden; }
+.iter-fill { height: 100%; width: 0%; background: linear-gradient(90deg, var(--accent), var(--accent-2)); transition: width .4s ease, background .3s ease; }
+.iter-fill.danger { background: linear-gradient(90deg, var(--sun), var(--warn)); }
+
+/* range / slider */
+.slider-row { display: flex; align-items: center; gap: 14px; margin: 14px 0; }
+.slider-row label { font-size: 13px; color: var(--ink-soft); font-weight: 500; min-width: 110px; }
+input[type="range"] { -webkit-appearance: none; appearance: none; height: 6px; border-radius: var(--r-pill); background: var(--surface-muted); border: 1px solid var(--border); flex: 1; }
+input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 18px; height: 18px; border-radius: 50%; background: var(--accent); cursor: pointer; box-shadow: 0 2px 6px var(--ring); }
+input[type="range"]::-moz-range-thumb { width: 18px; height: 18px; border: none; border-radius: 50%; background: var(--accent); cursor: pointer; }
+.slider-val { font-family: var(--mono); font-weight: 600; color: var(--accent); min-width: 28px; text-align: center; }
+
+/* state machine list */
+.states { display: grid; gap: 10px; counter-reset: st; }
+.state-step { display: flex; gap: 14px; align-items: flex-start; padding: 14px 16px; border-radius: var(--r-md); background: var(--surface); border: 1px solid var(--border); }
+.state-step .mono { font-family: var(--mono); font-size: 12.5px; color: var(--accent-2); font-weight: 500; }
+.state-step .arrow { color: var(--ink-mute); }
+.state-num { flex: none; width: 26px; height: 26px; border-radius: 8px; background: color-mix(in srgb, var(--accent) 14%, transparent); color: var(--accent); display: grid; place-items: center; font-size: 12px; font-weight: 700; }
+
+/* tabs (transparency) */
+.tabs { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 16px; background: var(--surface-muted); padding: 5px; border-radius: var(--r-pill); border: 1px solid var(--border); width: fit-content; }
+.tab { padding: 8px 16px; border-radius: var(--r-pill); font-size: 13px; font-weight: 600; color: var(--ink-mute); transition: background .18s ease, color .18s ease; }
+.tab[aria-selected="true"] { background: var(--surface); color: var(--accent); box-shadow: var(--shadow-card); }
+.tabpanel { display: none; }
+.tabpanel.active { display: block; animation: traceIn .3s ease; }
+
+/* quiz */
+.quiz { padding: 22px; }
+.quiz .q { font-weight: 600; color: var(--ink); margin-bottom: 14px; font-size: 16px; }
+.quiz-opts { display: grid; gap: 10px; }
+.quiz-opt { text-align: left; padding: 13px 16px; border-radius: var(--r-md); background: var(--surface); border: 1px solid var(--border-strong); color: var(--ink-soft); font-size: 14px; transition: border-color .18s ease, background .18s ease; }
+.quiz-opt:hover { border-color: var(--accent); }
+.quiz-opt.correct { border-color: var(--accent-2); background: color-mix(in srgb, var(--accent-2) 12%, var(--surface)); color: var(--ink); }
+.quiz-opt.wrong { border-color: var(--warn); background: color-mix(in srgb, var(--warn) 10%, var(--surface)); }
+.quiz-fb { margin-top: 14px; font-size: 13.5px; color: var(--ink-soft); display: none; }
+.quiz-fb.show { display: block; }
+
+/* footer */
+.site-footer { margin-top: var(--space-section); border-top: 1px solid var(--border); padding: 40px 0 64px; }
+.site-footer .container { display: flex; flex-wrap: wrap; gap: 14px; justify-content: space-between; align-items: center; }
+.site-footer p { margin: 0; font-size: 13px; color: var(--ink-mute); }
+
+.kicker { font-family: var(--hand); font-size: 22px; color: var(--accent); transform: rotate(-2deg); display: inline-block; }
+.divider { height: 1px; background: var(--border); margin: 0; border: none; }
+</style>
+</head>
+<body>
+<div class="mesh" aria-hidden="true"></div>
+
+<header class="site-header">
+  <a class="brand" href="index.html" title="All LangGraph chapters">
+    <span class="brand-mark">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="3"/><circle cx="18" cy="18" r="3"/><circle cx="18" cy="6" r="3"/><path d="M9 6h6"/><path d="M6 9v6a3 3 0 0 0 3 3h6"/></svg>
+    </span>
+    <span class="brand-text">
+      <span>LangGraph <small style="display:inline">·</small> Ch. 01</span>
+      <small>Contract Review</small>
+    </span>
+  </a>
+
+  <nav class="section-nav" aria-label="Sections">
+    <a href="#foundations">Foundations</a>
+    <a href="#architecture">Architecture</a>
+    <a href="#simulator">Simulator</a>
+    <a href="#state">State</a>
+    <a href="#transparency">Transparency</a>
+    <a href="#control">Control</a>
+    <a href="#recap">Recap</a>
+  </nav>
+
+  <div class="theme-toggle" role="group" aria-label="Theme">
+    <button type="button" data-theme-set="light" aria-pressed="false" title="Light theme">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
+      <span class="label-txt">Light</span>
+    </button>
+    <button type="button" data-theme-set="dark" aria-pressed="false" title="Dark theme">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+      <span class="label-txt">Dark</span>
+    </button>
+    <button type="button" data-theme-set="system" aria-pressed="false" title="System theme">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8"/><path d="M12 17v4"/></svg>
+      <span class="label-txt">Auto</span>
+    </button>
+  </div>
+</header>
+
+<main id="top">
+  <!-- Hero -->
+  <section class="hero">
+    <div class="container">
+      <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:14px">
+        <a href="index.html" style="font-size:13px;font-weight:600;color:var(--accent);display:inline-flex;align-items:center;gap:6px;border:none">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+          All LangGraph chapters
+        </a>
+      </div>
+      <span class="hero-eyebrow"><span class="dot"></span> Chapter 01 · learn by building · updated 2026-06-18</span>
+      <h1>Build a contract review<br/>workflow with <em>LangGraph</em>.</h1>
+      <p class="hero-sub">A graph is just a flowchart your code can run. This page turns the contract-review workflow you reasoned through into something you can <b>click, step through, and break</b> — covering architecture, state &amp; persistence, transparency, and the guardrails that keep workflows from spinning forever.</p>
+      <div class="hero-actions">
+        <a class="btn btn-primary" href="#simulator">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="6 3 20 12 6 21 6 3"/></svg>
+          Run the workflow
+        </a>
+        <a class="btn btn-ghost" href="#architecture">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 5 7 7-7 7"/><path d="M5 12h14"/></svg>
+          Start with architecture
+        </a>
+      </div>
+      <div class="hero-chips">
+        <span class="chip"><b>4</b> core concepts</span>
+        <span class="chip"><b>Nodes</b> + edges + conditional logic</span>
+        <span class="chip"><b>Checkpointing</b> &amp; state schema</span>
+        <span class="chip"><b>Human-in-the-loop</b></span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== 0. Foundations ===================== -->
+  <section class="block" id="foundations">
+    <div class="container">
+      <div class="eyebrow"><span class="num">0</span> Foundations</div>
+      <h2>What LangGraph actually is</h2>
+      <p class="lede">LangGraph models an AI workflow as a <b>graph</b> — and a graph here is built from exactly three things. Get these three, and everything else (persistence, debugging, guardrails) is just detail layered on top.</p>
+
+      <div class="grid cols-3" style="margin-top:26px">
+        <div class="glass card">
+          <h3><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/></svg></span> 1 · Nodes</h3>
+          <p><b>Stateful functions</b> that do a task — analyse symptoms, review a clause. They <i>read</i> the shared state and <i>write</i> updates back. Not stateless: a node both acts and remembers.</p>
+        </div>
+        <div class="glass card">
+          <h3><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></span> 2 · Edges</h3>
+          <p>The flow between nodes. <b>Conditional edges</b> route dynamically on the current state — e.g. send cardiac symptoms to cardiology, respiratory ones to pulmonology.</p>
+        </div>
+        <div class="glass card" style="border-color:var(--accent)">
+          <h3><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14a9 3 0 0 0 18 0V5"/><path d="M3 12a9 3 0 0 0 18 0"/></svg></span> 3 · State</h3>
+          <p><b>Shared memory every node can read and write.</b> It persists through the whole workflow, carrying context so each node can make informed decisions. This is the heart of the design.</p>
+        </div>
+      </div>
+
+      <h3 style="margin-top:34px;font-size:20px">Stateless vs. stateful nodes</h3>
+      <p style="max-width:70ch">The single biggest mental shift. Toggle to compare how data moves.</p>
+      <div class="glass card" style="padding:22px">
+        <div class="sim-controls" style="margin-bottom:16px">
+          <button class="sim-btn" id="sf-stateless">Stateless (plain functions)</button>
+          <button class="sim-btn primary" id="sf-stateful">Stateful (LangGraph) ✓</button>
+        </div>
+        <div id="sf-panel">
+          <!-- filled by JS -->
+        </div>
+      </div>
+
+      <div class="grid cols-2" style="margin-top:24px">
+        <div class="glass card">
+          <h3><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14"/><path d="M5 12h14"/></svg></span> Grows organically</h3>
+          <p>Adding a step means <b>defining one node and wiring its edges</b> — no rewriting the rest. Shared state integrates it automatically, so workflows expand without large code changes.</p>
+        </div>
+        <div class="glass card">
+          <h3><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg></span> Intelligible by design</h3>
+          <p>Because state is centralized and every step is tracked, you can <b>visualize the graph, step through execution, and inspect state</b> at each node (LangGraph Studio) — making errors easy to trace.</p>
+        </div>
+      </div>
+
+      <div class="note tip"><span class="lbl">Seen in the wild</span><p><b>Healthcare diagnostics</b> — an admission node seeds patient state; a diagnostics node updates it; conditional edges route to cardiology or pulmonology based on findings; billing reads the same shared state. <b>Klarna's customer-service assistant</b> is a real production example of this graph-based, stateful approach handling complex, branching conversations at scale.</p></div>
+    </div>
+  </section>
+
+  <!-- ===================== 1. Architecture ===================== -->
+  <section class="block" id="architecture">
+    <div class="container">
+      <div class="eyebrow"><span class="num">1</span> Graph Architecture</div>
+      <h2>Nodes, edges, and conditional logic</h2>
+      <p class="lede">In LangGraph a <b>node</b> is a step (a function that reads state and returns an update). An <b>edge</b> is the arrow that moves you to the next node. A <b>conditional edge</b> is a fork: a small router function looks at the state and decides which node runs next. Click any node below to inspect it.</p>
+
+      <div class="graph-wrap" style="margin-top:28px">
+        <div class="glass graph-stage">
+          <svg class="graph-svg" viewBox="0 0 520 470" role="img" aria-label="Contract review graph. Tap nodes to inspect.">
+            <defs>
+              <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="var(--ink-mute)"/></marker>
+              <marker id="arrow-accent" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="var(--accent)"/></marker>
+            </defs>
+
+            <!-- edges (drawn first, under nodes) -->
+            <path class="edge" id="e-start-llm" d="M260 76 L260 116"/>
+            <path class="edge" id="e-llm-human" d="M260 168 L260 208"/>
+            <!-- conditional fan-out from router -->
+            <path class="edge cond" id="e-human-llm" d="M188 244 C90 250 90 150 200 152"/>
+            <path class="edge cond" id="e-human-legal" d="M332 260 C430 270 430 330 372 340"/>
+            <path class="edge cond" id="e-human-done" d="M260 300 L260 356"/>
+
+            <!-- edge labels -->
+            <text class="edge-label cond" x="86" y="200">has queries</text>
+            <text class="edge-label cond" x="392" y="312">critical / re-word</text>
+            <text class="edge-label cond" x="272" y="332">approved</text>
+            <text class="edge-label" x="270" y="100">always</text>
+            <text class="edge-label" x="270" y="192">always</text>
+
+            <!-- nodes -->
+            <g class="gnode" data-node="entry" tabindex="0" role="button" aria-label="Contract entry node">
+              <rect x="170" y="40" width="180" height="40" rx="11"/>
+              <text x="260" y="58" text-anchor="middle">Contract Entry</text>
+              <text x="260" y="72" text-anchor="middle" class="sub">START · ingest the document</text>
+            </g>
+            <g class="gnode" data-node="llm_review" tabindex="0" role="button" aria-label="LLM review node">
+              <rect x="170" y="120" width="180" height="48" rx="11"/>
+              <text x="260" y="140" text-anchor="middle">LLM Review</text>
+              <text x="260" y="155" text-anchor="middle" class="sub">analyse terms · pros &amp; cons</text>
+            </g>
+            <g class="gnode" data-node="human_review" tabindex="0" role="button" aria-label="Human review node">
+              <rect x="170" y="212" width="180" height="48" rx="11"/>
+              <text x="260" y="232" text-anchor="middle">Human Review</text>
+              <text x="260" y="247" text-anchor="middle" class="sub">read feedback · decide</text>
+            </g>
+            <g class="gnode legal" data-node="legal" tabindex="0" role="button" aria-label="Escalate to legal node">
+              <rect x="300" y="340" width="150" height="44" rx="11"/>
+              <text x="375" y="360" text-anchor="middle">Escalate → Legal</text>
+              <text x="375" y="374" text-anchor="middle" class="sub">redraft / counsel</text>
+            </g>
+            <g class="gnode terminal" data-node="done" tabindex="0" role="button" aria-label="Completed node">
+              <rect x="190" y="356" width="140" height="42" rx="11"/>
+              <text x="260" y="375" text-anchor="middle">Completed</text>
+              <text x="260" y="389" text-anchor="middle" class="sub">END · approved</text>
+            </g>
+          </svg>
+          <div class="graph-legend">
+            <span><i class="lg-line"></i> normal edge</span>
+            <span><i class="lg-line cond"></i> conditional edge (router decides)</span>
+          </div>
+        </div>
+
+        <aside class="glass graph-detail" id="graph-detail" aria-live="polite">
+          <span class="badge">Tap a node</span>
+          <h4>The contract review graph</h4>
+          <p>Every node here is one of two things: a <b>worker</b> that does something (LLM Review), or a <b>router</b> that only decides where to go next (Human Review fans out three ways).</p>
+          <p style="margin-bottom:0">Select a node on the left to see what it does, the state it writes, and the edges leaving it.</p>
+        </aside>
+      </div>
+
+      <div class="grid cols-3" style="margin-top:26px">
+        <div class="glass card">
+          <h3><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/></svg></span> Nodes</h3>
+          <p>Plain functions: <code class="inline">def node(state) -&gt; dict</code>. They receive the current state and return only the keys they want to change.</p>
+        </div>
+        <div class="glass card">
+          <h3><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></span> Edges</h3>
+          <p>Fixed wiring. <code class="inline">add_edge("entry","llm_review")</code> means after entry, always go to review.</p>
+        </div>
+        <div class="glass card">
+          <h3><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 9 4 4"/><path d="M14 6h4v4"/></svg></span> Conditional edges</h3>
+          <p>A router function returns the <i>name</i> of the next node. That's how "has queries?" sends you back to the LLM.</p>
+        </div>
+      </div>
+
+      <pre class="code"><span class="c"># Wiring the contract-review graph</span>
+<span class="k">from</span> langgraph.graph <span class="k">import</span> StateGraph, START, END
+
+g = StateGraph(ContractState)
+g.add_node(<span class="s">"entry"</span>, ingest_contract)
+g.add_node(<span class="s">"llm_review"</span>, llm_review)
+g.add_node(<span class="s">"human_review"</span>, human_review)
+g.add_node(<span class="s">"legal"</span>, escalate_to_legal)
+
+g.add_edge(START, <span class="s">"entry"</span>)
+g.add_edge(<span class="s">"entry"</span>, <span class="s">"llm_review"</span>)
+g.add_edge(<span class="s">"llm_review"</span>, <span class="s">"human_review"</span>)
+
+<span class="c"># conditional edge: router reads state, returns next node name</span>
+<span class="k">def</span> <span class="f">route_after_human</span>(state):
+    <span class="k">if</span> state[<span class="s">"decision"</span>] == <span class="s">"approved"</span>:   <span class="k">return</span> <span class="s">"done"</span>
+    <span class="k">if</span> state[<span class="s">"decision"</span>] == <span class="s">"escalate"</span>:   <span class="k">return</span> <span class="s">"legal"</span>
+    <span class="k">return</span> <span class="s">"llm_review"</span>   <span class="c"># has more queries → loop back</span>
+
+g.add_conditional_edges(<span class="s">"human_review"</span>, route_after_human, {
+    <span class="s">"done"</span>: END, <span class="s">"legal"</span>: <span class="s">"legal"</span>, <span class="s">"llm_review"</span>: <span class="s">"llm_review"</span>,
+})
+app = g.compile(checkpointer=checkpointer)</pre>
+
+      <div class="note tip"><span class="lbl">Why you got this right</span><p>In the dialogue you spotted that looping back to <i>Contract Entry</i> would re-ingest from scratch — so feedback should flow to a new <b>Human Review</b> node instead, and only loop to the LLM when there are genuine follow-up queries. That's exactly the conditional-edge pattern above.</p></div>
+    </div>
+  </section>
+
+  <!-- ===================== 2. Simulator ===================== -->
+  <section class="block" id="simulator">
+    <div class="container">
+      <div class="eyebrow"><span class="num">▶</span> Hands-on</div>
+      <h2>Run the workflow, step by step</h2>
+      <p class="lede">This ties everything together. Press <b>Step</b> to advance one node at a time, or <b>Auto-run</b> to watch it flow. The execution trace (left) is your audit log; the live state (right) is what gets checkpointed after every node. Toggle the human's decision to fork the graph.</p>
+
+      <div class="glass sim" style="margin-top:24px">
+        <div class="sim-controls">
+          <button class="sim-btn primary" id="sim-step">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+            Step
+          </button>
+          <button class="sim-btn" id="sim-auto">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+            Auto-run
+          </button>
+          <button class="sim-btn" id="sim-reset">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9 9 0 0 0-6.4 2.6L3 8"/><path d="M3 3v5h5"/></svg>
+            Reset
+          </button>
+          <span class="sim-toggle">
+            Human verdict:
+            <button class="sim-btn" id="sim-decision" data-mode="queries" style="padding:7px 13px">has queries ↻</button>
+          </span>
+        </div>
+
+        <!-- live graph that lights up as the workflow runs -->
+        <div class="sim-graph-wrap">
+          <svg class="sim-graph" viewBox="0 0 560 210" role="img" aria-label="Live workflow graph. The active node glows as the simulator runs.">
+            <defs>
+              <marker id="s-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="var(--ink-mute)"/></marker>
+              <marker id="s-arrow-accent" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="var(--accent)"/></marker>
+            </defs>
+
+            <!-- edges -->
+            <path class="edge" data-edge="entry-llm_review" d="M122 86 L150 86"/>
+            <path class="edge" data-edge="llm_review-human_review" d="M262 86 L290 86"/>
+            <path class="edge" data-edge="human_review-done" d="M402 86 L430 86"/>
+            <path class="edge cond" data-edge="human_review-legal" d="M346 112 L346 150"/>
+            <!-- loop back: human → llm, curved above -->
+            <path class="edge cond" data-edge="human_review-llm_review" d="M312 64 C300 24 224 24 206 60"/>
+
+            <text class="edge-label cond" x="234" y="20">has queries (loop)</text>
+            <text class="edge-label cond" x="352" y="135">escalate</text>
+
+            <!-- nodes -->
+            <g class="snode" data-snode="entry">
+              <rect x="12" y="68" width="110" height="38" rx="10"/>
+              <text x="67" y="91" text-anchor="middle">Contract Entry</text>
+            </g>
+            <g class="snode" data-snode="llm_review">
+              <rect x="152" y="68" width="110" height="38" rx="10"/>
+              <text x="207" y="91" text-anchor="middle">LLM Review</text>
+            </g>
+            <g class="snode" data-snode="human_review">
+              <rect x="292" y="68" width="110" height="38" rx="10"/>
+              <text x="347" y="91" text-anchor="middle">Human Review</text>
+            </g>
+            <g class="snode terminal" data-snode="done">
+              <rect x="432" y="68" width="116" height="38" rx="10"/>
+              <text x="490" y="91" text-anchor="middle">Completed</text>
+            </g>
+            <g class="snode legal" data-snode="legal">
+              <rect x="292" y="152" width="110" height="38" rx="10"/>
+              <text x="347" y="175" text-anchor="middle">Escalate → Legal</text>
+            </g>
+          </svg>
+        </div>
+
+        <div class="sim-grid">
+          <div>
+            <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-mute);margin-bottom:8px">Execution trace · audit log</div>
+            <div class="trace" id="sim-trace">
+              <div class="trace-empty">Press <b>Step</b> or <b>Auto-run</b> to begin. Each entry is one node execution — the kind of trace a legal team would audit.</div>
+            </div>
+            <div class="iter-meter">
+              <span>iterations</span>
+              <div class="iter-bar"><div class="iter-fill" id="sim-iterfill"></div></div>
+              <span class="slider-val" id="sim-itercount">0</span><span style="color:var(--ink-mute)">/ <span id="sim-itermax">3</span></span>
+            </div>
+          </div>
+          <div>
+            <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-mute);margin-bottom:8px">Persisted state · last checkpoint</div>
+            <div class="statepanel" id="sim-state"></div>
+          </div>
+        </div>
+      </div>
+      <div class="note"><span class="lbl">Read the right-hand panel</span><p>Highlighted fields just changed in the most recent node. That's the whole idea of LangGraph state: each node returns a <i>partial</i> update, LangGraph merges it, and the merged result is saved to the checkpointer before the next node runs.</p></div>
+    </div>
+  </section>
+
+  <!-- ===================== 3. State & Persistence ===================== -->
+  <section class="block" id="state">
+    <div class="container">
+      <div class="eyebrow"><span class="num">2</span> State &amp; Persistence</div>
+      <h2>State schema, reducers, and checkpointing</h2>
+      <p class="lede">State is the shared dictionary every node reads and writes. You declare its shape once as a <b>schema</b>. Persisting that state after each node — <b>checkpointing</b> — is what lets a workflow survive a crash, a closed browser, or a week of waiting on a human.</p>
+
+      <div class="grid cols-2" style="margin-top:24px">
+        <div class="glass card">
+          <h3><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7V4h16v3"/><path d="M9 20h6"/><path d="M12 4v16"/></svg></span> The state schema</h3>
+          <p>Define exactly what flows through the graph. A <b>reducer</b> (like <code class="inline">add</code>) says <i>how</i> to merge updates — e.g. append to the feedback history instead of overwriting it.</p>
+          <pre class="code" style="margin-bottom:0"><span class="k">from</span> typing <span class="k">import</span> Annotated, Literal
+<span class="k">from</span> operator <span class="k">import</span> add
+
+<span class="k">class</span> <span class="f">ContractState</span>(TypedDict):
+    contract_text: str
+    status: Literal[<span class="s">"open"</span>,<span class="s">"llm_reviewed"</span>,
+        <span class="s">"awaiting_human"</span>,<span class="s">"escalated"</span>,<span class="s">"done"</span>]
+    <span class="c"># reducer → each node appends, never clobbers</span>
+    feedback: Annotated[list, add]
+    iteration: int
+    decision: str | None</pre>
+        </div>
+        <div class="glass card">
+          <h3><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14a9 3 0 0 0 18 0V5"/><path d="M3 12a9 3 0 0 0 18 0"/></svg></span> Checkpointing = durable memory</h3>
+          <p>You were right that in-memory state vanishes on restart. LangGraph's answer is a <b>checkpointer</b> that writes the full state after every node. Swap the backend without touching node code:</p>
+          <pre class="code" style="margin-bottom:0"><span class="c"># dev: in-memory (lost on restart)</span>
+<span class="k">from</span> langgraph.checkpoint.memory <span class="k">import</span> MemorySaver
+cp = MemorySaver()
+
+<span class="c"># prod: durable on disk / DB</span>
+<span class="k">from</span> langgraph.checkpoint.sqlite <span class="k">import</span> SqliteSaver
+cp = SqliteSaver.from_conn_string(<span class="s">"contracts.db"</span>)
+<span class="c"># (Postgres saver also available)</span>
+
+app = graph.compile(checkpointer=cp)
+app.invoke(inputs, config={<span class="s">"configurable"</span>:
+    {<span class="s">"thread_id"</span>: <span class="s">"contract-8842"</span>}})</pre>
+        </div>
+      </div>
+
+      <h3 style="margin-top:34px;font-size:20px">Status as a state machine</h3>
+      <p style="max-width:70ch">Your idea — <code class="inline">status</code> changing as the contract moves — is exactly how teams make a workflow auditable. Each node advances the status, and because every transition is checkpointed, the sequence <i>is</i> the history.</p>
+      <div class="states" style="margin-top:14px">
+        <div class="state-step"><span class="state-num">1</span><div><b>Contract entered</b><br/><span class="mono">status = "open"</span></div></div>
+        <div class="state-step"><span class="state-num">2</span><div><b>LLM finishes review</b><br/><span class="mono">status = "llm_reviewed" → "awaiting_human"</span> <span class="arrow">·</span> <span class="mono">feedback += [...]</span></div></div>
+        <div class="state-step"><span class="state-num">3</span><div><b>Human has queries → loop</b><br/><span class="mono">iteration += 1</span> <span class="arrow">·</span> back to <span class="mono">"llm_reviewed"</span></div></div>
+        <div class="state-step"><span class="state-num">4</span><div><b>Resolved</b><br/><span class="mono">status = "done"</span> or <span class="mono">"escalated"</span></div></div>
+      </div>
+
+      <div class="note tip"><span class="lbl">Level up — your flagged area</span><p>Two things to explore next: <b>state schemas with reducers</b> (so concurrent updates and history merge predictably), and <b>checkpoint threads</b> — each <code class="inline">thread_id</code> is one contract's full timeline, and you can rewind to any past checkpoint to replay or branch. That's "time-travel" debugging, and it's the iteration/history mechanism you were reaching for.</p></div>
+    </div>
+  </section>
+
+  <!-- ===================== 4. Transparency ===================== -->
+  <section class="block" id="transparency">
+    <div class="container">
+      <div class="eyebrow"><span class="num">3</span> Transparency &amp; Debuggability</div>
+      <h2>Make every decision auditable</h2>
+      <p class="lede">For a legal team, "why did the system do that?" must always be answerable. LangGraph gives you three complementary views — pick a tab.</p>
+
+      <div class="glass card" style="padding:22px;margin-top:22px">
+        <div class="tabs" role="tablist" aria-label="Transparency tools">
+          <button class="tab" role="tab" aria-selected="true" data-tab="trace">Step trace</button>
+          <button class="tab" role="tab" aria-selected="false" data-tab="stream">Streaming events</button>
+          <button class="tab" role="tab" aria-selected="false" data-tab="history">Checkpoint history</button>
+        </div>
+
+        <div class="tabpanel active" data-panel="trace">
+          <p>Your instinct — log the state at the end of each node and show the order — is the foundation of auditability. Stream each step as it happens:</p>
+          <pre class="code"><span class="c"># stream every node execution as it runs</span>
+<span class="k">for</span> step <span class="k">in</span> app.stream(inputs, config, stream_mode=<span class="s">"updates"</span>):
+    <span class="k">for</span> node, update <span class="k">in</span> step.items():
+        log.info(<span class="s">"node=%s  status=%s"</span>, node, update.get(<span class="s">"status"</span>))
+<span class="c"># → node=entry        status=open
+# → node=llm_review   status=awaiting_human
+# → node=human_review status=open      (looped: has queries)
+# → node=llm_review   status=awaiting_human
+# → node=human_review status=done</span></pre>
+        </div>
+        <div class="tabpanel" data-panel="stream">
+          <p>Different <code class="inline">stream_mode</code> values give different granularity — choose what your audit needs:</p>
+          <ul>
+            <li><code class="inline">"updates"</code> — what each node changed (compact audit log).</li>
+            <li><code class="inline">"values"</code> — the full state snapshot after each step.</li>
+            <li><code class="inline">"messages"</code> — token-by-token LLM output, for live UIs.</li>
+            <li><code class="inline">"debug"</code> — node entry/exit, timing, and checkpoint writes.</li>
+          </ul>
+          <p style="margin-bottom:0">Pair this with <b>LangSmith</b> tracing to get a clickable, visual run timeline — the step-by-step visualization you described, without building it yourself.</p>
+        </div>
+        <div class="tabpanel" data-panel="history">
+          <p>Because each step is checkpointed, you can list a contract's entire timeline and inspect the state at any point:</p>
+          <pre class="code"><span class="c"># walk the full history for one contract thread</span>
+<span class="k">for</span> ckpt <span class="k">in</span> app.get_state_history(config):
+    <span class="f">print</span>(ckpt.metadata[<span class="s">"step"</span>], ckpt.values[<span class="s">"status"</span>],
+          <span class="s">"iter="</span>, ckpt.values[<span class="s">"iteration"</span>])
+<span class="c"># → 4 done       iter=1
+# → 3 awaiting…  iter=1
+# → 2 open       iter=0   ← you can resume/replay from here</span></pre>
+          <p style="margin-bottom:0">This is the audit trail and the debugger in one: replay a contract exactly as it happened, or branch from a past state to test a fix.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== 5. Workflow Control ===================== -->
+  <section class="block" id="control">
+    <div class="container">
+      <div class="eyebrow"><span class="num">4</span> Workflow Control</div>
+      <h2>Guardrails: loops, limits, and humans</h2>
+      <p class="lede">Loops are powerful and dangerous. A human who keeps asking questions — or a buggy router — can cycle forever. You named the two essential guardrails: a hard iteration cap, and notifications so a waiting workflow never gets abandoned.</p>
+
+      <div class="grid cols-2" style="margin-top:24px">
+        <div class="glass card">
+          <h3><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 2"/></svg></span> Cap the loop</h3>
+          <p>Drag the cap and watch the simulator's iteration meter. Two layers protect you: a graph-wide <code class="inline">recursion_limit</code>, and your own counter in state.</p>
+          <div class="slider-row">
+            <label for="cap-slider">max_iterations</label>
+            <input type="range" id="cap-slider" min="1" max="6" value="3" />
+            <span class="slider-val" id="cap-val">3</span>
+          </div>
+          <pre class="code" style="margin-bottom:0"><span class="k">def</span> <span class="f">route_after_human</span>(state):
+    <span class="k">if</span> state[<span class="s">"iteration"</span>] &gt;= MAX_ITERS:
+        <span class="k">return</span> <span class="s">"escalate"</span>   <span class="c"># bail out safely</span>
+    ...
+<span class="c"># belt &amp; braces: hard stop at the engine level</span>
+app.invoke(inputs, config={<span class="s">"recursion_limit"</span>: 25})</pre>
+        </div>
+        <div class="glass card">
+          <h3><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg></span> Pause for a human, don't abandon</h3>
+          <p>Use <code class="inline">interrupt</code> to pause the graph and persist its state. The workflow simply waits — for a minute or a month — until a human resumes the same thread. Pair it with a timer that fires your email / SMS reminder.</p>
+          <pre class="code" style="margin-bottom:0"><span class="k">from</span> langgraph.types <span class="k">import</span> interrupt
+
+<span class="k">def</span> <span class="f">human_review</span>(state):
+    <span class="c"># graph pauses + checkpoints here</span>
+    verdict = interrupt({<span class="s">"feedback"</span>: state[<span class="s">"feedback"</span>]})
+    <span class="k">return</span> {<span class="s">"decision"</span>: verdict}
+
+<span class="c"># scheduled job: nudge stale reviews</span>
+<span class="k">if</span> waiting_hours(thread) &gt; 24:
+    notify(reviewer, <span class="s">"Contract 8842 needs you"</span>)</pre>
+        </div>
+      </div>
+
+      <div class="note warn"><span class="lbl">The failure you're preventing</span><p>Without a cap, a "human keeps having queries" loop (or a router bug) runs until it crashes or burns your LLM budget. Without notifications, an <code class="inline">interrupt</code> that nobody answers leaves a contract stuck in <code class="inline">awaiting_human</code> forever. Both guardrails are cheap; skipping them is how real workflows die quietly.</p></div>
+    </div>
+  </section>
+
+  <!-- ===================== Recap + quiz ===================== -->
+  <section class="block" id="recap">
+    <div class="container">
+      <div class="eyebrow"><span class="num">✓</span> Recap</div>
+      <h2>What you can now build</h2>
+      <div class="grid cols-2" style="margin-top:22px">
+        <div class="glass card">
+          <h3>The four pillars</h3>
+          <ul style="margin-bottom:0">
+            <li><b>Architecture</b> — nodes do work, edges wire flow, conditional edges branch on state.</li>
+            <li><b>State &amp; persistence</b> — a typed schema + a checkpointer = durable, resumable runs.</li>
+            <li><b>Transparency</b> — stream updates and walk checkpoint history for a full audit trail.</li>
+            <li><b>Control</b> — cap iterations and use <code class="inline">interrupt</code> + reminders for human steps.</li>
+          </ul>
+        </div>
+        <div class="glass quiz" id="quiz">
+          <div class="q">Quick check: the human reviewer keeps sending the contract back with new questions. Which mechanism stops this from looping forever?</div>
+          <div class="quiz-opts">
+            <button class="quiz-opt" data-correct="false">A bigger LLM context window</button>
+            <button class="quiz-opt" data-correct="true">A max_iterations check in the router (plus recursion_limit)</button>
+            <button class="quiz-opt" data-correct="false">Removing the conditional edge entirely</button>
+            <button class="quiz-opt" data-correct="false">Storing state in memory instead of a database</button>
+          </div>
+          <div class="quiz-fb" id="quiz-fb"></div>
+        </div>
+      </div>
+
+      <div style="margin-top:30px;text-align:center">
+        <span class="kicker">you reasoned your way to all of this 🎉</span>
+      </div>
+    </div>
+  </section>
+
+  <hr class="divider"/>
+  <footer class="site-footer">
+    <div class="container">
+      <p>Chapter 01 · Contract Review. Back to <a href="index.html">all LangGraph chapters</a> · part of the <a href="../architecture.html">LLM → Agent</a> platform.</p>
+      <p>Built to be clicked. Toggle the theme up top.</p>
+    </div>
+  </footer>
+</main>
+
+<script>
+(function () {
+  'use strict';
+  var root = document.documentElement;
+
+  /* ---------- Theme toggle (shared behaviour) ---------- */
+  var buttons = document.querySelectorAll('[data-theme-set]');
+  var mq = window.matchMedia('(prefers-color-scheme: dark)');
+  function getPref(){ return root.getAttribute('data-theme-pref') || 'system'; }
+  function applyPref(pref){
+    var resolved = pref === 'system' ? (mq.matches ? 'dark':'light') : pref;
+    root.setAttribute('data-theme', resolved);
+    root.setAttribute('data-theme-pref', pref);
+    try { localStorage.setItem('theme', pref); } catch(e){}
+    updateButtons(pref);
+  }
+  function updateButtons(pref){ buttons.forEach(function(b){ b.setAttribute('aria-pressed', b.getAttribute('data-theme-set')===pref ? 'true':'false'); }); }
+  buttons.forEach(function(b){ b.addEventListener('click', function(){ applyPref(b.getAttribute('data-theme-set')); }); });
+  mq.addEventListener && mq.addEventListener('change', function(){ if (getPref()==='system') applyPref('system'); });
+  updateButtons(getPref());
+
+  /* ---------- Mesh perf ---------- */
+  var mesh = document.querySelector('.mesh');
+  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)');
+  if (reduce.matches && mesh) mesh.classList.add('is-paused');
+  document.addEventListener('visibilitychange', function(){
+    if (!mesh) return;
+    if (document.hidden) mesh.classList.add('is-paused');
+    else if (!reduce.matches) mesh.classList.remove('is-paused');
+  });
+
+  /* ---------- 1. Interactive graph ---------- */
+  var nodeInfo = {
+    entry: { kind:'worker', title:'Contract Entry', state:'status = "open"',
+      body:'The START node. Ingests the uploaded contract and seeds the state: the raw text, an empty feedback list, and <code class="inline">iteration = 0</code>. One outgoing edge — it always flows to LLM Review.' },
+    llm_review: { kind:'worker', title:'LLM Review', state:'status → "awaiting_human"',
+      body:'Sends the contract terms to the LLM, which returns pros, cons and risk flags. It <i>appends</i> to <code class="inline">feedback</code> (thanks to the reducer) so earlier rounds are never lost, then hands off to Human Review.' },
+    human_review: { kind:'router', title:'Human Review',  state:'sets decision',
+      body:'Pauses via <code class="inline">interrupt</code> so a person can read the feedback. Their verdict drives a <b>conditional edge</b> with three exits: approved → Completed, critical/re-word → Legal, more questions → back to LLM Review.' },
+    legal: { kind:'worker', title:'Escalate → Legal', state:'status = "escalated"',
+      body:'Taken when the human flags a critical issue or wants a redraft. Packages the contract and the full feedback history for counsel. A terminal branch of the workflow.' },
+    done: { kind:'terminal', title:'Completed', state:'status = "done"',
+      body:'The END node, reached when the human approves. The final checkpoint here is the permanent record of how this contract was resolved.' }
+  };
+  var detail = document.getElementById('graph-detail');
+  var gnodes = document.querySelectorAll('.gnode');
+  function selectNode(name){
+    gnodes.forEach(function(n){ n.classList.toggle('active', n.getAttribute('data-node')===name); });
+    var info = nodeInfo[name];
+    if (!info) return;
+    var badge = info.kind==='router' ? 'Router node' : (info.kind==='terminal' ? 'Terminal node' : 'Worker node');
+    detail.innerHTML = '<span class="badge">'+badge+'</span><h4>'+info.title+'</h4>'+
+      '<p>'+info.body+'</p>'+
+      '<p style="margin-bottom:0">Writes: <span class="state-pill">'+info.state+'</span></p>';
+  }
+  gnodes.forEach(function(n){
+    n.addEventListener('click', function(){ selectNode(n.getAttribute('data-node')); });
+    n.addEventListener('keydown', function(e){ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); selectNode(n.getAttribute('data-node')); } });
+  });
+
+  /* ---------- 2. Simulator ---------- */
+  var traceEl = document.getElementById('sim-trace');
+  var stateEl = document.getElementById('sim-state');
+  var iterFill = document.getElementById('sim-iterfill');
+  var iterCount = document.getElementById('sim-itercount');
+  var iterMaxEl = document.getElementById('sim-itermax');
+  var stepBtn = document.getElementById('sim-step');
+  var autoBtn = document.getElementById('sim-auto');
+  var resetBtn = document.getElementById('sim-reset');
+  var decisionBtn = document.getElementById('sim-decision');
+  var snodes = document.querySelectorAll('.snode');
+  var simEdges = document.querySelectorAll('.sim-graph .edge');
+
+  var MAX = 3;
+  var decisionMode = 'queries'; // queries | approve | escalate
+  var state, phase, autoTimer = null, lastNode = null;
+
+  function freshState(){
+    return { contract_text:'"MSA — Acme × Globex…"', status:'open', feedback:[], iteration:0, decision:null };
+  }
+  function renderState(changed){
+    changed = changed || {};
+    function row(k, v, cls){
+      var hl = changed[k] ? ' class="changed"' : '';
+      return '  <span class="sk">'+k+'</span>: <span'+hl+'><span class="'+(cls||'sv')+'">'+v+'</span></span>';
+    }
+    var fb = '[' + state.feedback.length + ' item' + (state.feedback.length===1?'':'s') + ']';
+    stateEl.innerHTML = '{\n' +
+      row('contract_text', state.contract_text, 'sv') + ',\n' +
+      row('status', '"'+state.status+'"', 'sv') + ',\n' +
+      row('feedback', fb, 'sn') + ',\n' +
+      row('iteration', state.iteration, 'sn') + ',\n' +
+      row('decision', state.decision===null?'null':'"'+state.decision+'"', 'sv') + '\n}';
+  }
+  function updateMeter(){
+    iterCount.textContent = state.iteration;
+    var pct = Math.min(100, (state.iteration / MAX) * 100);
+    iterFill.style.width = pct + '%';
+    iterFill.classList.toggle('danger', state.iteration >= MAX);
+  }
+  function addTrace(step, node, msg, cls){
+    if (traceEl.querySelector('.trace-empty')) traceEl.innerHTML = '';
+    var div = document.createElement('div');
+    div.className = 'trace-item' + (cls?(' '+cls):'');
+    div.innerHTML = '<span class="tstep">'+step+'</span><span class="tdot"></span>'+
+      '<span class="tbody"><span class="tnode">'+node+'</span><br/><span class="tmsg">'+msg+'</span></span>';
+    traceEl.appendChild(div);
+    traceEl.scrollTop = traceEl.scrollHeight;
+  }
+  var stepNo = 0;
+  // phases: 'entry' -> 'llm' -> 'human' -> route -> ... -> 'end'
+  function reset(){
+    if (autoTimer){ clearInterval(autoTimer); autoTimer=null; autoBtn.innerHTML = autoBtnLabel(false); }
+    state = freshState(); phase = 'entry'; stepNo = 0;
+    traceEl.innerHTML = '<div class="trace-empty">Press <b>Step</b> or <b>Auto-run</b> to begin. Each entry is one node execution — the kind of trace a legal team would audit.</div>';
+    renderState({}); updateMeter();
+    lastNode = null;
+    snodes.forEach(function(n){ n.classList.remove('active','visited','pulse'); });
+    simEdges.forEach(function(e){ e.classList.remove('flash'); });
+    stepBtn.disabled = false; autoBtn.disabled = false;
+  }
+  function markGraph(name){
+    // flash the edge we just traversed (lastNode -> name)
+    simEdges.forEach(function(e){ e.classList.remove('flash'); });
+    if (lastNode && lastNode !== name){
+      var sel = lastNode + '-' + name;
+      var edge = document.querySelector('.sim-graph .edge[data-edge="'+sel+'"]');
+      if (edge){ edge.classList.add('flash'); }
+    }
+    // light up the active node in the live graph
+    snodes.forEach(function(n){
+      var nm = n.getAttribute('data-snode');
+      n.classList.remove('active','pulse');
+      if (nm===name){ n.classList.add('active','visited','pulse'); }
+    });
+    lastNode = name;
+  }
+  function finish(){
+    stepBtn.disabled = true; autoBtn.disabled = true;
+    if (autoTimer){ clearInterval(autoTimer); autoTimer=null; autoBtn.innerHTML = autoBtnLabel(false); }
+  }
+  function step(){
+    stepNo++;
+    if (phase === 'entry'){
+      state.status = 'open';
+      markGraph('entry');
+      addTrace(stepNo, 'entry', 'Contract ingested → status "open"');
+      renderState({status:1});
+      phase = 'llm'; return;
+    }
+    if (phase === 'llm'){
+      state.status = 'awaiting_human';
+      state.feedback = state.feedback.concat(['review #'+(state.feedback.length+1)]);
+      markGraph('llm_review');
+      addTrace(stepNo, 'llm_review', 'LLM analysed terms, appended feedback → "awaiting_human"');
+      renderState({status:1, feedback:1});
+      phase = 'human'; return;
+    }
+    if (phase === 'human'){
+      markGraph('human_review');
+      // router decides
+      if (decisionMode === 'approve'){
+        state.decision = 'approved';
+        addTrace(stepNo, 'human_review', 'Human approved. Router → done', 'is-human');
+        renderState({decision:1});
+        phase = 'done'; return;
+      }
+      if (decisionMode === 'escalate'){
+        state.decision = 'escalate';
+        addTrace(stepNo, 'human_review', 'Human flagged critical issue. Router → legal', 'is-human');
+        renderState({decision:1});
+        phase = 'legal'; return;
+      }
+      // queries → loop, unless capped
+      state.decision = 'has_queries';
+      state.iteration = state.iteration + 1;
+      if (state.iteration >= MAX){
+        addTrace(stepNo, 'human_review', 'More queries, but max_iterations ('+MAX+') hit → escalate', 'is-legal');
+        renderState({decision:1, iteration:1}); updateMeter();
+        phase = 'legal'; return;
+      }
+      addTrace(stepNo, 'human_review', 'Human has queries (iter '+state.iteration+'). Router → loop to LLM', 'is-human');
+      renderState({decision:1, iteration:1}); updateMeter();
+      phase = 'llm'; return;
+    }
+    if (phase === 'legal'){
+      state.status = 'escalated';
+      markGraph('legal');
+      addTrace(stepNo, 'legal', 'Packaged for counsel → "escalated" · END', 'is-legal');
+      renderState({status:1});
+      phase = 'stop'; finish(); return;
+    }
+    if (phase === 'done'){
+      state.status = 'done';
+      markGraph('done');
+      addTrace(stepNo, 'done', 'Approved & recorded → "done" · END', 'is-end');
+      renderState({status:1});
+      phase = 'stop'; finish(); return;
+    }
+  }
+  function autoBtnLabel(running){
+    return running
+      ? '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="5" width="4" height="14"/><rect x="14" y="5" width="4" height="14"/></svg> Pause'
+      : '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg> Auto-run';
+  }
+  stepBtn.addEventListener('click', step);
+  autoBtn.addEventListener('click', function(){
+    if (autoTimer){ clearInterval(autoTimer); autoTimer=null; autoBtn.innerHTML = autoBtnLabel(false); return; }
+    if (phase === 'stop') reset();
+    autoBtn.innerHTML = autoBtnLabel(true);
+    autoTimer = setInterval(function(){
+      if (phase === 'stop'){ clearInterval(autoTimer); autoTimer=null; autoBtn.innerHTML = autoBtnLabel(false); return; }
+      step();
+    }, 950);
+  });
+  resetBtn.addEventListener('click', reset);
+  decisionBtn.addEventListener('click', function(){
+    if (decisionMode === 'queries'){ decisionMode = 'approve'; decisionBtn.textContent = 'approve ✓'; }
+    else if (decisionMode === 'approve'){ decisionMode = 'escalate'; decisionBtn.textContent = 'escalate ⚖'; }
+    else { decisionMode = 'queries'; decisionBtn.textContent = 'has queries ↻'; }
+  });
+
+  /* ---------- 4. Cap slider (drives simulator MAX) ---------- */
+  var capSlider = document.getElementById('cap-slider');
+  var capVal = document.getElementById('cap-val');
+  capSlider.addEventListener('input', function(){
+    MAX = parseInt(capSlider.value, 10);
+    capVal.textContent = MAX;
+    iterMaxEl.textContent = MAX;
+    if (state) updateMeter();
+  });
+
+  /* ---------- 3. Tabs ---------- */
+  var tabs = document.querySelectorAll('.tab');
+  tabs.forEach(function(t){
+    t.addEventListener('click', function(){
+      tabs.forEach(function(x){ x.setAttribute('aria-selected', x===t ? 'true':'false'); });
+      var name = t.getAttribute('data-tab');
+      document.querySelectorAll('.tabpanel').forEach(function(p){
+        p.classList.toggle('active', p.getAttribute('data-panel')===name);
+      });
+    });
+  });
+
+  /* ---------- Quiz ---------- */
+  var quizOpts = document.querySelectorAll('.quiz-opt');
+  var quizFb = document.getElementById('quiz-fb');
+  var answered = false;
+  quizOpts.forEach(function(opt){
+    opt.addEventListener('click', function(){
+      if (answered) return;
+      answered = true;
+      var correct = opt.getAttribute('data-correct')==='true';
+      quizOpts.forEach(function(o){
+        if (o.getAttribute('data-correct')==='true') o.classList.add('correct');
+      });
+      if (!correct) opt.classList.add('wrong');
+      quizFb.textContent = correct
+        ? '✓ Exactly. The router checks the counter and bails to a safe branch; recursion_limit is the engine-level backstop.'
+        : 'Not quite — context size, edges, and storage don’t bound the loop. The router’s iteration check (with recursion_limit) is what guarantees termination.';
+      quizFb.classList.add('show');
+    });
+  });
+
+  /* ---------- Foundations: stateless vs stateful ---------- */
+  var sfPanel = document.getElementById('sf-panel');
+  var sfLess = document.getElementById('sf-stateless');
+  var sfFul = document.getElementById('sf-stateful');
+  var sfViews = {
+    stateless: '<pre class="code" style="margin:0"><span class="c"># Each function gets only what it is handed.</span>\n'+
+      '<span class="c"># Nothing is remembered between steps.</span>\n'+
+      '<span class="k">def</span> <span class="f">analyse</span>(symptoms):  <span class="k">return</span> diagnosis\n'+
+      '<span class="k">def</span> <span class="f">treat</span>(diagnosis): <span class="k">return</span> plan  <span class="c"># ← can\'t see symptoms</span>\n\n'+
+      '<span class="c"># context must be threaded by hand, every call:</span>\n'+
+      'plan = treat(analyse(symptoms))   <span class="c"># brittle as it grows</span></pre>'+
+      '<p style="margin:14px 0 0;color:var(--ink-soft);font-size:14px">Context is lost unless you manually pass it along. Adding a step means re-plumbing arguments everywhere. This is <b>not</b> how LangGraph nodes work.</p>',
+    stateful: '<pre class="code" style="margin:0"><span class="c"># Every node reads + writes the SAME shared state.</span>\n'+
+      '<span class="k">def</span> <span class="f">analyse</span>(state):\n'+
+      '    <span class="k">return</span> {<span class="s">"diagnosis"</span>: classify(state[<span class="s">"symptoms"</span>])}\n'+
+      '<span class="k">def</span> <span class="f">treat</span>(state):\n'+
+      '    <span class="c"># can see symptoms AND diagnosis — full context</span>\n'+
+      '    <span class="k">return</span> {<span class="s">"plan"</span>: plan_for(state)}</pre>'+
+      '<p style="margin:14px 0 0;color:var(--ink-soft);font-size:14px">Each node returns a <i>partial</i> update; LangGraph merges it into shared state and carries it forward. New nodes just read what they need — <b>no re-plumbing</b>. That continuity is exactly what makes workflows extensible and debuggable.</p>'
+  };
+  function sfShow(which){
+    sfPanel.innerHTML = sfViews[which];
+    sfFul.classList.toggle('primary', which==='stateful');
+    sfLess.classList.toggle('primary', which==='stateless');
+  }
+  if (sfLess && sfFul){
+    sfLess.addEventListener('click', function(){ sfShow('stateless'); });
+    sfFul.addEventListener('click', function(){ sfShow('stateful'); });
+    sfShow('stateful');
+  }
+
+  /* ---------- init ---------- */
+  reset();
+  selectNode('entry');
+})();
+</script>
+</body>
+</html>
