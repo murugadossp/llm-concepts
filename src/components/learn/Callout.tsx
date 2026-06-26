@@ -17,15 +17,15 @@ export function Callout({
 }) {
   return (
     <aside
-      className="glass my-6 border-l-4 p-5"
-      style={{ borderLeftColor: variantStyles[variant] }}
+      className="my-6 rounded-r-[var(--r-sm)] border-l-[3px] px-4 py-3.5"
+      style={{ borderLeftColor: variantStyles[variant], background: "var(--surface-muted)" }}
     >
       {title ? (
         <h4 className="mb-2 font-semibold" style={{ color: "var(--ink)" }}>
           {title}
         </h4>
       ) : null}
-      <div className="text-sm leading-7" style={{ color: "var(--ink-soft)" }}>
+      <div className="text-sm leading-6" style={{ color: "var(--ink-soft)" }}>
         {children}
       </div>
     </aside>

@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
 import { Check, Copy } from "lucide-react";
+import { useState } from "react";
 
 export function CodeBlock({
   language,
@@ -20,23 +20,29 @@ export function CodeBlock({
   }
 
   return (
-    <div className="glass-strong my-6 overflow-hidden">
+    <div
+      className="my-6 overflow-hidden rounded-[var(--r-md)] border"
+      style={{ background: "var(--code-bg)", borderColor: "var(--border-strong)" }}
+    >
       <div
         className="flex items-center justify-between px-4 py-2 text-xs"
-        style={{ borderBottom: "1px solid var(--border)", color: "var(--ink-mute)" }}
+        style={{ borderBottom: "1px solid var(--border-strong)", color: "var(--code-mute)" }}
       >
         <span>{language ?? "code"}</span>
         <button
           type="button"
           onClick={copy}
           className="inline-flex items-center gap-1 rounded px-2 py-1 hover:opacity-80"
-          style={{ color: "var(--ink-soft)" }}
+          style={{ color: "var(--code-ink)" }}
         >
           {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
           {copied ? "Copied" : "Copy"}
         </button>
       </div>
-      <pre className="overflow-x-auto p-4 font-mono text-sm leading-6" style={{ color: "var(--ink)" }}>
+      <pre
+        className="overflow-x-auto p-5 font-mono text-sm leading-6"
+        style={{ color: "var(--code-ink)" }}
+      >
         <code>{code}</code>
       </pre>
     </div>

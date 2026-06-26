@@ -75,7 +75,7 @@ export function ChapterSidebarShell({ activeSlug, chapterTree }: ChapterSidebarS
 
       <div
         className={[
-          "fixed inset-y-0 left-0 z-50 p-3 transition-transform duration-200 lg:sticky lg:top-24 lg:z-30 lg:h-[calc(100vh-7rem)] lg:translate-x-0 lg:p-0",
+          "fixed inset-y-0 left-0 z-50 p-3 transition-transform duration-200 lg:sticky lg:top-[92px] lg:z-30 lg:h-[calc(100vh-7rem)] lg:translate-x-0 lg:p-0",
           mobileOpen ? "translate-x-0" : "-translate-x-full",
         ].join(" ")}
       >
@@ -110,15 +110,15 @@ function SidebarContent({
   return (
     <aside
       className={[
-        "glass-strong flex h-full flex-col overflow-hidden transition-[width] duration-200",
-        collapsed ? "w-[84px]" : "w-[292px]",
+        "glass flex h-full flex-col overflow-hidden transition-[width] duration-200",
+        collapsed ? "w-[76px]" : "w-[276px]",
       ].join(" ")}
       aria-label="Learning path"
     >
       <div className="flex items-center gap-3 px-4 py-5">
         <Link
           href="/chapters"
-          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[18px]"
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[12px]"
           style={{ background: "var(--accent)", color: "white" }}
           aria-label="LLM to Agent chapters"
           title="LLM to Agent"
@@ -155,7 +155,7 @@ function SidebarContent({
           <Link
             key={href}
             href={href}
-            className="flex h-11 items-center gap-3 rounded-[16px] px-3 text-sm font-medium transition hover:opacity-80"
+            className="flex h-10 items-center gap-3 rounded-[10px] px-3 text-[13px] font-medium transition hover:bg-[var(--surface-hover)]"
             style={{ color: "var(--ink-soft)" }}
             title={collapsed ? label : undefined}
           >
@@ -174,7 +174,7 @@ function SidebarContent({
                 <Link
                   key={chapter.slug}
                   href={`/chapters/${chapter.lessons[0]?.slug ?? chapter.slug}`}
-                  className="flex h-11 items-center justify-center rounded-[16px] text-sm font-semibold transition hover:opacity-85"
+                  className="flex h-10 items-center justify-center rounded-[10px] text-sm font-semibold transition hover:opacity-85"
                   style={{
                     background: active ? "var(--accent)" : "var(--surface-strong)",
                     color: active ? "white" : "var(--ink-soft)",
@@ -190,7 +190,7 @@ function SidebarContent({
           <div>
             <div className="mb-2 flex items-center justify-between px-2">
               <p
-                className="text-xs font-semibold uppercase tracking-wide"
+                className="text-[11px] font-semibold uppercase tracking-wide"
                 style={{ color: "var(--ink-mute)" }}
               >
                 Learning Path
@@ -237,7 +237,10 @@ function SidebarContent({
           </div>
         ) : (
           <div className="space-y-3">
-            <div className="rounded-[18px] p-3" style={{ background: "var(--surface)" }}>
+            <div
+              className="rounded-[var(--r-sm)] p-3"
+              style={{ background: "var(--surface-muted)" }}
+            >
               <p className="text-xs font-medium" style={{ color: "var(--ink-mute)" }}>
                 Current module
               </p>
@@ -287,16 +290,16 @@ function ChapterGroup({
 
   return (
     <div
-      className="rounded-[18px] p-1.5"
+      className="rounded-[var(--r-sm)] p-1"
       style={{ background: active ? "var(--surface)" : "transparent" }}
     >
       <Link
         href={href}
-        className="flex items-center gap-3 rounded-[14px] px-2.5 py-2 text-sm font-semibold transition hover:opacity-80"
+        className="flex items-center gap-3 rounded-[9px] px-2.5 py-2 text-[13px] font-semibold transition hover:bg-[var(--surface-hover)]"
         style={{ color: active ? "var(--ink)" : "var(--ink-soft)" }}
       >
         <span
-          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[12px] text-xs font-bold"
+          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[9px] text-xs font-bold"
           style={{
             background: active ? "var(--accent)" : "var(--surface-strong)",
             color: active ? "white" : "var(--ink-soft)",
@@ -314,7 +317,7 @@ function ChapterGroup({
               <li key={lesson.slug}>
                 <Link
                   href={`/chapters/${lesson.slug}`}
-                  className="block rounded-[12px] px-3 py-2 text-sm transition hover:opacity-80"
+                  className="block rounded-[8px] px-3 py-2 text-[13px] transition hover:opacity-80"
                   style={{
                     background: lessonActive ? "var(--accent)" : "transparent",
                     color: lessonActive ? "white" : "var(--ink-soft)",

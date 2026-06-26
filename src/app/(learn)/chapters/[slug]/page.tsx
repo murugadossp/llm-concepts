@@ -1,4 +1,3 @@
-import type React from "react";
 import { Atlas } from "@/characters/Atlas";
 import { MCPMae } from "@/characters/MCPMae";
 import { Tess } from "@/characters/Tess";
@@ -11,6 +10,7 @@ import { mdxComponents } from "@/lib/mdx-components";
 import type { Metadata } from "next";
 import { compileMDX } from "next-mdx-remote/rsc";
 import { notFound } from "next/navigation";
+import type React from "react";
 import rehypeAutolinkHeadings from "rehype-autolink-headings";
 import rehypeSlug from "rehype-slug";
 import remarkGfm from "remark-gfm";
@@ -85,18 +85,25 @@ export default async function ChapterPage({ params }: PageProps) {
         dangerouslySetInnerHTML={{ __html: jsonLdPayload }}
       />
       <ChapterSidebar activeSlug={slug} />
-      <article className="min-w-0 flex-1">
+      <article className="min-w-0 flex-1 pb-8">
         <ChapterNav chapter={chapter} prev={prev} next={next} />
-        <header className="glass-strong mb-8 p-8">
+        <header className="mb-12 pt-5">
+          <span className="eyebrow-pill">
+            <span className="eyebrow-dot" />
+            {chapterLabel} · {chapter.difficulty}
+          </span>
           <div className="flex flex-wrap items-start justify-between gap-4">
-            <div>
-              <p className="text-sm font-medium" style={{ color: "var(--accent-2)" }}>
-                {chapterLabel}
-              </p>
-              <h1 className="font-display mt-2 text-4xl font-bold" style={{ color: "var(--ink)" }}>
+            <div className="max-w-3xl">
+              <h1
+                className="editorial-title mt-5 text-[clamp(2.8rem,6vw,4.75rem)]"
+                style={{ color: "var(--ink)" }}
+              >
                 {chapter.title}
               </h1>
-              <p className="mt-3 text-lg leading-relaxed" style={{ color: "var(--ink-soft)" }}>
+              <p
+                className="mt-4 max-w-[68ch] text-lg leading-8"
+                style={{ color: "var(--ink-soft)" }}
+              >
                 {chapter.summary}
               </p>
               <div className="mt-4 flex flex-wrap gap-2">
@@ -107,11 +114,21 @@ export default async function ChapterPage({ params }: PageProps) {
             </div>
             {(() => {
               const characterMap: Record<string, React.ComponentType<{ className?: string }>> = {
-                Tess, Vector, Atlas, MCPMae,
+                Tess,
+                Vector,
+                Atlas,
+                MCPMae,
               };
               const primary = chapter.characters[0];
               const Char = primary ? characterMap[primary] : undefined;
-              return Char ? <Char className="h-20 w-20 shrink-0" /> : null;
+              return Char ? (
+                <div
+                  className="glass hidden h-28 w-28 shrink-0 place-items-center p-4 md:grid"
+                  style={{ color: "var(--accent)" }}
+                >
+                  <Char className="h-20 w-20" />
+                </div>
+              ) : null;
             })()}
           </div>
         </header>

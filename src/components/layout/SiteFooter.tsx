@@ -1,12 +1,17 @@
 export function SiteFooter() {
   return (
-    <footer
-      className="glass mx-auto mb-8 mt-16 w-[min(100%-2rem,var(--maxw-wide))] px-6 py-8 text-sm"
-      style={{ color: "var(--ink-mute)" }}
-    >
-      <p>
-        Interactive learning from tokens to agents — by Murugadoss. Milestone 1 scaffold in progress.
-      </p>
+    <footer className="mt-20 border-t py-9" style={{ borderColor: "var(--border)" }}>
+      <div className="site-container flex flex-wrap items-center justify-between gap-4">
+        <p className="m-0 text-[13px]" style={{ color: "var(--ink-mute)" }}>
+          Interactive learning from tokens to agents — by Murugadoss.
+        </p>
+        <span
+          className="comic-dialogue inline-block -rotate-2 text-xl"
+          style={{ color: "var(--accent)" }}
+        >
+          Learn by building.
+        </span>
+      </div>
     </footer>
   );
 }

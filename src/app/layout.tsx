@@ -1,11 +1,11 @@
-import type { Metadata } from "next";
-import { Caveat, Fraunces, Inter, JetBrains_Mono } from "next/font/google";
-import Script from "next/script";
 import { MeshBackground } from "@/components/layout/MeshBackground";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { ThemeProvider } from "@/components/theme/ThemeProvider";
 import { themeInitScript } from "@/components/theme/theme-script";
+import type { Metadata } from "next";
+import { Caveat, Instrument_Serif, Inter, JetBrains_Mono } from "next/font/google";
+import Script from "next/script";
 import "./globals.css";
 
 const inter = Inter({
@@ -13,10 +13,10 @@ const inter = Inter({
   subsets: ["latin"],
 });
 
-const fraunces = Fraunces({
-  variable: "--font-fraunces",
+const instrumentSerif = Instrument_Serif({
+  variable: "--font-instrument-serif",
   subsets: ["latin"],
-  weight: ["600", "700", "800"],
+  weight: "400",
 });
 
 const jetbrains = JetBrains_Mono({
@@ -50,7 +50,7 @@ export default function RootLayout({
         </Script>
       </head>
       <body
-        className={`${inter.variable} ${fraunces.variable} ${jetbrains.variable} ${caveat.variable} antialiased`}
+        className={`${inter.variable} ${instrumentSerif.variable} ${jetbrains.variable} ${caveat.variable} antialiased`}
       >
         <ThemeProvider>
           <MeshBackground />

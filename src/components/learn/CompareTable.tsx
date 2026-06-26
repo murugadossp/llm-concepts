@@ -8,11 +8,11 @@ export function CompareTable({ columns = [], rows = [] }: CompareTableProps) {
     <div className="glass my-8 overflow-x-auto">
       <table className="min-w-full border-collapse text-left text-sm">
         <thead>
-          <tr style={{ background: "var(--surface-strong)" }}>
+          <tr style={{ background: "var(--surface-muted)" }}>
             {columns.map((column) => (
               <th
                 key={column}
-                className="sticky top-0 px-4 py-3 font-semibold"
+                className="sticky top-0 px-4 py-3 text-xs font-semibold uppercase tracking-wide"
                 style={{ color: "var(--ink)", borderBottom: "1px solid var(--border-strong)" }}
               >
                 {column}
@@ -25,12 +25,12 @@ export function CompareTable({ columns = [], rows = [] }: CompareTableProps) {
             <tr
               key={row.join("-")}
               style={{
-                background: rowIndex % 2 === 0 ? "transparent" : "var(--surface)",
+                background: rowIndex % 2 === 0 ? "transparent" : "var(--surface-muted)",
               }}
             >
               {row.map((cell, cellIndex) => (
                 <td
-                  key={`${rowIndex}-${cellIndex}`}
+                  key={`${columns[cellIndex] ?? "column"}-${cell}`}
                   className="px-4 py-3 align-top leading-6"
                   style={{ color: "var(--ink-soft)", borderBottom: "1px solid var(--border)" }}
                 >

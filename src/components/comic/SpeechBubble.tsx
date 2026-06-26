@@ -15,7 +15,10 @@ export function SpeechBubble({ speaker, children }: SpeechBubbleProps) {
       }}
     >
       {speaker ? (
-        <span className="comic-dialogue block text-xs font-semibold" style={{ color: "var(--accent)" }}>
+        <span
+          className="comic-dialogue block text-xs font-semibold"
+          style={{ color: "var(--accent)" }}
+        >
           {speaker}
         </span>
       ) : null}

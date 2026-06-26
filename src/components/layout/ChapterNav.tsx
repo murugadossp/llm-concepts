@@ -17,21 +17,28 @@ export function ChapterNav({
 
   return (
     <nav
-      className="glass sticky top-[5.5rem] z-40 mb-8 flex flex-wrap items-center justify-between gap-3 px-4 py-3 text-sm"
+      className="sticky top-[73px] z-40 -mx-1 mb-4 flex flex-wrap items-center justify-between gap-3 border-b px-2 py-3 text-[13px]"
+      style={{ background: "var(--bg-base)", borderColor: "var(--border)" }}
       aria-label="Chapter navigation"
     >
-      <Link href="/chapters" style={{ color: "var(--ink-soft)" }}>
+      <Link
+        href="/chapters"
+        className="rounded-lg px-2 py-1 hover:bg-[var(--surface-hover)]"
+        style={{ color: "var(--ink-soft)" }}
+      >
         ← All chapters
       </Link>
-      <span style={{ color: "var(--ink-mute)" }}>{chapterLabel}</span>
-      <div className="flex gap-3">
+      <span className="hidden sm:inline" style={{ color: "var(--ink-mute)" }}>
+        {chapterLabel}
+      </span>
+      <div className="flex gap-1">
         {prev ? (
           <Link
             href={`/chapters/${prev.slug}`}
-            className="hover:underline"
+            className="rounded-lg px-2 py-1 hover:bg-[var(--surface-hover)]"
             style={{ color: "var(--accent)" }}
           >
-            ← {prev.title.split(":")[0]}
+            ← <span className="hidden md:inline">{prev.title.split(":")[0]}</span>
           </Link>
         ) : (
           <span style={{ color: "var(--ink-mute)" }}>← Start</span>
@@ -39,10 +46,10 @@ export function ChapterNav({
         {next ? (
           <Link
             href={`/chapters/${next.slug}`}
-            className="hover:underline"
+            className="rounded-lg px-2 py-1 hover:bg-[var(--surface-hover)]"
             style={{ color: "var(--accent)" }}
           >
-            {next.title.split(":")[0]} →
+            <span className="hidden md:inline">{next.title.split(":")[0]}</span> →
           </Link>
         ) : (
           <span style={{ color: "var(--ink-mute)" }}>End →</span>

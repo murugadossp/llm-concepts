@@ -3,8 +3,11 @@ import type { ReactNode } from "react";
 export function ELI5Card({ title, children }: { title: string; children: ReactNode }) {
   return (
     <aside
-      className="glass my-6 border-l-4 p-5"
-      style={{ borderLeftColor: "var(--accent)" }}
+      className="my-6 rounded-r-[var(--r-sm)] border-l-[3px] px-4 py-3.5"
+      style={{
+        borderLeftColor: "var(--accent)",
+        background: "var(--surface-muted)",
+      }}
     >
       <div className="mb-2 flex items-center gap-2">
         <span aria-hidden>🧒</span>
@@ -12,7 +15,7 @@ export function ELI5Card({ title, children }: { title: string; children: ReactNo
           {title}
         </h4>
       </div>
-      <div className="text-sm leading-7" style={{ color: "var(--ink-soft)" }}>
+      <div className="text-sm leading-6" style={{ color: "var(--ink-soft)" }}>
         {children}
       </div>
     </aside>

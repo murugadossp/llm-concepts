@@ -15,8 +15,12 @@ export function PersonaStrip({ characters }: { characters: string[] }) {
       {characters.map((name) => (
         <span
           key={name}
-          className="rounded-[var(--r-pill)] px-3 py-1 text-xs font-medium"
-          style={{ background: "var(--surface-strong)", color: "var(--ink-soft)" }}
+          className="rounded-[var(--r-pill)] border px-3 py-1 text-xs font-medium"
+          style={{
+            background: "var(--surface-muted)",
+            borderColor: "var(--border)",
+            color: "var(--ink-soft)",
+          }}
         >
           {characterLabels[name] ?? name}
         </span>

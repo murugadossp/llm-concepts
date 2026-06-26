@@ -1,65 +1,73 @@
-import { Chip } from "@/components/learn/Chip";
-import { getChapterTree } from "@/lib/chapters";
-import Link from "next/link";
+import { CollectionCard } from "@/components/library/CollectionCard";
+import { getAllChapters } from "@/lib/chapters";
+import { langGraphLessons } from "@/lib/standalone-library";
+import { BookOpen, ExternalLink, Network } from "lucide-react";
 
-export default function ChaptersHubPage() {
-  const chapters = getChapterTree();
+export default function LearningPathsPage() {
+  const llmLessonCount = getAllChapters().length;
 
   return (
-    <div className="mx-auto w-[min(100%-2rem,var(--maxw-wide))] px-4 py-10">
-      <h1 className="font-display text-3xl font-bold" style={{ color: "var(--ink)" }}>
-        Chapters
+    <div className="site-container py-16">
+      <span className="eyebrow-pill">
+        <span className="eyebrow-dot" />
+        Learning paths
+      </span>
+      <h1 className="editorial-title mt-5 text-5xl sm:text-6xl" style={{ color: "var(--ink)" }}>
+        Choose where to begin.
       </h1>
-      <p className="mt-2" style={{ color: "var(--ink-soft)" }}>
-        Flagship lessons ship first. More chapters follow the BLUEPRINT build order.
+      <p className="mt-5 max-w-[68ch] text-lg leading-8" style={{ color: "var(--ink-soft)" }}>
+        Start with how large language models work, or move into graph-based workflows and
+        multi-agent coordination. Each path can grow independently without crowding this hub.
       </p>
-      <ul className="mt-8 grid gap-4 sm:grid-cols-2">
-        {chapters.map((chapter) => (
-          <li key={chapter.slug}>
-            <Link
-              href={`/chapters/${chapter.slug}`}
-              className="glass block h-full p-6 transition hover:opacity-95"
-            >
-              <div className="flex flex-wrap gap-2">
-                <Chip tone="accent">{chapter.tier}</Chip>
-                <Chip tone="neutral">{chapter.difficulty}</Chip>
-              </div>
-              <h2
-                className="font-display mt-3 text-xl font-semibold"
-                style={{ color: "var(--ink)" }}
-              >
-                {chapter.title}
-              </h2>
-              <p className="mt-2 text-sm" style={{ color: "var(--ink-soft)" }}>
-                {chapter.summary}
-              </p>
-              <p className="mt-4 text-xs" style={{ color: "var(--ink-mute)" }}>
-                ~{chapter.estimatedMinutes} min read
-              </p>
-            </Link>
-            {chapter.lessons.length > 0 ? (
-              <ol className="mt-3 space-y-2">
-                {chapter.lessons.map((lesson) => (
-                  <li key={lesson.slug}>
-                    <Link
-                      href={`/chapters/${lesson.slug}`}
-                      className="glass flex items-center justify-between gap-3 px-4 py-3 text-sm transition hover:opacity-95"
-                    >
-                      <span style={{ color: "var(--ink)" }}>
-                        {chapter.chapterNumber}.{lesson.lessonNumber}{" "}
-                        {lesson.navTitle ?? lesson.title}
-                      </span>
-                      <span className="shrink-0 text-xs" style={{ color: "var(--ink-mute)" }}>
-                        ~{lesson.estimatedMinutes} min
-                      </span>
-                    </Link>
-                  </li>
-                ))}
-              </ol>
-            ) : null}
-          </li>
-        ))}
-      </ul>
+
+      <div className="mt-12 grid gap-6 lg:grid-cols-2">
+        <CollectionCard
+          href="/chapters/llm-concepts"
+          eyebrow="Core learning path"
+          title="LLM Concepts"
+          description="Build the mental model from tokens, embeddings, and attention toward retrieval, tools, agents, Model Context Protocol, skills, plugins, and safety."
+          meta={[`${llmLessonCount} lessons`, "Beginner onward", "Native MDX"]}
+          icon={<BookOpen className="h-6 w-6" aria-hidden />}
+        />
+        <CollectionCard
+          href="/chapters/langgraph"
+          eyebrow="Workflow learning path"
+          title="LangGraph"
+          description="Learn stateful graphs through worked workflows, coordination patterns, interactive quizzes, simulations, and system-design case studies."
+          meta={[`${langGraphLessons.length} chapters`, "Interactive", "Case studies included"]}
+          icon={<Network className="h-6 w-6" aria-hidden />}
+        />
+      </div>
+
+      <section className="pt-20">
+        <div className="flex flex-wrap items-baseline justify-between gap-3">
+          <h2 className="editorial-title text-4xl" style={{ color: "var(--ink)" }}>
+            Project architecture &amp; references
+          </h2>
+          <span className="text-[13px]" style={{ color: "var(--ink-mute)" }}>
+            About this learning platform
+          </span>
+        </div>
+        <a
+          href="/library/architecture.html"
+          className="glass mt-6 block p-6 transition hover:border-[var(--accent)]"
+        >
+          <span className="lesson-chip">Interactive reference</span>
+          <h3 className="mt-4 text-xl font-semibold" style={{ color: "var(--ink)" }}>
+            LLM → Agent Platform Architecture
+          </h3>
+          <p className="mt-2 max-w-[76ch] text-sm leading-7" style={{ color: "var(--ink-soft)" }}>
+            Explore the product stack, content system, design tokens, data model, authentication,
+            entitlements, payments, AI tutor, rollout phases, and architecture decisions.
+          </p>
+          <span
+            className="mt-5 inline-flex items-center gap-1.5 text-[13px] font-semibold"
+            style={{ color: "var(--accent)" }}
+          >
+            Open architecture reference <ExternalLink className="h-3.5 w-3.5" aria-hidden />
+          </span>
+        </a>
+      </section>
     </div>
   );
 }

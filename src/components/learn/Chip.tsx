@@ -16,8 +16,8 @@ export function Chip({
   const styles = toneStyles[tone];
   return (
     <span
-      className="inline-flex rounded-[var(--r-pill)] px-2.5 py-1 text-xs font-medium"
-      style={{ background: styles.bg, color: styles.color }}
+      className="inline-flex rounded-[var(--r-pill)] border px-2.5 py-1 text-xs font-semibold"
+      style={{ background: styles.bg, color: styles.color, borderColor: "var(--border)" }}
     >
       {children}
     </span>
