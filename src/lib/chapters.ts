@@ -62,14 +62,11 @@ function compareChapters(a: ChapterMeta, b: ChapterMeta): number {
 
 export function getChapterTree(): ChapterTreeItem[] {
   const chapters = getAllChapters();
-  const bySlug = new Map(chapters.map((chapter) => [chapter.slug, chapter]));
   const roots = chapters.filter((chapter) => !chapter.parentSlug);
 
   return roots.map((root) => ({
     ...root,
-    lessons: chapters.filter(
-      (chapter) => chapter.parentSlug === root.slug && bySlug.has(root.slug),
-    ),
+    lessons: chapters.filter((chapter) => chapter.parentSlug === root.slug),
   }));
 }
 
