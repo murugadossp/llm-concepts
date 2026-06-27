@@ -64,7 +64,7 @@ Unlike traditional databases that look up indexes by ID or exact text matching, 
 
 To find the closest chunks, the database computes the distance between the user's query vector and the stored document vectors using one of three metrics:
 
-\[\text\{Cosine Similarity\} = \frac\{A \cdot B\}\{\\|A\\| \\|B\\|\}\]
+$$\text{Cosine Similarity} = \frac{A \cdot B}{\|A\| \|B\|}$$
 
 * **Cosine Similarity**: Measures the cosine of the angle between two vectors. It is scale-invariant, making it ideal for text comparison where document length varies.
 * **Dot Product**: Multiplies corresponding components. Extremely fast, but requires all vectors to be normalized to a length of 1 first.

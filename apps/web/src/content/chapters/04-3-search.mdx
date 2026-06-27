@@ -52,7 +52,7 @@ For exact matches, code variables, usernames, or serial numbers, classic **keywo
 ### Reciprocal Rank Fusion (RRF)
 To merge these lists, we use **Reciprocal Rank Fusion (<abbr title="Reciprocal Rank Fusion">RRF</abbr>)**. RRF scores documents based on their position in both lists, rather than trying to combine raw scoring scales:
 
-\[RRF(d) = \sum_\{m \in M\} \frac\{1\}\{k + r_m(d)\}\]
+$$RRF(d) = \sum_{m \in M} \frac{1}{k + r_m(d)}$$
 
 Where $r_m(d)$ is the rank of document $d$ in retriever $m$, and $k$ is a constant (typically 60) to prevent top ranks from completely dominating.
 

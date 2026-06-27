@@ -51,7 +51,7 @@ To grade predictions, the model uses a formula called **Cross-Entropy Loss**.
 
 Suppose the model outputs a probability distribution over its vocabulary for the next word. The true target word has an index $y$, and the model predicted a probability $P(x_y)$ for that word. The loss $L$ for this single step is calculated as:
 
-\[L = -\ln(P(x_y))\]
+$$L = -\ln(P(x_y))$$
 
 Where:
 * $P(x_y)$ is the probability assigned to the correct word.

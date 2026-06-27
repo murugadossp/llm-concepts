@@ -76,7 +76,7 @@ Before an LLM picks the next token, the final layer of the network outputs a lis
 
 To convert these raw numbers into a tidy list of percentages that sum to 1.0 (100%), the model uses the **Softmax** function. Mathematically, the probability of selecting token $i$ is calculated as:
 
-\[P(x_i) = \frac\{e^\{z_i / T\}\}\{\sum_j e^\{z_j / T\}\}\]
+$$P(x_i) = \frac{e^{z_i / T}}{\sum_j e^{z_j / T}}$$
 
 Where:
 * $z_i$ is the raw logit score for token $i$.
@@ -84,7 +84,7 @@ Where:
 * $e$ is Euler's constant ($\approx 2.718$).
 
 ### How Temperature $T$ Controls the Math:
-* **Low Temperature ($T \to 0$)**: The divisor $T$ is very small, which pushes the exponential term $e^\{z_i/T\}$ of the highest-scoring token toward infinity. The highest-scoring token takes up virtually 100% of the probability, making generation completely predictable (greedy decoding).
+* **Low Temperature ($T \to 0$)**: The divisor $T$ is very small, which pushes the exponential term $e^{z_i/T}$ of the highest-scoring token toward infinity. The highest-scoring token takes up virtually 100% of the probability, making generation completely predictable (greedy decoding).
 * **High Temperature ($T \ge 1.0$)**: The divisor $T$ is large, which shrinks the differences between the exponents. The probability curve flattens out, giving lower-scoring words a much higher relative chance of being rolled.
 
 ---

@@ -48,6 +48,12 @@ export default function RootLayout({
         <Script id="theme-init" strategy="beforeInteractive">
           {themeInitScript}
         </Script>
+        <link
+          rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css"
+          integrity="sha384-GMR9mGtcMmduTeGEKsNQ5yUBR5GGERIBHC3ADDD65m754u597893fIRc50LnA9Hn"
+          crossOrigin="anonymous"
+        />
       </head>
       <body
         className={`${inter.variable} ${instrumentSerif.variable} ${jetbrains.variable} ${caveat.variable} antialiased`}
