@@ -2,6 +2,12 @@ import { ComicPanel } from "@/components/comic/ComicPanel";
 import { ComicStrip } from "@/components/comic/ComicStrip";
 import { PersonaStrip } from "@/components/comic/PersonaStrip";
 import { SpeechBubble } from "@/components/comic/SpeechBubble";
+import { AttentionHeatmap } from "@/components/interactive/AttentionHeatmap";
+import { ContextBudgetBar } from "@/components/interactive/ContextBudgetBar";
+import { EmbeddingsMap } from "@/components/interactive/EmbeddingsMap";
+import { PipelineDiagram } from "@/components/interactive/PipelineDiagram";
+import { PredictiveWordGame } from "@/components/interactive/PredictiveWordGame";
+import { SamplingPlayground } from "@/components/interactive/SamplingPlayground";
 import { TokenizerDemo } from "@/components/interactive/TokenizerDemo";
 import { Callout } from "@/components/learn/Callout";
 import { Chip } from "@/components/learn/Chip";
@@ -34,6 +40,12 @@ export const mdxComponents: MDXComponents = {
   CodeBlock,
   CodeTabs,
   TokenizerDemo,
+  PredictiveWordGame,
+  EmbeddingsMap,
+  AttentionHeatmap,
+  ContextBudgetBar,
+  SamplingPlayground,
+  PipelineDiagram,
   FreePreview,
   ProOnly,
   Quiz,

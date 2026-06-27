@@ -62,23 +62,23 @@ lesson has any interactivity (a mock regex "tokenizer"). Plan:
       themed with the existing CSS vars so it matches both light and dark
       automatically.
 - [x] One scored quiz added to the end of each existing lesson.
-- [ ] **Lesson 0 — "What Is an LLM, Really?"**: new intro lesson before tokens.
+- [x] **Lesson 0 — "What Is an LLM, Really?"**: new intro lesson before tokens.
       Core idea: next-token prediction over a trained model, no jargon yet.
       Interactive: "predict the next word" mini-game — user guesses, then sees the
       model's real top-5 next-token probabilities.
-- [ ] **Embeddings visualizer**: small preloaded 2D word-map (king/queen/man/woman/
+- [x] **Embeddings visualizer**: small preloaded 2D word-map (king/queen/man/woman/
       dog/cat, etc.) — type two words, see a live similarity score, points light up.
       Currently the embeddings lesson has zero interactivity.
-- [ ] **Attention heatmap visualizer**: canned attention weights for 2–3 example
+- [x] **Attention heatmap visualizer**: canned attention weights for 2–3 example
       sentences — click a token, see which other tokens light up and by how much.
       Currently the attention lesson has zero interactivity.
-- [ ] **Context-window budget bar**: fixed-width bar representing token budget;
+- [x] **Context-window budget bar**: fixed-width bar representing token budget;
       drag in system prompt / history / retrieved-doc chunks, watch it fill and
       overflow. Currently the context-windows lesson has zero interactivity.
-- [ ] **Sampling slider**: temperature / top-p / top-k sliders driving a live bar
+- [x] **Sampling slider**: temperature / top-p / top-k sliders driving a live bar
       chart of next-token probabilities, "regenerate" button. Currently the
       sampling lesson has zero interactivity.
-- [ ] **Capstone lesson — "Putting It Together"**: animated step-through pipeline
+- [x] **Capstone lesson — "Putting It Together"**: animated step-through pipeline
       diagram (tokens → embeddings → attention ×N → logits → sampling → next token
       → loop) + a 5-question scored quiz closing the module.
 - [ ] Reusable visual primitives worth extracting once 2+ of the above exist

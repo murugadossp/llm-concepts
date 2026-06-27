@@ -31,6 +31,21 @@ A context window is not just "how much text you can paste." It is the model's wo
 - More context can help, but it costs more and can become noisy.
 - Token budgets shape product design, retrieval design, and agent memory.
 
+## Comic: Tess's Tiny Desk
+
+<ComicStrip>
+  <ComicPanel character="Tess" title="The Limited Desk">
+    <SpeechBubble speaker="Tess">I need to check the recipe, write a note, and hold my tea. There's no space left!</SpeechBubble>
+    **Visual action:** Tess sits at a tiny, cramped desk piled high with books, papers, and empty cups. She looks overwhelmed trying to find a spot for a single new sheet.
+    **Teaching point:** The context window is like a working desk. Everything (prompts, history, outputs) competes for the same limited area.
+  </ComicPanel>
+  <ComicPanel character="Tess" title="Messy Desk, Slow Work">
+    <SpeechBubble speaker="Tess">A bigger desk helps, but if it's messy, I still get lost looking for my pen!</SpeechBubble>
+    **Visual action:** The desk expands to a larger table, but it is covered in chaotic notes. Tess spends time searching through heaps of paper.
+    **Teaching point:** While large context windows exist, too much noise can cause the model to miss crucial details.
+  </ComicPanel>
+</ComicStrip>
+
 ## The Model's Working Page
 
 The context window is how much text the model can consider at once. It includes your prompt, conversation history, tool results, retrieved documents, previous assistant messages, and the model's generated tokens.
@@ -60,6 +75,12 @@ This is why "just paste everything" is rarely the best strategy. Good LLM system
 
   This makes inference faster, especially for long prompts. The tradeoff is memory: cached keys and values take space.
 </DeepDive>
+
+## Try It
+
+Try styling a context window yourself using the simulator below. Observe how adding optional items like history or search context quickly eats up the budget!
+
+<ContextBudgetBar />
 
 ## Remember
 

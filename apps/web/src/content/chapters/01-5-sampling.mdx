@@ -31,6 +31,21 @@ The model does not write a whole answer in one motion. It predicts one token, th
 - Temperature changes how sharp or adventurous the choice can be.
 - Top-p and top-k limit the candidate set before the next token is chosen.
 
+## Comic: Tess Explores the Menu
+
+<ComicStrip>
+  <ComicPanel character="Tess" title="The Greedy Customer">
+    <SpeechBubble speaker="Tess">Give me the absolute most popular item, every single time!</SpeechBubble>
+    **Visual action:** Tess stands at a restaurant counter. The chef offers "Pizza" (90% popular) and "Salad" (10% popular). Tess takes Pizza.
+    **Teaching point:** Temperature = 0 is "greedy decoding" — the model always selects the highest-probability option, making outputs entirely predictable.
+  </ComicPanel>
+  <ComicPanel character="Tess" title="The Adventurous Foodie">
+    <SpeechBubble speaker="Tess">Let's flatten the ratings. Give me a surprise recommendation!</SpeechBubble>
+    **Visual action:** The chef shuffles the menu card. Now "Pizza" drops to 30%, and other items like "Spaghetti" or "Soup" rise to 25%. Tess rolls a die to choose.
+    **Teaching point:** Higher temperature flattens the distribution, giving less likely options a chance to be chosen.
+  </ComicPanel>
+</ComicStrip>
+
 ## From Scores To Text
 
 Once the model has scores for possible next tokens, decoding rules decide what comes out.
@@ -58,6 +73,12 @@ Stable tasks usually use lower randomness. Brainstorming and creative tasks can 
 <DeepDive title="What logits are">
   Logits are raw scores for every token in the vocabulary. Before the model picks the next token, these scores are converted into probabilities, often with softmax. A higher logit means the model currently considers that token more likely.
 </DeepDive>
+
+## Try It
+
+Tune the temperature, Top-P, and Top-K settings below to see how they reshape candidate probabilities and generate next words.
+
+<SamplingPlayground />
 
 ## Remember
 

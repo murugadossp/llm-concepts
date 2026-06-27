@@ -6,7 +6,7 @@ chapterNumber: 1
 lessonNumber: 0
 section: "foundations"
 difficulty: "beginner"
-estimatedMinutes: 4
+estimatedMinutes: 5
 tier: "free"
 prereqs: []
 characters: ["Tess"]
@@ -16,7 +16,7 @@ suggestedPrompts:
   - "What's the difference between tokens, embeddings, and attention?"
   - "Why do I need these ideas before learning about agents?"
   - "Can you walk me through the lesson order?"
-updatedAt: "2026-05-23"
+updatedAt: "2026-06-27"
 authors: ["murugadoss"]
 summary: >
   A calm map of the first ideas every LLM learner needs before moving toward agents.
@@ -30,11 +30,13 @@ This module slows the foundation down. Instead of rushing through the entire tra
 
 ## Start Here
 
+0. **What Is an LLM, Really?** Understand next-token prediction over a trained model.
 1. **What Is a Token?** Learn the pieces an LLM can actually read.
 2. **Embeddings** See how token IDs become coordinates in meaning-space.
 3. **Attention** Understand how tokens decide which other tokens matter.
 4. **Context Windows** Learn what fits on the model's working page.
 5. **Sampling** Explore why the same prompt can produce different answers.
+6. **Putting It Together** Trace the full transformer pipeline cycle.
 
 <RememberCard>
   - Token = chunk of text the model sees.
@@ -49,3 +51,4 @@ This module slows the foundation down. Instead of rushing through the entire tra
 Agents, retrieval systems, tool calls, memory, evaluations, and safety all depend on these basics. If tokens feel fuzzy, token budgets feel arbitrary. If embeddings feel magical, retrieval feels magical. If attention feels vague, long-context behavior feels unpredictable.
 
 The point is not to memorize architecture diagrams. The point is to build a working mental model you can use when a real LLM app behaves strangely.
+
