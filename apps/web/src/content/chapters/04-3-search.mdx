@@ -64,12 +64,12 @@ Comparing a user query to thousands of document vectors is fast because we compa
 
 ```mermaid
 graph TD
-  Query["User Query"] --> BM25["Lexical Search (BM25)"] & Vec["Semantic Search (Vector Embeddings)"]
-  BM25 -->|Top 50 Chunks| Merge["RRF Rank Fusion Merger"]
+  Query["User Query"] --> BM25["Lexical Search<br/>(BM25)"] & Vec["Semantic Search<br/>(Vector Embeddings)"]
+  BM25 -->|Top 50 Chunks| Merge["RRF Rank Fusion<br/>Merger"]
   Vec -->|Top 50 Chunks| Merge
-  Merge -->|Top 50 Candidate Chunks| Cross["Cross-Encoder / Re-Ranker"]
-  Cross -->|Concatenated Deep Match| Sort["Sorted Top 5 Best Chunks"]
-  Sort --> Prompt["Inject into Prompt Context"]
+  Merge -->|Top 50 Candidates| Cross["Cross-Encoder /<br/>Re-Ranker"]
+  Cross -->|Concatenated Match| Sort["Sorted Top 5<br/>Best Chunks"]
+  Sort --> Prompt["Inject into<br/>Prompt Context"]
 ```
 
 ### How They Compare:

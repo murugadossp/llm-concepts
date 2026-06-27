@@ -65,19 +65,19 @@ PPO is notoriously complex to implement. It requires hosting four separate model
 ```mermaid
 graph TD
   subgraph PPO Loop
-    PPO_P[Prompt] --> PPO_M[Active Policy Model] & PPO_Ref[Reference Model]
-    PPO_M --> PPO_Out[Generated Response]
-    PPO_Out --> PPO_RM[Reward Model Network]
+    PPO_P[Prompt] --> PPO_M["Active Policy<br/>Model"] & PPO_Ref["Reference<br/>Model"]
+    PPO_M --> PPO_Out["Generated<br/>Response"]
+    PPO_Out --> PPO_RM["Reward Model<br/>Network"]
     PPO_RM --> PPO_S[Score Output]
-    PPO_S --> PPO_Update[PPO Update Algorithm]
+    PPO_S --> PPO_Update["PPO Update<br/>Algorithm"]
     PPO_Update -->|Updates Weights| PPO_M
     PPO_Ref -->|KL Penalty| PPO_Update
   end
 
   subgraph DPO Loop
-    DPO_P[Prompt] --> DPO_Pair[Choose / Reject Pair]
-    DPO_Pair --> DPO_Loss[DPO Classification Loss]
-    DPO_Loss -->|Direct Update| DPO_Model[Active Policy Model]
+    DPO_P[Prompt] --> DPO_Pair["Choose / Reject<br/>Pair"]
+    DPO_Pair --> DPO_Loss["DPO Classification<br/>Loss"]
+    DPO_Loss -->|Direct Update| DPO_Model["Active Policy<br/>Model"]
   end
 ```
 

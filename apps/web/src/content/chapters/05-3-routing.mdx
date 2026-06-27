@@ -46,21 +46,21 @@ To solve this, we implement a **Routing Layer** (also known as a dispatcher) in 
 
 ```mermaid
 graph TD
-  Prompt["User Prompt: 'Book a room for Tuesday'"] --> Embed["Router Embedding Model"]
-  Embed -->|Query Vector| Search["Vector DB Similarity Search"]
+  Prompt["User Prompt:<br/>'Book a room for Tuesday'"] --> Embed["Router Embedding<br/>Model"]
+  Embed -->|Query Vector| Search["Vector DB<br/>Similarity Search"]
   
   subgraph Tool Catalog Database
-    T1["Tool Schema: room_booking"]
-    T2["Tool Schema: calendar_create"]
-    T3["Tool Schema: fetch_weather"]
-    T4["Tool Schema: database_query"]
+    T1["Tool Schema:<br/>room_booking"]
+    T2["Tool Schema:<br/>calendar_create"]
+    T3["Tool Schema:<br/>fetch_weather"]
+    T4["Tool Schema:<br/>database_query"]
   end
 
   Search -->|Nearest Neighbors| T1 & T2
-  T1 & T2 -->|Dynamic Schema Injection| APIRequest["LLM API Request Context"]
+  T1 & T2 -->|Dynamic Schema Injection| APIRequest["LLM API Request<br/>Context"]
   Prompt --> APIRequest
   APIRequest -->|Only 2 Schemas passed| LLM["LLM (Active Model)"]
-  LLM -->|Emits ToolCall| Execute["JSON: room_booking(...)"]
+  LLM -->|Emits ToolCall| Execute["JSON:<br/>room_booking(...)"]
 ```
 
 Instead of sending all 100 tools, we follow a three-step dispatch workflow:

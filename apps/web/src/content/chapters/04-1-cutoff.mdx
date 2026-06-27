@@ -48,13 +48,13 @@ Rather than trying to force the model to memorize the entire universe, we switch
 
 ```mermaid
 graph TD
-  User["User Query: 'What were yesterday's sales?'"] --> Embed["Query Embedding Generator"]
-  Embed -->|Vector Coordinates| VDB[("Vector Database\n(Pgvector, Pinecone)")]
-  VDB -->|Retrieve Top K Chunks| Ranker["Re-ranker / Context Compiler"]
-  Ranker -->|Context: 'Yesterday sales: $42,000'| PromptBuilder["Augmented Prompt Assembler"]
+  User["User Query:<br/>'What were yesterday's sales?'"] --> Embed["Query Embedding<br/>Generator"]
+  Embed -->|Vector Coordinates| VDB[("Vector Database<br/>(Pgvector, Pinecone)")]
+  VDB -->|Retrieve Top Chunks| Ranker["Context Compiler /<br/>Re-ranker"]
+  Ranker -->|Context: 'Yesterday sales: $42,000'| PromptBuilder["Augmented Prompt<br/>Assembler"]
   User --> PromptBuilder
-  PromptBuilder -->|Augmented Prompt| LLM["Large Language Model"]
-  LLM -->|Generates Answer| Answer["User Output: 'Yesterday's sales were $42,000'"]
+  PromptBuilder -->|Augmented Prompt| LLM["LLM (Text Generator)"]
+  LLM -->|Generates Answer| Answer["User Output:<br/>'Yesterday's sales were $42,000'"]
 ```
 
 The steps inside this loop are:

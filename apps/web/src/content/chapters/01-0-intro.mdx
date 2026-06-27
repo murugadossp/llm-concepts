@@ -80,10 +80,10 @@ This diagram illustrates how the model iteratively predicts and builds its own o
 
 ```mermaid
 graph TD
-  Prompt["Input Prompt: 'The sky is'"] --> LLM["LLM (Text Predictor)"]
-  LLM -->|Outputs Probability Pool| Pool["'blue' (85%), 'grey' (10%), 'cloudy' (3%)"]
-  Pool -->|Select 'blue'| Select["Chosen Token: 'blue'"]
-  Select -->|Append to Prompt| Append["New Sequence: 'The sky is blue'"]
+  Prompt["Input Prompt:<br/>'The sky is'"] --> LLM["LLM (Text Predictor)"]
+  LLM -->|Outputs Probability Pool| Pool["'blue' (85%)<br/>'grey' (10%)<br/>'cloudy' (3%)"]
+  Pool -->|Select 'blue'| Select["Chosen Token:<br/>'blue'"]
+  Select -->|Append to Prompt| Append["New Sequence:<br/>'The sky is blue'"]
   Append -->|Loop Back as Input| LLM
 ```
 

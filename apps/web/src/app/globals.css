@@ -144,3 +144,71 @@ a {
     animation-iteration-count: 1 !important;
   }
 }
+
+/* Mermaid Diagram Global Styling */
+.mermaid-chart {
+  display: flex;
+  justify-content: center;
+  margin: 2rem 0;
+  padding: 1.5rem;
+  background: var(--surface-muted);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  overflow-x: auto;
+}
+
+.mermaid-chart svg {
+  background: transparent !important;
+  font-family: var(--font-sans), sans-serif !important;
+}
+
+/* Style node shapes to match active theme surface & borders */
+.mermaid-chart .node rect,
+.mermaid-chart .node circle,
+.mermaid-chart .node polygon,
+.mermaid-chart .node path {
+  fill: var(--surface) !important;
+  stroke: var(--border-strong) !important;
+  stroke-width: 1.5px !important;
+}
+
+/* Ensure text inside nodes is high contrast var(--ink) */
+.mermaid-chart text,
+.mermaid-chart .node .label,
+.mermaid-chart .labelText,
+.mermaid-chart .markdown-paragraph {
+  fill: var(--ink) !important;
+  color: var(--ink) !important;
+  font-family: var(--font-sans), sans-serif !important;
+  font-size: 13.5px !important;
+  line-height: 1.5 !important;
+}
+
+/* Edge connecting lines */
+.mermaid-chart .edgePaths .edgePath .path {
+  stroke: var(--ink-mute) !important;
+  stroke-width: 1.5px !important;
+}
+
+/* Arrows */
+.mermaid-chart .marker,
+.mermaid-chart marker {
+  fill: var(--ink-mute) !important;
+  stroke: var(--ink-mute) !important;
+}
+
+/* Edge labels (description pills on connecting arrows) */
+.mermaid-chart .edgeLabel rect {
+  fill: var(--surface-strong) !important;
+  stroke: var(--border) !important;
+  rx: 6px !important;
+  ry: 6px !important;
+}
+
+.mermaid-chart .edgeLabel text,
+.mermaid-chart .edgeLabel span {
+  fill: var(--ink-soft) !important;
+  color: var(--ink-soft) !important;
+  font-size: 11.5px !important;
+  font-weight: 500 !important;
+}

@@ -61,10 +61,10 @@ To make this cheaper, researchers developed **Parameter-Efficient Fine-Tuning (<
 
 ```mermaid
 graph LR
-  X["Input Activation (X)"] --> BaseW["Frozen Base Weights W0 (dxk)"]
-  X --> AdapterA["Adapter Matrix A (dxr)"]
-  AdapterA --> AdapterB["Adapter Matrix B (rxk)"]
-  BaseW --> Sum["Sum: Y = X*W0 + X*A*B * (&alpha;/r)"]
+  X["Input Activation (X)"] --> BaseW["Frozen Base Weights<br/>W0 (d x k)"]
+  X --> AdapterA["Adapter Matrix A<br/>(d x r)"]
+  AdapterA --> AdapterB["Adapter Matrix B<br/>(r x k)"]
+  BaseW --> Sum["Sum:<br/>Y = X*W0 + X*&Delta;W"]
   AdapterB --> Sum
   Sum --> Y["Output Activation (Y)"]
 ```

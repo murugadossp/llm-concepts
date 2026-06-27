@@ -77,7 +77,7 @@ export function Mermaid({ chart }: { chart: string }) {
   return (
     <div 
       ref={ref} 
-      className="mermaid-chart my-8 flex justify-center overflow-x-auto p-4 bg-surface-muted rounded-[var(--r-md)] border" 
+      className="mermaid-chart" 
       dangerouslySetInnerHTML={{ __html: svg }} 
     />
   );

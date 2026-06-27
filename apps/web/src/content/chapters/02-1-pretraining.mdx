@@ -41,13 +41,13 @@ During pre-training, the model reads billions or trillions of tokens. For every 
 
 ```mermaid
 graph TD
-  A["Input Context: 'Once upon a ___'"] --> B["Embedding & Attention Layers (Weights W)"]
-  B --> C["Model Logit Output (Probabilities)"]
-  C --> D{"Compute Cross-Entropy Loss: L = -ln(P(target))"}
-  D -->|Loss > 0 (Low confidence)| E["Backpropagation: Compute Gradients"]
-  E --> F["Adjust Weights: W_new = W - &eta; * Gradient"]
+  A["Input Context:<br/>'Once upon a ___'"] --> B["Embedding & Attention Layers<br/>(Weights W)"]
+  B --> C["Model Logit Output<br/>(Probabilities)"]
+  C --> D{"Compute Loss:<br/>L = -ln(P_target)"}
+  D -->|Loss > 0| E["Backpropagation:<br/>Compute Gradients"]
+  E --> F["Adjust Weights:<br/>W_new = W - &eta; * Gradient"]
   F --> A
-  D -->|Loss &approx; 0 (High confidence)| G["Continue to Next Token"]
+  D -->|Loss &approx; 0| G["Continue to Next Token"]
 ```
 
 <ELI5Card title="An autocomplete with a grade">
