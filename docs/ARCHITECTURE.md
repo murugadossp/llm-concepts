@@ -22,7 +22,7 @@ The project ships in **two distinct milestones** with an explicit engagement gat
 
 1. Ship **3 flagship chapters** — Chapter 1 (Foundations), Chapter 6 (Agents), Chapter 7 (MCP) — as a free, public site.
 2. **Solid learning-app design system** — light + dark themes, system-preference detection, persisted choice, opaque surfaces, subdued mesh background.
-3. **MDX-driven authoring** — drop a `.mdx` file in `/src/content/chapters/`, chapter or sub-lesson appears in nav.
+3. **MDX-driven authoring** — drop a `.mdx` file in `apps/web/src/content/chapters/`, chapter or sub-lesson appears in nav.
 4. **Email capture** — newsletter signup with single CTA throughout site.
 5. **Analytics** — scroll depth, completion rate, time-on-page (PostHog).
 6. **SEO foundations** — sitemap, RSS, per-chapter OG cards, schema.org Article markup.
@@ -117,132 +117,29 @@ Items marked **(M2)** are not installed during Content MVP — keeps the Milesto
 
 ```
 llm-concepts/
-├── BLUEPRINT.md
-├── ARCHITECTURE.md
-├── architecture.html              ← interactive visualization (this doc, illustrated)
-├── README.md
-├── package.json
-├── pnpm-lock.yaml
-├── biome.json
-├── next.config.ts
-├── tailwind.config.ts
-├── drizzle.config.ts
-├── playwright.config.ts
-├── vitest.config.ts
-├── .env.example
-├── .github/
-│   └── workflows/
-│       ├── ci.yml                 ← lint + type-check + unit + E2E
-│       └── deploy.yml             ← Vercel preview + prod
-├── drizzle/
-│   └── *.sql                      ← generated migrations
-├── public/
-│   ├── favicon.svg
-│   └── og/                        ← per-chapter OG cards
-├── src/
-│   ├── app/
-│   │   ├── (marketing)/           ← root route group: landing, pricing, about
-│   │   │   ├── page.tsx
-│   │   │   ├── pricing/page.tsx
-│   │   │   └── about/page.tsx
-│   │   ├── (learn)/               ← chapter rendering, free + gated
-│   │   │   ├── chapters/
-│   │   │   │   ├── page.tsx       ← chapter index (hub)
-│   │   │   │   └── [slug]/page.tsx ← dynamic per-chapter route
-│   │   │   └── glossary/page.tsx
-│   │   ├── (app)/                 ← authenticated app
-│   │   │   ├── dashboard/page.tsx
-│   │   │   ├── bookmarks/page.tsx
-│   │   │   ├── notes/page.tsx
-│   │   │   ├── settings/page.tsx
-│   │   │   └── teams/             ← organization admin
-│   │   │       ├── page.tsx
-│   │   │       ├── members/page.tsx
-│   │   │       └── billing/page.tsx
-│   │   ├── (api)/api/             ← server endpoints
-│   │   │   ├── tutor/
-│   │   │   │   └── route.ts       ← AI tutor streaming POST
-│   │   │   ├── progress/
-│   │   │   │   └── route.ts
-│   │   │   ├── webhooks/
-│   │   │   │   ├── lemon-squeezy/route.ts
-│   │   │   │   └── clerk/route.ts
-│   │   │   └── og/[slug]/route.ts ← dynamic OG image generation
-│   │   ├── layout.tsx             ← root layout: theme provider, fonts, clerk
-│   │   ├── globals.css            ← Tailwind directives + base
-│   │   └── not-found.tsx
-│   ├── content/
-│   │   └── chapters/
-│   │       ├── 01-foundations.mdx    ← module overview
-│   │       ├── 01-1-tokens.mdx       ← sub-lesson
-│   │       ├── 01-2-embeddings.mdx   ← sub-lesson
-│   │       ├── 02-training.mdx
-│   │       └── ...                ← per BLUEPRINT chapter outlines
-│   ├── components/
-│   │   ├── comic/
-│   │   │   ├── ComicPanel.tsx
-│   │   │   ├── ComicStrip.tsx
-│   │   │   ├── SpeechBubble.tsx
-│   │   │   └── PersonaStrip.tsx
-│   │   ├── learn/
-│   │   │   ├── ELI5Card.tsx
-│   │   │   ├── DeepDive.tsx
-│   │   │   ├── RememberCard.tsx
-│   │   │   ├── CompareTable.tsx
-│   │   │   ├── FlowDiagram.tsx
-│   │   │   ├── Callout.tsx
-│   │   │   ├── Chip.tsx
-│   │   │   ├── CodeBlock.tsx
-│   │   │   └── CodeTabs.tsx       ← TS / Python tabs
-│   │   ├── interactive/           ← client components ("islands")
-│   │   │   ├── TokenizerDemo.tsx
-│   │   │   ├── AttentionHeatmap.tsx
-│   │   │   ├── AgentLoopAnimator.tsx
-│   │   │   ├── MCPPlayground.tsx
-│   │   │   └── TutorChat.tsx
-│   │   ├── layout/
-│   │   │   ├── SiteHeader.tsx
-│   │   │   ├── SiteFooter.tsx
-│   │   │   ├── ChapterNav.tsx
-│   │   │   ├── ChapterSidebar.tsx
-│   │   │   ├── Paywall.tsx
-│   │   │   └── ProgressDots.tsx
-│   │   ├── theme/
-│   │   │   ├── ThemeProvider.tsx
-│   │   │   └── ThemeToggle.tsx
-│   │   └── ui/                    ← shadcn/ui primitives (button, card, dialog, …)
-│   ├── characters/
-│   │   ├── Tess.tsx               ← inline SVG components
-│   │   ├── Atlas.tsx
-│   │   ├── MCPMae.tsx
-│   │   ├── SkillSam.tsx
-│   │   ├── PlugPip.tsx
-│   │   ├── Orchestrator.tsx
-│   │   ├── Vector.tsx
-│   │   └── Halu.tsx
-│   ├── db/
-│   │   ├── client.ts              ← Drizzle + Neon
-│   │   ├── schema.ts              ← all tables
-│   │   └── queries/               ← typed query helpers per domain
-│   │       ├── progress.ts
-│   │       ├── bookmarks.ts
-│   │       ├── entitlements.ts
-│   │       └── tutor.ts
-│   ├── lib/
-│   │   ├── auth.ts                ← Clerk helpers
-│   │   ├── entitlements.ts        ← tier-check helpers
-│   │   ├── chapters.ts            ← lesson index from MDX
-│   │   ├── mdx-components.tsx     ← MDX component mapping
-│   │   ├── tutor.ts               ← Claude streaming helpers
-│   │   ├── rate-limit.ts          ← Upstash Redis-backed
-│   │   └── analytics.ts           ← PostHog wrapper
-│   ├── styles/
-│   │   ├── tokens.css             ← CSS variable tokens (light + dark)
-│   │   └── glass.css              ← reusable solid surface utility classes
-│   └── env.ts                     ← Zod-validated env at startup
-└── tests/
-    ├── unit/
-    ├── integration/
+├── apps/
+│   ├── web/                       ← Next.js frontend, MDX lessons, public library
+│   │   ├── package.json
+│   │   ├── next.config.ts
+│   │   ├── public/
+│   │   │   ├── library/           ← standalone HTML lessons/resources
+│   │   │   └── theme/             ← shared standalone lesson runtime theme
+│   │   └── src/
+│   │       ├── app/               ← marketing, chapter, dashboard, and API routes
+│   │       ├── content/chapters/  ← MDX chapters and lessons
+│   │       ├── components/
+│   │       ├── characters/
+│   │       ├── lib/
+│   │       └── env.ts
+│   └── api/                       ← planned Python backend for auth-adjacent services, analytics, admin APIs
+├── docs/                          ← architecture, blueprint, brand/theme guidance
+├── packages/                      ← planned shared packages such as theme/content
+├── .agents/                       ← Codex/authoring skills for lesson work
+├── README.md                      ← repo orientation and folder structure
+└── package.json                   ← root convenience scripts for apps/web
+```
+
+The detailed app tree lives under `apps/web`. Deployments should point at `apps/web` as the frontend root.
     └── e2e/
 ```
 
@@ -354,7 +251,7 @@ A single fixed `<div class="mesh">` behind everything renders three radial gradi
 
 ## 5. Lesson schema
 
-Every chapter or sub-lesson is one `.mdx` file in `src/content/chapters/`. A root chapter has no `parentSlug`; a lesson belongs to a root chapter via `parentSlug` and uses `lessonNumber` for nested ordering.
+Every chapter or sub-lesson is one `.mdx` file in `apps/web/src/content/chapters/`. A root chapter has no `parentSlug`; a lesson belongs to a root chapter via `parentSlug` and uses `lessonNumber` for nested ordering.
 
 ### 5.1 Frontmatter contract
 
@@ -443,7 +340,7 @@ Chapters without `<ProOnly>` are implicitly free. Pro chapters use the explicit 
 
 The "easy to add new lessons" goal reduces to:
 
-1. Create `src/content/chapters/12-rag-deep-dive.mdx` for a root chapter or `src/content/chapters/12-1-rag-basics.mdx` for a sub-lesson.
+1. Create `apps/web/src/content/chapters/12-rag-deep-dive.mdx` for a root chapter or `apps/web/src/content/chapters/12-1-rag-basics.mdx` for a sub-lesson.
 2. Write frontmatter + prose + components.
 3. Commit. Vercel preview deploys it. The chapter or lesson appears in the chapter index, sitemap, sidebar, and OG cards automatically.
 

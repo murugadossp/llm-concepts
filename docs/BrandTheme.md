@@ -4,15 +4,15 @@ This project uses one shared lesson theme for the Next.js app and the standalone
 
 The canonical implementation lives at:
 
-- `public/theme/lesson-theme.css`
+- `apps/web/public/theme/lesson-theme.css`
 
 The Next.js app imports the same file from:
 
-- `src/app/globals.css`
+- `apps/web/src/app/globals.css`
 
 The LangGraph standalone runtime imports it from:
 
-- `public/library/langgraph/multi-agent-series.css`
+- `apps/web/public/library/langgraph/multi-agent-series.css`
 
 ## Visual direction
 
@@ -156,7 +156,7 @@ For LangGraph pages that use shared diagrams and interaction styles, also includ
 <script src="/library/langgraph/multi-agent-series.js"></script>
 ```
 
-If the HTML file lives inside `public/library/langgraph/`, relative paths are also acceptable:
+If the HTML file lives inside `apps/web/public/library/langgraph/`, relative paths are also acceptable:
 
 ```html
 <link rel="stylesheet" href="multi-agent-series.css" />
@@ -197,13 +197,13 @@ Avoid:
 
 ## Current source-of-truth rule
 
-For the frontend branch:
+For this monorepo:
 
-- Published assets live under `public/library/...`
-- Shared brand/theme lives under `public/theme/...`
-- Original standalone backups should live outside this frontend worktree
+- Published frontend assets live under `apps/web/public/library/...`
+- Shared brand/theme lives under `apps/web/public/theme/...`
+- Original standalone backups should live outside this frontend/platform repo
 
-Do not reintroduce a duplicate root `langgraph/` folder into the frontend repo. It creates confusion about which copy is published.
+Do not reintroduce a duplicate root `langgraph/` folder into this repo. It creates confusion about which copy is published.
 
 ## Validation checklist
 
@@ -222,4 +222,3 @@ Before merging theme changes, verify:
 - dark theme
 - mobile width
 - production build
-
