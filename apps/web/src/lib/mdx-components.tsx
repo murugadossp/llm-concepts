@@ -2,6 +2,7 @@ import { ComicPanel } from "@/components/comic/ComicPanel";
 import { ComicStrip } from "@/components/comic/ComicStrip";
 import { PersonaStrip } from "@/components/comic/PersonaStrip";
 import { SpeechBubble } from "@/components/comic/SpeechBubble";
+import { Mermaid } from "@/components/learn/Mermaid";
 import { AttentionHeatmap } from "@/components/interactive/AttentionHeatmap";
 import { ContextBudgetBar } from "@/components/interactive/ContextBudgetBar";
 import { EmbeddingsMap } from "@/components/interactive/EmbeddingsMap";
@@ -110,4 +111,17 @@ export const mdxComponents: MDXComponents = {
       {...props}
     />
   ),
+  pre: (props: any) => {
+    const child = props.children;
+    if (child && child.props && child.props.className === "language-mermaid") {
+      const chart = child.props.children;
+      return <Mermaid chart={chart} />;
+    }
+    if (child && child.props && child.props.className) {
+      const language = child.props.className.replace("language-", "");
+      const code = child.props.children;
+      return <CodeBlock language={language}>{code}</CodeBlock>;
+    }
+    return <pre {...props} />;
+  },
 };
