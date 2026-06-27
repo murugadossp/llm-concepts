@@ -99,29 +99,29 @@ a {
 
 /* Comic Panel visual enhancements */
 .comic-dialogue p:nth-of-type(1) {
-  background: var(--surface-muted);
-  border-left: 3.5px solid var(--accent-2);
-  color: var(--ink-soft);
+  background: color-mix(in srgb, var(--accent-2) 10%, var(--surface-muted));
+  border-left: 4px solid var(--accent-2);
+  color: var(--ink);
   font-family: var(--font-inter), sans-serif;
-  font-size: 13.5px;
-  line-height: 1.5;
-  padding: 0.625rem 0.75rem;
-  border-radius: 6px;
+  font-size: 14.5px;
+  line-height: 1.55;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
   font-style: italic;
-  margin-top: 0.75rem;
+  margin-top: 0.85rem;
 }
 
 .comic-dialogue p:nth-of-type(2) {
-  background: color-mix(in srgb, var(--accent) 7%, var(--surface-muted));
-  border-left: 3.5px solid var(--accent);
+  background: color-mix(in srgb, var(--accent) 12%, var(--surface-muted));
+  border-left: 4px solid var(--accent);
   color: var(--ink);
   font-family: var(--font-inter), sans-serif;
-  font-size: 13.5px;
-  line-height: 1.5;
-  padding: 0.625rem 0.75rem;
-  border-radius: 6px;
+  font-size: 14.5px;
+  line-height: 1.55;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
   font-weight: 500;
-  margin-top: 0.75rem;
+  margin-top: 0.85rem;
 }
 
 @media (max-width: 640px) {
