@@ -18,10 +18,20 @@ learning site that teaches large language models, tools, agents, Model Context P
 
 Read from the repository root before generating or revising:
 
-- `BLUEPRINT.md` for audience, tone, chapter outlines, visual language, characters, and content conventions.
-- `ARCHITECTURE.md` for MDX/frontmatter contracts, component names, milestone rules, and gating behavior.
+- `docs/BLUEPRINT.md` for audience, tone, chapter outlines, visual language, characters, and content conventions.
+- `docs/ARCHITECTURE.md` for MDX/frontmatter contracts, component names, milestone rules, and gating behavior.
+- `docs/BrandTheme.md` for the current Daybreak/Midnight theme, font roles, shared CSS tokens, standalone HTML rules, and visual validation checklist.
 
-Tie-breaker: `ARCHITECTURE.md` wins for technical/MDX questions; `BLUEPRINT.md` wins for content, tone, teaching flow, and visual direction.
+Tie-breaker: `docs/ARCHITECTURE.md` wins for technical/MDX questions; `docs/BLUEPRINT.md` wins for content, tone, and teaching flow; `docs/BrandTheme.md` wins for current visual theme implementation details.
+
+## Current Repo Layout
+
+- Native MDX chapters live in `apps/web/src/content/chapters/`.
+- MDX component implementations live in `apps/web/src/components/`.
+- The MDX component registry lives in `apps/web/src/lib/mdx-components.tsx`.
+- Shared brand/theme CSS lives in `apps/web/public/theme/lesson-theme.css`.
+- Served standalone HTML lessons/resources live in `apps/web/public/library/`.
+- Do not recreate old root-level lesson folders such as `langgraph/`; published standalone assets belong under `apps/web/public/library/...`.
 
 ## Stable Project Rules
 
@@ -102,15 +112,31 @@ summary: >
 
 Pick `prereqs` from earlier chapter slugs, usually the immediately preceding 1-2 relevant chapters. Generate 3-5 `suggestedPrompts` a learner might ask the AI tutor. Set `updatedAt` to the current date in YYYY-MM-DD format.
 
+## Theme And Visual Guardrails
+
+The current visual system is the shared Brand Theme in `docs/BrandTheme.md`. Preserve it when writing or revising lessons:
+
+- Use the calm editorial learning style: readable, spacious, visual, and slightly playful.
+- Assume the page already provides the mesh background, Daybreak/Midnight themes, `Instrument Serif` headings, `Inter` body text, and `JetBrains Mono` code styling.
+- Prefer existing MDX components over custom markup. The components already inherit the shared theme tokens.
+- Do not hardcode color hex values, font names, shadows, borders, or radii inside MDX.
+- Do not invent page-specific theme systems, mesh backgrounds, or one-off card styles.
+- Art direction for comics and diagrams should reference theme tokens semantically: accent, teal accent, warm highlight, muted surface, strong surface, subtle border.
+- Diagram briefs must work in both light and dark mode. Avoid instructions that depend on a single background color.
+- Interactive widget specs must preserve keyboard use, readable contrast, reduced-motion behavior, and light/dark compatibility.
+- If the user asks for standalone HTML, link the shared CSS from `/theme/lesson-theme.css` instead of embedding a full duplicate token block.
+- For LangGraph-style standalone pages, also reuse `/library/langgraph/multi-agent-series.css` and `/library/langgraph/multi-agent-series.js` when those interaction patterns are needed.
+
 ## Workflow
 
-1. Identify the target chapter number, title, difficulty, read time, promise, comic premise, concepts, diagrams, comparison table, deep dives, and remember-card bullets from `BLUEPRINT.md`.
+1. Identify the target chapter number, title, difficulty, read time, promise, comic premise, concepts, diagrams, comparison table, deep dives, and remember-card bullets from `docs/BLUEPRINT.md`.
 2. Check the current milestone and chapter tier (see tier map) before adding `<FreePreview>` / `<ProOnly>`.
-3. Generate frontmatter, including `suggestedPrompts` and sensible `prereqs`.
-4. Draft the chapter in progressive layers: comic hook, core explanation, collapsed builder detail.
-5. Add at least one forward-reference to a later chapter and one back-reference to an earlier chapter when applicable. Chapter 1 only needs forward-references.
-6. Use component placeholders that look like MDX, not prose instructions.
-7. End with a short draft self-review or, for review mode, severity-ranked findings.
+3. Check `docs/BrandTheme.md` before adding any visual, diagram, or interactive instructions.
+4. Generate frontmatter, including `suggestedPrompts` and sensible `prereqs`.
+5. Draft the chapter in progressive layers: comic hook, core explanation, collapsed builder detail.
+6. Add at least one forward-reference to a later chapter and one back-reference to an earlier chapter when applicable. Chapter 1 only needs forward-references.
+7. Use existing MDX components from `apps/web/src/lib/mdx-components.tsx`; if a component does not exist, describe it as a future widget spec instead of inventing unregistered JSX.
+8. End with a short draft self-review or, for review mode, severity-ranked findings.
 
 ## Required Chapter Structure
 
@@ -127,9 +153,9 @@ Generate chapter drafts in this order:
 9. Where This Shows Up Later / Earlier cross-reference section.
 10. Read More section with primary-source placeholders or verified URLs only.
 
-## Component Placeholder Catalog
+## Component Catalog
 
-Prefer these shapes until real components are implemented:
+Prefer these shapes. They are registered in `apps/web/src/lib/mdx-components.tsx`:
 
 ```mdx
 <ComicStrip>
@@ -187,6 +213,8 @@ Prefer these shapes until real components are implemented:
 
 Use TypeScript as the default code language. Use Python where the outline or ML topic makes it clearer. Use `CodeTabs` when showing both.
 
+If a lesson needs a new interactive visual beyond the current catalog, write a concise widget spec in the lesson draft and explicitly call out that implementation belongs under `apps/web/src/components/interactive/`.
+
 ## Writing Rules
 
 - Write for mixed audiences using progressive disclosure.
@@ -243,6 +271,8 @@ Core explanation.
 <RememberCard>{/* takeaways */}</RememberCard>
 ```
 
+Save native lesson drafts as files under `apps/web/src/content/chapters/` unless the user asks for a different output format.
+
 ## Self-Review Checklist
 
 Before finishing a generated or revised chapter, check and report:
@@ -255,7 +285,9 @@ Before finishing a generated or revised chapter, check and report:
 - `prereqs`, `tier`, and gating match the current milestone and chapter tier map.
 - Character names and roles match the roster.
 - Cross-references include forward/back links where applicable.
-- Component placeholders are MDX-shaped blocks.
+- Component usage is MDX-shaped and limited to registered components unless clearly marked as a future widget spec.
+- Visual guidance follows `docs/BrandTheme.md`; no hardcoded theme tokens, colors, fonts, shadows, or one-off layout systems are introduced.
+- New interactive visual specs mention light/dark, keyboard, contrast, and reduced-motion expectations.
 - Further reading uses verified primary-source URLs or TODO placeholders.
 
 ## Output Modes
