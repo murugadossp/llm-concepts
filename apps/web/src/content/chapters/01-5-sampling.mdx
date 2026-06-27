@@ -67,3 +67,32 @@ Stable tasks usually use lower randomness. Brainstorming and creative tasks can 
   - Top-p and top-k filter the token menu.
   - Different early choices can steer the rest of the answer.
 </RememberCard>
+
+export const samplingQuiz = [
+  {
+    question: "What does raising the temperature do?",
+    options: [
+      "Always picks the single most likely token",
+      "Flattens the probability distribution so lower-probability tokens get more room",
+      "Increases the context window size",
+      "Removes punctuation from the output",
+    ],
+    correctIndex: 1,
+    explanation:
+      "Low temperature sharpens the distribution toward the top choice; higher temperature spreads probability across more candidates.",
+  },
+  {
+    question: "What's the difference between top-k and top-p sampling?",
+    options: [
+      "They are two names for the same setting",
+      "Top-k keeps a fixed number of candidates; top-p keeps the smallest set whose probabilities add up to a threshold",
+      "Top-k only works on short prompts",
+      "Top-p disables randomness entirely",
+    ],
+    correctIndex: 1,
+    explanation:
+      "Top-k filters by a fixed count of tokens; top-p (nucleus sampling) filters by cumulative probability, so the candidate set size can vary.",
+  },
+];
+
+<Quiz title="Sampling: check your understanding" questions={samplingQuiz} />

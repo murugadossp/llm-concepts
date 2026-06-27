@@ -99,3 +99,32 @@ Real attention patterns are not always this clean. A token can attend to punctua
   - Attention can blend several sources at once.
   - Position information helps the model understand order.
 </RememberCard>
+
+export const attentionQuiz = [
+  {
+    question: "In query, key, and value, what is the 'query'?",
+    options: [
+      "The information that gets passed along if a match matters",
+      "What another token offers for matching",
+      "What the current token is looking for",
+      "The final output of the transformer",
+    ],
+    correctIndex: 2,
+    explanation:
+      "A query is what a token is looking for; keys are what other tokens offer to match against; values are what gets passed along on a strong match.",
+  },
+  {
+    question: "Why do transformers need positional encoding at all?",
+    options: [
+      "Attention by itself has no built-in sense of word order",
+      "To make the model run faster",
+      "To reduce the vocabulary size",
+      "To convert tokens back into characters",
+    ],
+    correctIndex: 0,
+    explanation:
+      "Without position information, 'dog bites man' and 'man bites dog' would look the same to attention.",
+  },
+];
+
+<Quiz title="Attention: check your understanding" questions={attentionQuiz} />

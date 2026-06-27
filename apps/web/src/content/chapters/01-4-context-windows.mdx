@@ -69,3 +69,32 @@ This is why "just paste everything" is rarely the best strategy. Good LLM system
   - Retrieval helps choose what enters context.
   - Agents need context discipline because task histories get messy.
 </RememberCard>
+
+export const contextQuiz = [
+  {
+    question: "What counts toward the context window?",
+    options: [
+      "Only the text you type in the prompt box",
+      "Prompt, history, retrieved text, tool results, and the model's own generated output",
+      "Only the model's final answer",
+      "Only system instructions",
+    ],
+    correctIndex: 1,
+    explanation:
+      "Everything sharing the model's working page — input and output alike — competes for the same token budget.",
+  },
+  {
+    question: "Why isn't a bigger context window automatically better?",
+    options: [
+      "Bigger context windows are always cheaper",
+      "More tokens cost more to process and can bury the important details in noise",
+      "Models refuse to use extra context space",
+      "Context windows can only grow, never shrink",
+    ],
+    correctIndex: 1,
+    explanation:
+      "More context means more computation and more chances for the relevant detail to get lost — good context design still matters.",
+  },
+];
+
+<Quiz title="Context windows: check your understanding" questions={contextQuiz} />

@@ -76,3 +76,32 @@ That is the bridge from this lesson to RAG later in the course: if meaning can b
   - Similarity in vector space can support semantic search.
   - Context can update a token's representation later in the model.
 </RememberCard>
+
+export const embeddingsQuiz = [
+  {
+    question: "What is an embedding, in plain terms?",
+    options: [
+      "A dictionary definition attached to a token",
+      "A learned list of numbers representing a token in many dimensions",
+      "A picture of the token",
+      "The token's position in the sentence",
+    ],
+    correctIndex: 1,
+    explanation:
+      "An embedding is a vector — coordinates in a high-dimensional meaning-space — learned from how the token is used in text.",
+  },
+  {
+    question: "Where does the 'map' metaphor for embeddings break down?",
+    options: [
+      "Real embedding dimensions usually don't have one clean, human-readable meaning each",
+      "Embeddings never have any geometric structure at all",
+      "Embeddings only exist in retrieval systems, not inside the model",
+      "Tokens with similar embeddings are always opposites",
+    ],
+    correctIndex: 0,
+    explanation:
+      "Meaning is distributed across many numbers rather than living on one labeled axis like 'royalty' or 'gender'.",
+  },
+];
+
+<Quiz title="Embeddings: check your understanding" questions={embeddingsQuiz} />

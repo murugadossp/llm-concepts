@@ -14,6 +14,7 @@ import { FlowDiagram } from "@/components/learn/FlowDiagram";
 import { FreePreview } from "@/components/learn/FreePreview";
 import { Infographic } from "@/components/learn/Infographic";
 import { ProOnly } from "@/components/learn/ProOnly";
+import { Quiz } from "@/components/learn/Quiz";
 import { RememberCard } from "@/components/learn/RememberCard";
 import type { MDXComponents } from "mdx/types";
 
@@ -35,6 +36,7 @@ export const mdxComponents: MDXComponents = {
   TokenizerDemo,
   FreePreview,
   ProOnly,
+  Quiz,
   h1: (props) => (
     <h1
       className="editorial-title mt-12 scroll-mt-24 text-4xl first:mt-0"

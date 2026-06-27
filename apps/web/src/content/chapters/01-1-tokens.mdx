@@ -127,3 +127,32 @@ export const tokenizerCompare = {
   - Token boundaries are model-specific.
   - More text usually means more tokens, more cost, and more context pressure.
 </RememberCard>
+
+export const tokensQuiz = [
+  {
+    question: "What does a tokenizer actually hand to the model?",
+    options: [
+      "Whole human words, one per token",
+      "Token IDs that look up learned vectors",
+      "Raw letters with no transformation",
+      "A translated version of the text",
+    ],
+    correctIndex: 1,
+    explanation:
+      "Text is cut into tokens, then each token maps to an integer ID, which the model uses to look up its embedding.",
+  },
+  {
+    question: "Why might two different tokenizers split the same word differently?",
+    options: [
+      "One tokenizer is broken",
+      "Each tokenizer learned its own set of reusable chunks from its own training data",
+      "Token boundaries are random each time",
+      "Longer words are always split, shorter words never are",
+    ],
+    correctIndex: 1,
+    explanation:
+      "Tokenizers like BPE, WordPiece, and SentencePiece each learn their own merge rules, so the same text can produce different chunks.",
+  },
+];
+
+<Quiz title="Tokens: check your understanding" questions={tokensQuiz} />
