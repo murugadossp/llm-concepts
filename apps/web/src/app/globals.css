@@ -97,6 +97,31 @@ a {
   font-size: 0.9em;
 }
 
+/* Comic Panel visual enhancements */
+.comic-dialogue p:nth-of-type(1) {
+  background: var(--surface-muted);
+  border-left: 3.5px solid var(--accent-2);
+  color: var(--ink-soft);
+  font-size: 13.5px;
+  line-height: 1.5;
+  padding: 0.625rem 0.75rem;
+  border-radius: 6px;
+  font-style: italic;
+  margin-top: 0.75rem;
+}
+
+.comic-dialogue p:nth-of-type(2) {
+  background: color-mix(in srgb, var(--accent) 7%, var(--surface-muted));
+  border-left: 3.5px solid var(--accent);
+  color: var(--ink);
+  font-size: 13.5px;
+  line-height: 1.5;
+  padding: 0.625rem 0.75rem;
+  border-radius: 6px;
+  font-weight: 500;
+  margin-top: 0.75rem;
+}
+
 @media (max-width: 640px) {
   .chapter-prose > h2 {
     margin-top: 3.75rem;
