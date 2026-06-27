@@ -75,6 +75,9 @@ export function Quiz({ title = "Check your understanding", questions = [] }: Qui
         {questions.map((q, qIndex) => {
           const answered = qIndex in answers;
           const selectedIndex = answers[qIndex];
+          const answeredCorrect = answered && selectedIndex === q.correctIndex;
+          const correctOption = q.options[q.correctIndex];
+          const resultId = `quiz-question-${qIndex + 1}-result`;
 
           return (
             <li key={q.question} className="glass p-5">
@@ -100,6 +103,7 @@ export function Quiz({ title = "Check your understanding", questions = [] }: Qui
                       type="button"
                       disabled={answered}
                       onClick={() => handleAnswer(qIndex, optIndex)}
+                      aria-describedby={answered ? resultId : undefined}
                       className="flex items-center justify-between gap-3 rounded-[var(--r-md)] border px-4 py-2.5 text-left text-sm transition disabled:cursor-default"
                       style={{
                         borderColor: showCorrect
@@ -117,23 +121,39 @@ export function Quiz({ title = "Check your understanding", questions = [] }: Qui
                     >
                       <span>{option}</span>
                       {showCorrect ? (
-                        <Check
-                          className="h-4 w-4 shrink-0"
-                          style={{ color: "var(--accent-2)" }}
-                          aria-hidden
-                        />
+                        <>
+                          <span className="sr-only">Correct answer.</span>
+                          <Check
+                            className="h-4 w-4 shrink-0"
+                            style={{ color: "var(--accent-2)" }}
+                            aria-hidden
+                          />
+                        </>
                       ) : null}
                       {showWrong ? (
-                        <X
-                          className="h-4 w-4 shrink-0"
-                          style={{ color: "var(--warn)" }}
-                          aria-hidden
-                        />
+                        <>
+                          <span className="sr-only">Your answer, incorrect.</span>
+                          <X
+                            className="h-4 w-4 shrink-0"
+                            style={{ color: "var(--warn)" }}
+                            aria-hidden
+                          />
+                        </>
                       ) : null}
                     </button>
                   );
                 })}
               </div>
+              {answered ? (
+                <p
+                  id={resultId}
+                  aria-live="polite"
+                  className="mt-3 text-xs leading-6"
+                  style={{ color: "var(--ink-mute)" }}
+                >
+                  {answeredCorrect ? "Correct." : `Not quite. Correct answer: ${correctOption}.`}
+                </p>
+              ) : null}
               {answered && q.explanation ? (
                 <p className="mt-3 text-xs leading-6" style={{ color: "var(--ink-mute)" }}>
                   {q.explanation}

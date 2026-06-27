@@ -1,6 +1,6 @@
 "use client";
 
-import { decode, encode } from "gpt-tokenizer/encoding/cl100k_base";
+import { decode, decodeGenerator, encode } from "gpt-tokenizer/encoding/cl100k_base";
 import { useMemo, useState } from "react";
 
 type TokenizerDemoProps = {
@@ -12,18 +12,36 @@ type TokenizerDemoProps = {
 // Illustrative rate only — real pricing varies by model and provider.
 const EXAMPLE_RATE_PER_MILLION_USD = 0.15;
 
-type TokenPiece = { id: number; text: string };
+type TokenPiece = { ids: number[]; text: string };
 
-function realTokenize(text: string): TokenPiece[] {
-  if (!text) return [];
+type TokenizerResult = {
+  pieces: TokenPiece[];
+  tokenCount: number;
+};
+
+function realTokenize(text: string): TokenizerResult {
+  if (!text) return { pieces: [], tokenCount: 0 };
   const ids = encode(text);
-  return ids.map((id) => ({ id, text: decode([id]) }));
+  let tokenOffset = 0;
+  const pieces = [...decodeGenerator(ids)].map((pieceText) => {
+    const pieceTokenCount = encode(pieceText).length;
+    const pieceIds = ids.slice(tokenOffset, tokenOffset + pieceTokenCount);
+    tokenOffset += pieceIds.length;
+    return { ids: pieceIds, text: pieceText };
+  });
+
+  if (tokenOffset < ids.length) {
+    const remainingIds = ids.slice(tokenOffset);
+    pieces.push({ ids: remainingIds, text: decode(remainingIds) });
+  }
+
+  return { pieces, tokenCount: ids.length };
 }
 
 export function TokenizerDemo({ defaultText = "", notes = [], tasks = [] }: TokenizerDemoProps) {
   const [text, setText] = useState(defaultText);
-  const tokens = useMemo(() => realTokenize(text), [text]);
-  const estimatedCost = (tokens.length / 1_000_000) * EXAMPLE_RATE_PER_MILLION_USD;
+  const { pieces, tokenCount } = useMemo(() => realTokenize(text), [text]);
+  const estimatedCost = (tokenCount / 1_000_000) * EXAMPLE_RATE_PER_MILLION_USD;
 
   return (
     <div className="glass my-8 p-5">
@@ -52,30 +70,34 @@ export function TokenizerDemo({ defaultText = "", notes = [], tasks = [] }: Toke
         }}
       />
       <div className="mt-4 flex flex-wrap gap-2">
-        {tokens.map(({ id, text: tokenText }, index) => (
-          <span
-            key={`${index}-${id}`}
-            className="rounded-[var(--r-sm)] px-2 py-1 font-mono text-xs"
-            style={{
-              background:
-                index % 2 === 0
-                  ? "color-mix(in srgb, var(--accent) 18%, transparent)"
-                  : "color-mix(in srgb, var(--accent-2) 18%, transparent)",
-              color: "var(--ink)",
-            }}
-            title={`ID ${id}`}
-          >
-            {tokenText.replace(/\n/g, "⏎").replace(/ /g, "·") || "∅"}
-            <span className="ml-1 opacity-60">#{id}</span>
-          </span>
-        ))}
+        {pieces.map(({ ids, text: tokenText }, index) => {
+          const idLabel = ids.join(", ");
+
+          return (
+            <span
+              key={`${index}-${idLabel}`}
+              className="rounded-[var(--r-sm)] px-2 py-1 font-mono text-xs"
+              style={{
+                background:
+                  index % 2 === 0
+                    ? "color-mix(in srgb, var(--accent) 18%, transparent)"
+                    : "color-mix(in srgb, var(--accent-2) 18%, transparent)",
+                color: "var(--ink)",
+              }}
+              title={`${ids.length === 1 ? "ID" : "IDs"} ${idLabel}`}
+            >
+              {tokenText.replace(/\n/g, "⏎").replace(/ /g, "·") || "∅"}
+              <span className="ml-1 opacity-60">#{idLabel}</span>
+            </span>
+          );
+        })}
       </div>
       <div
         className="mt-4 flex flex-wrap items-center gap-4 rounded-[var(--r-sm)] px-3 py-2 text-xs"
         style={{ background: "var(--surface-muted)", color: "var(--ink-soft)" }}
       >
         <span>
-          <strong style={{ color: "var(--ink)" }}>{tokens.length}</strong> tokens
+          <strong style={{ color: "var(--ink)" }}>{tokenCount}</strong> tokens
         </span>
         <span>
           <strong style={{ color: "var(--ink)" }}>{text.length}</strong> characters
