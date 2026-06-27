@@ -1,38 +1,15 @@
 {
-  "name": "llm-concepts",
+  "name": "llm-concepts-platform",
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbopack",
-    "dev:stable": "next dev",
-    "build": "next build --turbopack",
-    "clean": "rm -rf .next",
-    "start": "next start",
-    "lint": "biome check .",
-    "lint:fix": "biome check --write .",
-    "format": "biome format --write .",
-    "typecheck": "tsc --noEmit"
-  },
-  "dependencies": {
-    "gray-matter": "^4.0.3",
-    "lucide-react": "^0.460.0",
-    "next": "15.5.18",
-    "next-mdx-remote": "^6.0.0",
-    "react": "19.1.0",
-    "react-dom": "19.1.0",
-    "zod": "^4.4.3"
-  },
-  "devDependencies": {
-    "@biomejs/biome": "^1.9.4",
-    "@tailwindcss/postcss": "^4",
-    "@types/mdx": "^2.0.13",
-    "@types/node": "^20",
-    "@types/react": "^19",
-    "@types/react-dom": "^19",
-    "rehype-autolink-headings": "^7.1.0",
-    "rehype-slug": "^6.0.0",
-    "remark-gfm": "^4.0.1",
-    "tailwindcss": "^4",
-    "typescript": "^5"
+    "web:dev": "npm --prefix apps/web run dev",
+    "web:dev:stable": "npm --prefix apps/web run dev:stable",
+    "web:build": "npm --prefix apps/web run build",
+    "web:start": "npm --prefix apps/web run start",
+    "web:lint": "npm --prefix apps/web run lint",
+    "web:lint:fix": "npm --prefix apps/web run lint:fix",
+    "web:format": "npm --prefix apps/web run format",
+    "web:typecheck": "npm --prefix apps/web run typecheck"
   }
 }

@@ -643,7 +643,7 @@ Chapter 1 is implemented as a **module with sub-lessons** rather than one crowde
 - **Inclusive defaults:** all diagrams have text equivalents in the prose; all interactive widgets work keyboard-only; all character SVGs have `<title>` and `<desc>` accessible labels.
 - **Cross-references:** when a concept is revisited in a later chapter, link forward ("we'll meet this again in Ch7 → MCP"). When recalling an earlier concept, link back.
 - **Citations:** each chapter ends with a "Read more" list — primary sources (Anthropic docs, papers, canonical blog posts) only. URLs as plain text; no external embeds.
-- **Authoring:** one `.mdx` file per chapter or sub-lesson in `src/content/chapters/`. Frontmatter contract validated by Zod at build (see ARCHITECTURE.md §5).
+- **Authoring:** one `.mdx` file per chapter or sub-lesson in `apps/web/src/content/chapters/`. Frontmatter contract validated by Zod at build (see ARCHITECTURE.md §5).
 
 ---
 

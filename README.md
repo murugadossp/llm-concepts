@@ -1,51 +1,113 @@
-# LLM → Agent
+# LLM Concepts Platform
 
-An interactive learning site that explains how large language models work, from tokens to agents. Built with Next.js 15, React 19, and MDX.
+This repository is organized as a small monorepo for the LLM Concepts learning platform.
 
-## Prerequisites
+The current production app is the Next.js frontend in `apps/web`. A future Python backend can live beside it as `apps/api` when we add login, user progress, analytics, payments, admin APIs, or background AI workflows.
 
-- Node.js 20+
-- npm 10+
+## Folder structure
 
-## Setup
+```txt
+.
+├── apps/
+│   └── web/              # Next.js public site, lessons, dashboard, future admin UI
+├── docs/                 # Architecture, brand theme, and project documentation
+├── .agents/              # Codex/authoring skills for lesson work
+└── package.json          # Root convenience scripts for apps/web
+```
+
+Planned future structure:
+
+```txt
+.
+├── apps/
+│   ├── web/              # Next.js frontend
+│   └── api/              # Future Python backend, likely FastAPI
+├── packages/
+│   ├── theme/            # Optional shared theme package if needed later
+│   └── content/          # Optional shared content utilities if needed later
+└── docs/
+```
+
+## Apps
+
+### `apps/web`
+
+The current frontend app. It includes:
+
+- landing page
+- learning paths
+- native MDX LLM Concepts lessons
+- served standalone LangGraph and architecture library pages
+- shared light/dark brand theme
+- dashboard/about/pricing placeholders
+- future login, dashboard, and admin UI
+
+The shared theme source is:
+
+```txt
+apps/web/public/theme/lesson-theme.css
+```
+
+The brand/theme guide is:
+
+```txt
+docs/BrandTheme.md
+```
+
+### Future `apps/api`
+
+When needed, `apps/api` can hold a Python backend for:
+
+- user accounts and profile APIs
+- lesson progress
+- analytics events
+- admin data APIs
+- payments/webhooks
+- background jobs
+- AI/LLM content workflows
+
+## Common commands
+
+From the repo root:
+
+| Command | Description |
+| --- | --- |
+| `npm run web:dev` | Start the Next.js dev server |
+| `npm run web:dev:stable` | Start the Next.js dev server without Turbopack |
+| `npm run web:build` | Build the frontend |
+| `npm run web:start` | Start the production frontend server |
+| `npm run web:lint` | Run Biome checks for the frontend |
+| `npm run web:typecheck` | Run TypeScript checks for the frontend |
+
+Or work directly inside `apps/web`:
 
 ```bash
-cp .env.example .env.local
+cd apps/web
 npm install
 npm run dev
 ```
 
-Open `http://localhost:3000`.
+## Deployment note
 
-## Commands
+Frontend deployments should use:
 
-| Command | Description |
-|---|---|
-| `npm run dev` | Start dev server with Turbopack |
-| `npm run build` | Production build |
-| `npm run typecheck` | TypeScript type check |
-| `npm run lint` | Biome lint |
-| `npm run lint:fix` | Biome lint with auto-fix |
-| `npm run format` | Biome format |
+```txt
+Root directory: apps/web
+Build command: npm run build
+Start command: npm run start
+```
 
-## Authoring chapters
+If using the root package scripts in a CI system, use:
 
-Chapters live in `src/content/chapters/` as MDX files. Each file needs YAML frontmatter validated by the Zod schema in `src/lib/chapters.ts`.
+```txt
+Build command: npm run web:build
+```
 
-Naming convention: `{chapterNumber}-{lessonNumber}-{slug}.mdx` (e.g. `01-2-embeddings.mdx`). Section index pages use `{chapterNumber}-{slug}.mdx` with `lessonNumber: 0`.
+## Source-of-truth rules
 
-The chapter-writer skill in `.agents/skills/llm-concepts-chapter-writer/SKILL.md` documents the required structure, component catalog, and self-review checklist.
+- Published frontend assets live under `apps/web/public`.
+- Served standalone lesson pages live under `apps/web/public/library`.
+- Shared theme lives under `apps/web/public/theme`.
+- Project documentation lives under `docs`.
+- Do not reintroduce duplicate root standalone folders such as `langgraph/`; keep original standalone backups outside this frontend/platform repo.
 
-## Characters
-
-SVG character components live in `src/characters/`. Reference them in chapter frontmatter via the `characters` array; the chapter page renders the first listed character automatically.
-
-Current cast: `Tess` (token), `Vector` (embedding), `Atlas` (retrieval), `MCPMae` (MCP/tools).
-
-## Tech stack
-
-- **Next.js 15** — App Router, static generation
-- **next-mdx-remote** — MDX compilation with remark-gfm, rehype-slug, rehype-autolink-headings
-- **Tailwind CSS v4** — utility styling
-- **Biome** — linting and formatting (replaces ESLint/Prettier)
-- **Zod** — frontmatter validation at build time
