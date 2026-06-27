@@ -24,7 +24,11 @@ summary: >
 This chapter details the mechanics of **Function Calling**, which bridges raw text prediction and active code execution.
 
 <Callout title="Learning goal">
-  By the end of this module, you should be able to write valid JSON schemas for tools, trace the synchronous tool-execution loop, and explain how routing layers scale tool selection in production.
+  By the end of this module, you should be able to:
+  * **Design schemas**: Declare parameters, types, and descriptions in JSON schema format.
+  * **Trace the loop**: Coordinate model function-calls with backend API executors.
+  * **Execute parallel calls**: Fan out and resolve multiple queries concurrently.
+  * **Scale catalogs**: Deploy semantic routing to handle hundreds of tools without context bloat.
 </Callout>
 
 ## Comic Script: Atlas's New Toolbelt
