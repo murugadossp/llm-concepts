@@ -38,16 +38,19 @@ This chapter explores how language models leverage external memory and databases
   <ComicPanel character="Atlas" title="The May Cutoff">
     <SpeechBubble speaker="Atlas">I need to check yesterday's sales numbers... but my training cutoff was in May! I have no idea what happened yesterday.</SpeechBubble>
     **Visual action:** Atlas stands in front of a computer screen displaying a "404 Not Found" for current records, holding a calendar marked June.
+
     **Teaching point:** Models are frozen in time once trained. They cannot recall events past their cutoff date unless supplemented at runtime.
   </ComicPanel>
   <ComicPanel character="Atlas" title="Consulting the Librarian">
     <SpeechBubble speaker="Atlas">Ah! If I check this library card index, I can fetch the exact book pages containing yesterday's sales spreadsheet and read them directly!</SpeechBubble>
     **Visual action:** Atlas walks to a vector database (represented as a card catalog) and retrieves a folder labeled "June Sales Figures".
+
     **Teaching point:** Retrieval systems look up relevant information by embedding the question and searching a database of document vectors.
   </ComicPanel>
   <ComicPanel character="Atlas" title="Reading the context">
     <SpeechBubble speaker="Atlas">Now that I've pasted the sales document directly onto my desk, I can write a perfect report! no guessing required.</SpeechBubble>
     **Visual action:** Atlas sits at a desk with the retrieved sales papers, writing a detailed summary with a checkmark.
+
     **Teaching point:** RAG works by feeding the model retrieved snippets inside the prompt, preventing factual hallucinations.
   </ComicPanel>
 </ComicStrip>

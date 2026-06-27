@@ -37,16 +37,19 @@ This chapter details the mechanics of **Function Calling**, which bridges raw te
   <ComicPanel character="Atlas" title="The Structured Belt">
     <SpeechBubble speaker="Atlas">Look at my new toolbelt! Every tool here has a strict JSON-schema label on it, like send_email and search_weather!</SpeechBubble>
     **Visual action:** Atlas stands proudly wearing a toolbelt where each slot has a glowing blueprint diagram with JSON parameters.
+
     **Teaching point:** Models do not run code directly; they choose and output a schema matching the tool they want to invoke.
   </ComicPanel>
   <ComicPanel character="Atlas" title="Emitting a Call">
     <SpeechBubble speaker="Atlas">Instead of writing a letter, I'll output a JSON request calling the calendar tool with my appointment details.</SpeechBubble>
     **Visual action:** Atlas prints out a paper sheet containing: `{"tool": "calendar_create", "date": "Friday"}`.
+
     **Teaching point:** When calling tools, the model halts normal text generation and outputs a structured arguments dictionary.
   </ComicPanel>
   <ComicPanel character="Atlas" title="Executing and Feeding Back">
     <SpeechBubble speaker="Atlas">My system ran the code, got the confirmation token, and fed it back to me. Now I can tell the user the event is booked!</SpeechBubble>
     **Visual action:** Atlas receives a confirmation ticket and types the final response to the user.
+
     **Teaching point:** The orchestration loop takes the model's JSON, executes the real function in the backend, and returns the result back to the model to compile the final text.
   </ComicPanel>
 </ComicStrip>

@@ -37,11 +37,13 @@ The model does not write a whole answer in one motion. It predicts one token, th
   <ComicPanel character="Tess" title="The Greedy Customer">
     <SpeechBubble speaker="Tess">Give me the absolute most popular item, every single time!</SpeechBubble>
     **Visual action:** Tess stands at a restaurant counter. The chef offers "Pizza" (90% popular) and "Salad" (10% popular). Tess takes Pizza.
+
     **Teaching point:** Temperature = 0 is "greedy decoding" — the model always selects the highest-probability option, making outputs entirely predictable.
   </ComicPanel>
   <ComicPanel character="Tess" title="The Adventurous Foodie">
     <SpeechBubble speaker="Tess">Let's flatten the ratings. Give me a surprise recommendation!</SpeechBubble>
     **Visual action:** The chef shuffles the menu card. Now "Pizza" drops to 30%, and other items like "Spaghetti" or "Soup" rise to 25%. Tess rolls a die to choose.
+
     **Teaching point:** Higher temperature flattens the distribution, giving less likely options a chance to be chosen.
   </ComicPanel>
 </ComicStrip>
