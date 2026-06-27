@@ -44,22 +44,23 @@ Updating a model's weights to learn new facts by fine-tuning is extremely diffic
 
 ## The RAG Solution: Open-Book Exam
 
-Rather than trying to force the model to memorize the entire universe, we switch the model from a **closed-book exam** to an **open-book exam**:
+Rather than trying to force the model to memorize the entire universe, we switch the model from a **closed-book exam** to an **open-book exam** using a three-step pipeline:
 
+```mermaid
+graph TD
+  User["User Query: 'What were yesterday's sales?'"] --> Embed["Query Embedding Generator"]
+  Embed -->|Vector Coordinates| VDB[("Vector Database\n(Pgvector, Pinecone)")]
+  VDB -->|Retrieve Top K Chunks| Ranker["Re-ranker / Context Compiler"]
+  Ranker -->|Context: 'Yesterday sales: $42,000'| PromptBuilder["Augmented Prompt Assembler"]
+  User --> PromptBuilder
+  PromptBuilder -->|Augmented Prompt| LLM["Large Language Model"]
+  LLM -->|Generates Answer| Answer["User Output: 'Yesterday's sales were $42,000'"]
 ```
-[User Question]
-     ↓
-[Search DB for docs] ──> Fetch "Yesterday's sales: $42,000"
-     ↓
-[Build Augmented Prompt]:
-"Answer the user question using only this context:
----
-Context: Yesterday's sales were $42,000.
----
-Question: What were yesterday's sales?"
-     ↓
-[LLM output] ──> "Yesterday's sales were $42,000."
-```
+
+The steps inside this loop are:
+1. **Retrieve**: We embed the user's query and perform a similarity search in a vector database to find the most relevant document chunks.
+2. **Augment**: We compile the matched text chunks directly into the model's system prompt (surrounding the question with verified context).
+3. **Generate**: We pass this combined prompt to the LLM. The model reads the context using attention layers to output a factual, grounded response.
 
 By placing the raw source material directly into the **Context Window (Chapter 1.4)**, the model's self-attention heads (Chapter 1.3) can bridge the gap. Instead of guessing from pre-trained weights, it summarizes the verified facts visible in its prompt.
 

@@ -44,15 +44,46 @@ Reinforcement Learning from Human Feedback (<abbr title="Reinforcement Learning 
 2. **Train a Reward Model**: We train a separate neural network called the **Reward Model**. This model's sole job is to read a prompt and a response, and output a single score representing how much a human would like that response.
 3. **Optimize the Policy (PPO)**: We use an algorithm called **Proximal Policy Optimization (<abbr title="Proximal Policy Optimization">PPO</abbr>)** to nudge the base model's weights. If the model outputs tokens that get high scores from the Reward Model, those weights are strengthened. If it outputs tokens that get low scores, those weights are suppressed.
 
+### The Reward Hacking & KL-Divergence Barrier
+During reinforcement learning, models are prone to **reward hacking**—discovering bizarre gibberish strings that trigger high scores from the reward model without actually being helpful. 
+To prevent this, we subtract a **Kullback-Leibler (KL) divergence penalty** from the reward function:
+
+$$\text{Reward}_{\text{total}} = R(x, y) - \beta D_{\text{KL}}(P_{\theta}(y|x) \parallel P_{\text{ref}}(y|x))$$
+
+Where:
+* $R(x, y)$ is the raw reward model score.
+* $P_{\theta}(y|x)$ is the active model being updated.
+* $P_{\text{ref}}(y|x)$ is the original frozen SFT model.
+* $\beta$ is a scaling hyperparameter (typically 0.1). If the model's token distribution drifts too far from the safe SFT base, the KL divergence penalty increases, keeping the model stable.
+
 ---
 
-## Direct Preference Optimization (DPO)
+## PPO vs. DPO: Bypassing the Reward Model
 
-PPO is notoriously complex to implement. It requires hosting multiple models in GPU memory simultaneously (the active model, the reference model, the reward model, and the value critic model).
+PPO is notoriously complex to implement. It requires hosting four separate models in GPU memory simultaneously: the active policy, the frozen reference, the reward model, and the value critic model.
 
-In 2023, Stanford researchers introduced **Direct Preference Optimization (<abbr title="Direct Preference Optimization">DPO</abbr>)**:
+```mermaid
+graph TD
+  subgraph PPO Loop
+    PPO_P[Prompt] --> PPO_M[Active Policy Model] & PPO_Ref[Reference Model]
+    PPO_M --> PPO_Out[Generated Response]
+    PPO_Out --> PPO_RM[Reward Model Network]
+    PPO_RM --> PPO_S[Score Output]
+    PPO_S --> PPO_Update[PPO Update Algorithm]
+    PPO_Update -->|Updates Weights| PPO_M
+    PPO_Ref -->|KL Penalty| PPO_Update
+  end
+
+  subgraph DPO Loop
+    DPO_P[Prompt] --> DPO_Pair[Choose / Reject Pair]
+    DPO_Pair --> DPO_Loss[DPO Classification Loss]
+    DPO_Loss -->|Direct Update| DPO_Model[Active Policy Model]
+  end
+```
+
+In 2023, researchers introduced **Direct Preference Optimization (<abbr title="Direct Preference Optimization">DPO</abbr>)**:
 * DPO mathematically demonstrates that the active language model can act as its own reward model.
-* Instead of training a separate reward model and using reinforcement learning, DPO updates the model weights directly using a simple classification loss on the preference pairs (A > B).
+* Instead of training a separate reward model and using reinforcement learning, DPO updates the model weights directly using a simple binary cross-entropy classification loss on the preference pairs (chosen vs. rejected).
 * This makes alignment faster, cheaper, and far more stable.
 
 ---

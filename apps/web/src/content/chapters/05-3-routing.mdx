@@ -44,18 +44,31 @@ When you attach tools to an API request, you are appending their JSON schemas di
 
 To solve this, we implement a **Routing Layer** (also known as a dispatcher) in front of the model.
 
-```
-[User prompt] ──> (1) Router embeds prompt ──> matches top 3 tool vectors
-                                                     ↓
-[User gets answer] <── (3) App executes 3 tools <── (2) LLM chooses from only 3 schemas
+```mermaid
+graph TD
+  Prompt["User Prompt: 'Book a room for Tuesday'"] --> Embed["Router Embedding Model"]
+  Embed -->|Query Vector| Search["Vector DB Similarity Search"]
+  
+  subgraph Tool Catalog Database
+    T1["Tool Schema: room_booking"]
+    T2["Tool Schema: calendar_create"]
+    T3["Tool Schema: fetch_weather"]
+    T4["Tool Schema: database_query"]
+  end
+
+  Search -->|Nearest Neighbors| T1 & T2
+  T1 & T2 -->|Dynamic Schema Injection| APIRequest["LLM API Request Context"]
+  Prompt --> APIRequest
+  APIRequest -->|Only 2 Schemas passed| LLM["LLM (Active Model)"]
+  LLM -->|Emits ToolCall| Execute["JSON: room_booking(...)"]
 ```
 
-Instead of sending all 100 tools, we:
-* Store the tool descriptions as vectors in a vector database (similar to RAG in Chapter 4.2).
-* When a user prompt arrives, we embed it and perform a vector search to retrieve the **top 3 or 5 most relevant tools**.
-* We only declare those 3–5 schemas in the LLM API request.
+Instead of sending all 100 tools, we follow a three-step dispatch workflow:
+1. **Index descriptions**: Store all function descriptions and metadata as coordinate vectors in a vector database (similar to document chunking in Chapter 4.2).
+2. **Retrieve schemas**: When a user prompt arrives, embed it and perform a vector search to retrieve the **top 3 or 5 most similar tools** (e.g. matching "booking" matches `room_booking` and `calendar_create` but ignores database query tools).
+3. **Declare to LLM**: We only write those 3–5 schemas in the final API request, hiding the other 95+ schemas.
 
-This maintains high model accuracy, keeps latency low, and reduces API costs.
+This maintains high model accuracy, prevents token waste, keeps latency low, and reduces API costs.
 
 ---
 

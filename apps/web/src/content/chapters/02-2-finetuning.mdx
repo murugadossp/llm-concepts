@@ -59,7 +59,23 @@ To make this cheaper, researchers developed **Parameter-Efficient Fine-Tuning (<
 * **Inject Tiny Adapters**: We insert small mathematical matrices alongside the attention layers.
 * **Train Only the Adapters**: During training, we only update the weights inside these tiny matrices. 
 
-This reduces the parameter count we train by **99.9%**! A model that previously required a server cluster to fine-tune can now be customized on a single hobbyist GPU.
+```mermaid
+graph LR
+  X["Input Activation (X)"] --> BaseW["Frozen Base Weights W0 (dxk)"]
+  X --> AdapterA["Adapter Matrix A (dxr)"]
+  AdapterA --> AdapterB["Adapter Matrix B (rxk)"]
+  BaseW --> Sum["Sum: Y = X*W0 + X*A*B * (&alpha;/r)"]
+  AdapterB --> Sum
+  Sum --> Y["Output Activation (Y)"]
+```
+
+### LoRA Hyperparameters: Rank and Alpha
+When configuring LoRA, developers adjust two critical values:
+1. **Rank ($r$)**: The inner dimension of the adapter matrices (typically 8 or 16). A lower rank forces the adapter to learn only the most essential changes, keeping trainable parameter counts under $1\%$.
+2. **Alpha ($\alpha$)**: A scaling factor (typically 16 or 32) that controls the adapter's influence: $$\text{Weight} = \frac{\alpha}{r}$$.
+
+### QLoRA: Quantized LoRA
+Building on LoRA, **QLoRA** compresses the frozen base model weights into a specialized **4-bit NormalFloat (NF4)** representation. This drops the memory requirement for a 7B model from 16GB down to just ~5GB, allowing developers to fine-tune high-quality models on a single consumer-grade desktop GPU while computing adapter gradients in full 16-bit precision.
 
 <ELI5Card title="Writing sticky notes instead of rewriting the book">
   Imagine you have a massive, printed cookbook. Instead of printing a brand new version of the book to add three recipes, you write the new recipes on small sticky notes and stick them on the margins of the existing pages. The printed book is frozen (base model), and only the sticky notes (LoRA adapters) are edited.

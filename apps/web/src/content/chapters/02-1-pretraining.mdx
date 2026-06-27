@@ -39,6 +39,17 @@ If you type "Once upon a..." into a newly initialized model, it might guess "ref
 
 During pre-training, the model reads billions or trillions of tokens. For every token it reads, it attempts to guess the next token. If its guess is wrong, a mathematical feedback signal updates the weights.
 
+```mermaid
+graph TD
+  A["Input Context: 'Once upon a ___'"] --> B["Embedding & Attention Layers (Weights W)"]
+  B --> C["Model Logit Output (Probabilities)"]
+  C --> D{"Compute Cross-Entropy Loss: L = -ln(P(target))"}
+  D -->|Loss > 0 (Low confidence)| E["Backpropagation: Compute Gradients"]
+  E --> F["Adjust Weights: W_new = W - &eta; * Gradient"]
+  F --> A
+  D -->|Loss &approx; 0 (High confidence)| G["Continue to Next Token"]
+```
+
 <ELI5Card title="An autocomplete with a grade">
   Imagine you are learning a foreign language by reading books. For every word you read, you try to predict the next word before turning the page. At first, you guess randomly. But every time you turn the page and see the real word, you correct your mental rules. After reading millions of pages, your guesses become highly accurate.
 </ELI5Card>
@@ -63,18 +74,24 @@ Where:
 
 ---
 
-## Compute Scaling Laws
+## Compute Scaling Laws & Training Scale
 
-Building a model is a balancing act. In 2022, researchers at DeepMind published the **Chinchilla scaling laws**, which established that for optimal performance, a model's parameter count and its training data volume must scale in equal proportions:
-* For every doubling of the compute budget (FLOPs), you should double the number of parameters $N$ and the number of training tokens $D$ equally.
-* Historically, models were "over-parameterized" (too large for the amount of data they read). Modern engineering focuses on training smaller models (e.g. 8 Billion parameters) for *longer* periods on more data, making them cheaper to run in production.
+Pre-training requires astronomical amounts of data and compute. For example, training a state-of-the-art model like **Llama 3 70B** requires:
+* **Data**: Over **15 Trillion tokens** (a dataset of text 7.5 times larger than Llama 2).
+* **Compute**: Roughly **$2.4 \times 10^{25}$ FLOPs** (floating-point operations) of calculations.
+* **Hardware**: Running **24,000 H100 GPUs** continuously for several months, consuming megawatts of electricity and costing millions of dollars.
+
+### The Chinchilla Scaling Laws
+In 2022, researchers at DeepMind published the **Chinchilla scaling laws**, which established how to distribute a compute budget optimally between parameters ($N$) and training data ($D$):
+* **Compute-Optimal Ratio**: To get the maximum model capability for a given FLOP budget, the parameter count $N$ and the number of training tokens $D$ should be scaled in a $1:1$ proportion. This mathematically translates to training with roughly **20 tokens per parameter** (e.g. an 8B parameter model is compute-optimal at 160B tokens).
+* **Overtraining in Practice**: While 20 tokens per parameter is optimal *during training*, it is often better to train smaller models for *longer* on more data (e.g. Llama 3 8B was trained on 15T tokens—which is over **1,800 tokens per parameter**!). Even though this is "compute-inefficient" during training, it produces a highly compressed 8B model that is incredibly cheap and fast to query millions of times in production.
 
 <CompareTable
   columns={["Metric", "What it represents", "Engineering tradeoff"]}
   rows={[
-    ["Parameters (N)", "The count of adjustable weights inside the model.", "More parameters mean more capacity for facts, but require more GPU memory."],
-    ["Dataset Size (D)", "The number of tokens the model reads during training.", "More tokens build stronger intuition, but increase pre-training time."],
-    ["Compute Budget (C)", "Total floating-point calculations performed (FLOPs).", "Sets the upper bound on how large a model can be trained for a given budget."]
+    ["Parameters (N)", "The count of adjustable weights inside the model (e.g. 8B, 70B).", "More parameters increase reasoning capacity, but require significantly more GPU memory to load during inference."],
+    ["Dataset Size (D)", "The volume of tokens the model reads (e.g. 15 Trillion tokens).", "More tokens yield stronger intuition and lower inference costs, but require longer pre-training runs."],
+    ["Compute Budget (C)", "Total floating-point calculations performed (FLOPs).", "Sets the upper bound on how large a model can be trained. Governed by GPU count, time, and electricity."]
   ]}
 />
 

@@ -40,6 +40,17 @@ To feed documents into an LLM context, we cannot paste a 500-page PDF manual—i
 2. **Semantic Chunking**: Analyzes the text and splits it only when a significant shift in meaning occurs (e.g. at section headers or paragraph breaks).
 3. **Parent-Child Chunking**: Splits documents into tiny child chunks (e.g. 100 tokens) for vector search, but links them to larger parent chunks (e.g. 1000 tokens) containing the full surrounding context. When a child matches, we feed the parent to the LLM.
 
+### Sliding Window Chunking Layout
+To preserve context boundaries, fixed-size chunking uses an **overlap** of tokens, acting as a sliding window:
+
+```
+Document:  [ Token 1  Token 2  Token 3  Token 4  Token 5  Token 6  Token 7  Token 8 ]
+
+Chunk 1:   [ Token 1  Token 2  Token 3  Token 4  Token 5 ]  (Size: 5 tokens)
+                                 └──── Overlap: 2 tokens ────┐
+Chunk 2:                        [ Token 4  Token 5  Token 6  Token 7  Token 8 ] (Size: 5 tokens)
+```
+
 <Callout variant="tip" title="Bad chunking = bad RAG">
   If you split the phrase `"Do not press the red button. It will cause a meltdown."` into two chunks:
   * Chunk 1: `"Do not press the red button."`
@@ -54,9 +65,23 @@ To feed documents into an LLM context, we cannot paste a 500-page PDF manual—i
 
 Once text is chunked, each chunk is passed through an **Embedding Model** (Chapter 1.2) to generate a high-dimensional vector. These vectors are stored in a **Vector Database** (like Pgvector, Pinecone, Chroma, or Qdrant).
 
-Unlike traditional databases that look up indexes by ID or exact text matching, vector databases index coordinates:
-* **HNSW (Hierarchical Navigable Small World)**: Creates a multi-layered graph of vector points, letting the database skip unrelated clusters and navigate quickly to the closest vectors.
-* **IVF (Inverted File Index)**: Groups vectors into clusters and searches only inside the most similar clusters, trading a tiny bit of recall accuracy for massive speedups.
+Unlike traditional databases that look up indexes by ID or exact text matching, vector databases index coordinates. Because performing a brute-force linear search ($O(N)$ comparisons) across millions of high-dimensional vectors is too slow, databases use specialized indexing structures:
+
+```mermaid
+graph TD
+  subgraph HNSW Layered Graph
+    L2["Layer 2 (Express Highway: Sparse Nodes & Long Links)"] --> L1["Layer 1 (Local Roads: Medium Density)"]
+    L1 --> L0["Layer 0 (Base Layer: All Vector Coordinates)"]
+  end
+```
+
+* **HNSW (Hierarchical Navigable Small World)**:
+  * Creates a multi-layered graph resembling a skip-list.
+  * The top layers contain few vectors with wide connections for quick routing across coordinate space.
+  * The search navigates down through the layers, landing on the bottom layer containing all vectors to locate the exact nearest neighbors in $O(\log N)$ logarithmic time.
+* **IVF (Inverted File Index)**:
+  * Partitions the high-dimensional space into clusters using $K$-Means clustering.
+  * Each incoming query vector is compared only against the centroids of the nearest clusters (controlled by the $n_{\text{probe}}$ hyperparameter), skipping the rest of the database entirely. This provides sub-millisecond search speeds at the cost of a tiny fraction of recall accuracy.
 
 ---
 

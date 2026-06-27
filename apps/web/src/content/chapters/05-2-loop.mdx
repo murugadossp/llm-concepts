@@ -36,16 +36,84 @@ A crucial concept to grasp is that **the model does not run the tool code**. The
 
 Every tool invocation follows a circular flow coordinated by your application code:
 
-```
-[User prompt] ──> (1) LLM decides to call tool ──> returns JSON arguments
-                                                         │
-[User gets answer] <── (4) LLM reads result <── (3) App sends back result <── (2) App runs real function code
+```mermaid
+sequenceDiagram
+  autonumber
+  actor User
+  participant App as App / Orchestrator
+  participant LLM as LLM (Text Predictor)
+  participant API as Local Function / External API
+
+  User->>App: "What is the weather in Boston?"
+  App->>LLM: Send Prompt + [Tool Schema Definitions]
+  Note over LLM: Decides tool is needed.<br/>Halts plain text output.
+  LLM-->>App: Return JSON request: call_123 (fetch_weather, city: "Boston")
+  App->>API: Execute local function fetch_weather("Boston")
+  API-->>App: Return function raw output string: "72F, Sunny"
+  App->>LLM: Send original prompt + call_123 request + call_123 result ("72F, Sunny")
+  Note over LLM: Compiles final conversational answer<br/>using the retrieved results.
+  LLM-->>App: Return final response: "The weather in Boston is 72°F and sunny."
+  App-->>User: "The weather in Boston is 72°F and sunny."
 ```
 
-1. **Model Decides**: The model reads the prompt and schemas, halts normal text output, and returns a specific JSON object detailing the function name and arguments (e.g. `{"name": "fetch_weather", "arguments": {"city": "Boston"}}`).
-2. **App Executes**: Your application code intercept this response, parses the JSON, and runs the real function in your codebase (e.g., calling an external weather API).
-3. **App Feeds Back**: Your code sends a new request back to the model, appending a message with the **`tool` role** containing the raw text response of the function (e.g., `{"temp": "72F", "rain": "0%"}`).
-4. **Model Summarizes**: The model reads this tool result, updates its context representation, and returns a natural language response summarizing the findings: `"The weather in Boston is currently 72°F and sunny."`
+### TypeScript Implementation of the Loop
+Here is a complete code pattern illustrating how your application code intercepts tool calls, executes the local code, and feeds the results back:
+
+```typescript
+// 1. Define the actual local function to execute
+async function fetchWeather(city: string): Promise<string> {
+  const response = await fetch(`https://api.weather.com/v1/forecast?city=${city}`);
+  const data = await response.json();
+  return JSON.stringify(data);
+}
+
+// 2. The orchestration loop managing the LLM state
+async function runChatSession(userMessage: string) {
+  const messages = [{ role: "user", content: userMessage }];
+
+  // Step 1: Send query and tool schema list to the model
+  const firstResponse = await openai.chat.completions.create({
+    model: "gpt-4o",
+    messages: messages,
+    tools: [weatherToolSchemaDefinition]
+  });
+
+  const choice = firstResponse.choices[0].message;
+  
+  // Check if the model wants to call a tool
+  if (choice.tool_calls) {
+    // Append the model's tool call request to the message history
+    messages.push(choice);
+
+    for (const toolCall of choice.tool_calls) {
+      if (toolCall.function.name === "fetch_weather") {
+        const args = JSON.parse(toolCall.function.arguments);
+        
+        // Step 2: Run the real API code on your machine
+        const apiResult = await fetchWeather(args.city);
+
+        // Step 3: Append the tool execution result with the "tool" role
+        messages.push({
+          role: "tool",
+          tool_call_id: toolCall.id,
+          name: toolCall.function.name,
+          content: apiResult
+        });
+      }
+    }
+
+    // Step 4: Send the updated history back to the model for the final response
+    const finalResponse = await openai.chat.completions.create({
+      model: "gpt-4o",
+      messages: messages
+    });
+
+    return finalResponse.choices[0].message.content;
+  }
+
+  return choice.content;
+}
+```
 
 ---
 
