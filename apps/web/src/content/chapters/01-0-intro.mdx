@@ -67,13 +67,25 @@ Thus, next-word prediction naturally forces the model to learn logic, grammar, r
   Your phone's autocomplete only looks at the last 1 or 2 words. A modern LLM can look at hundreds of pages of context (the context window) to decide the next word. However, it still operates one step at a time; it has no hidden planner drafting future sentences in parallel.
 </Callout>
 
-## The Machinery: Training Data, Parameters, and loops
+## The Machinery: Training Data, Parameters, and Loops
 
 To understand how an LLM makes these predictions, we need to introduce three key terms:
 
-1. **Training Data (The Internet Library)**: Before a model can predict the next word, it needs to study patterns. Models are fed billions of pages of text—novels, code repositories, websites, and articles. By scanning these documents, it learns that "bacon and" is usually followed by "eggs", and that "E = mc" is followed by "²".
+1. **Training Data (The Internet Library)**: Before a model can predict the next word, it needs to study patterns. Models are fed billions of pages of text—novels, code repositories, websites, and articles. By scanning these documents, it learns that `"bacon and"` is usually followed by `"eggs"`, and that `"E = mc"` is followed by `"²"`.
 2. **Parameters (The Radio Dials)**: An LLM is not a database of rules; it is a giant mathematical formula. Inside this formula are billions of variables called parameters (or weights). During training, these parameters are fine-tuned. 
-3. **Autoregressive Generation (The Loop)**: The model outputs exactly *one* token at a time. Once a token is chosen, it is appended to the end of the prompt, and the entire sequence is fed back into the model to predict the *next* token. This process loops repeatedly until a stop command is met.
+3. **Autoregressive Generation (The Loop)**: The model outputs exactly *one* token at a time. Once a token is chosen, it is appended to the end of the prompt, and the entire sequence is fed back into the model to predict the *next* token. This process loops repeatedly.
+
+### The Autoregressive Generation Loop
+This diagram illustrates how the model iteratively predicts and builds its own output, token by token:
+
+```mermaid
+graph TD
+  Prompt["Input Prompt: 'The sky is'"] --> LLM["LLM (Text Predictor)"]
+  LLM -->|Outputs Probability Pool| Pool["'blue' (85%), 'grey' (10%), 'cloudy' (3%)"]
+  Pool -->|Select 'blue'| Select["Chosen Token: 'blue'"]
+  Select -->|Append to Prompt| Append["New Sequence: 'The sky is blue'"]
+  Append -->|Loop Back as Input| LLM
+```
 
 <ELI5Card title="Parameters are like dials on a radio">
   Imagine a giant radio with 100 billion dials. If you turn them randomly, all you hear is static. But if you spend weeks tuning them to match the broadcasting signal, you suddenly get crystal-clear music. In an LLM, training is the process of adjusting those billions of dials so the math outputs coherent language instead of random words.
