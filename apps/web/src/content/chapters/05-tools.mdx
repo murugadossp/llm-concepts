@@ -1,0 +1,75 @@
+---
+slug: "05-tools"
+title: "Tools: How LLMs Call APIs and Run Code"
+navTitle: "Tools"
+chapterNumber: 5
+lessonNumber: 0
+section: "core"
+difficulty: "intermediate"
+estimatedMinutes: 3
+tier: "free"
+prereqs: ["01-foundations", "02-training", "04-rag"]
+characters: ["Atlas"]
+ogImageVariant: "tools"
+suggestedPrompts:
+  - "What is function calling and how does an LLM trigger it?"
+  - "How do tool schemas and parameter descriptions influence model output?"
+  - "What are parallel tool calls and why are they useful?"
+updatedAt: "2026-06-27"
+authors: ["murugadoss"]
+summary: >
+  How a text generator learns to act by emitting JSON-structured schemas to trigger external APIs, read databases, or run code.
+---
+
+This chapter details the mechanics of **Function Calling**, which bridges raw text prediction and active code execution.
+
+<Callout title="Learning goal">
+  By the end of this module, you should be able to write valid JSON schemas for tools, trace the synchronous tool-execution loop, and explain how routing layers scale tool selection in production.
+</Callout>
+
+## Comic Script: Atlas's New Toolbelt
+
+<ComicStrip>
+  <ComicPanel character="Atlas" title="The Structured Belt">
+    <SpeechBubble speaker="Atlas">Look at my new toolbelt! Every tool here has a strict JSON-schema label on it, like send_email and search_weather!</SpeechBubble>
+    **Visual action:** Atlas stands proudly wearing a toolbelt where each slot has a glowing blueprint diagram with JSON parameters.
+    **Teaching point:** Models do not run code directly; they choose and output a schema matching the tool they want to invoke.
+  </ComicPanel>
+  <ComicPanel character="Atlas" title="Emitting a Call">
+    <SpeechBubble speaker="Atlas">Instead of writing a letter, I'll output a JSON request calling the calendar tool with my appointment details.</SpeechBubble>
+    **Visual action:** Atlas prints out a paper sheet containing: `{"tool": "calendar_create", "date": "Friday"}`.
+    **Teaching point:** When calling tools, the model halts normal text generation and outputs a structured arguments dictionary.
+  </ComicPanel>
+  <ComicPanel character="Atlas" title="Executing and Feeding Back">
+    <SpeechBubble speaker="Atlas">My system ran the code, got the confirmation token, and fed it back to me. Now I can tell the user the event is booked!</SpeechBubble>
+    **Visual action:** Atlas receives a confirmation ticket and types the final response to the user.
+    **Teaching point:** The orchestration loop takes the model's JSON, executes the real function in the backend, and returns the result back to the model to compile the final text.
+  </ComicPanel>
+</ComicStrip>
+
+## Core Roadmap
+
+To build system integrations with function calling, we divide the topic into three lessons:
+
+1. **Schemas & Descriptions**: Designing parameter constraints and convincing descriptions.
+2. **The Execution Loop**: Tracing how code executes and fanning out parallel calls.
+3. **Routing & Scaling**: Scaling tool selection and managing crowded catalogs.
+
+<RememberCard>
+  - A tool is a function definition declared to the LLM.
+  - Models never call APIs directly; they emit a structured request to your server.
+  - Good tool descriptions act as documentation the model reads.
+</RememberCard>
+
+## Start the Lessons
+
+0. **Tools Overview** (This page)
+1. **Schemas & Descriptions**: Structuring parameters.
+2. **The Execution Loop**: Running client-side API requests.
+3. **Routing & Scaling**: Structuring large-scale tool catalogs.
+
+---
+
+## Where This Shows Up Later
+
+Function calling is the primary mechanism of **Model Context Protocol (MCP) (Chapter 7)**, where servers publish tools for clients to run. It also powers the autonomous loops of **The Agent Era (Chapter 6)**.

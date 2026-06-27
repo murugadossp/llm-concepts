@@ -1,0 +1,86 @@
+---
+slug: "02-3-rlhf"
+title: "RLHF & Alignment: Aligning Outputs with Human Values"
+navTitle: "RLHF"
+chapterNumber: 2
+lessonNumber: 3
+parentSlug: "02-training"
+section: "core"
+difficulty: "advanced"
+estimatedMinutes: 10
+tier: "free"
+prereqs: ["02-2-finetuning"]
+characters: ["Tess"]
+ogImageVariant: "training"
+suggestedPrompts:
+  - "How does a reward model score responses?"
+  - "What is the difference between PPO and DPO?"
+  - "What is Constitutional AI?"
+updatedAt: "2026-06-27"
+authors: ["murugadoss"]
+summary: >
+  Aligning LLM outputs using human preference feedback, reward models, and direct optimization policies.
+---
+
+Even after SFT, a model can still produce harmful, toxic, or factually incorrect statements. To prevent this, models pass through **alignment** using human preference feedback.
+
+## TL;DR
+
+- RLHF guides models toward responses that humans prefer.
+- DPO bypasses training a separate reward model by mathematically optimizing directly on preferences.
+- Constitutional AI uses AI feedback (RLAIF) to align models against a set of written principles.
+
+---
+
+## The Traditional RLHF Pipeline
+
+Reinforcement Learning from Human Feedback (<abbr title="Reinforcement Learning from Human Feedback">RLHF</abbr>) is a three-stage loop:
+
+```
+[Prompt] ──> Generate Pair (A, B) ──> Human Ranks (A > B) ──> Train Reward Model ──> Update Policy (PPO)
+```
+
+1. **Preference Data Collection**: The model generates two responses (A and B) for a given prompt. Human labelers review them and mark which one is better (e.g. A is more polite, accurate, or safe than B).
+2. **Train a Reward Model**: We train a separate neural network called the **Reward Model**. This model's sole job is to read a prompt and a response, and output a single score representing how much a human would like that response.
+3. **Optimize the Policy (PPO)**: We use an algorithm called **Proximal Policy Optimization (<abbr title="Proximal Policy Optimization">PPO</abbr>)** to nudge the base model's weights. If the model outputs tokens that get high scores from the Reward Model, those weights are strengthened. If it outputs tokens that get low scores, those weights are suppressed.
+
+---
+
+## Direct Preference Optimization (DPO)
+
+PPO is notoriously complex to implement. It requires hosting multiple models in GPU memory simultaneously (the active model, the reference model, the reward model, and the value critic model).
+
+In 2023, Stanford researchers introduced **Direct Preference Optimization (<abbr title="Direct Preference Optimization">DPO</abbr>)**:
+* DPO mathematically demonstrates that the active language model can act as its own reward model.
+* Instead of training a separate reward model and using reinforcement learning, DPO updates the model weights directly using a simple classification loss on the preference pairs (A > B).
+* This makes alignment faster, cheaper, and far more stable.
+
+---
+
+## Constitutional AI: RLAIF
+
+As models grow, collecting millions of human annotations becomes a massive bottleneck. Anthropic introduced **Constitutional AI (or Reinforcement Learning from AI Feedback - RLAIF)**:
+* **The Constitution**: Developers write a list of principles (e.g., "Do not support illegal acts", "Be supportive but direct").
+* **Self-Critique**: The model generates an answer, reads the constitution, critiques its own draft, and writes an updated version.
+* **AI Preferences**: Another model acts as the judge, ranking response pairs based on the constitution. This preference data is then used to train the final model.
+
+<ELI5Card title="An editor with a code of conduct">
+  Instead of asking a crowd of people to vote on every single sentence a writer writes, the publisher gives the writer a written handbook (the Constitution). The writer checks their own work against the handbook before publishing.
+</ELI5Card>
+
+---
+
+## Remember
+
+<RememberCard>
+  - Alignment ensures models are helpful, harmless, and honest.
+  - RLHF uses human preference pairs to train a scoring reward model.
+  - DPO simplifies this by optimizing directly on preference pairs without a separate reward model.
+  - Constitutional AI replaces human annotators with structured rules and AI feedback.
+</RememberCard>
+
+---
+
+## Read More
+* [Direct Preference Optimization: Your Language Model is Secretly a Reward Model (Rafailov et al., 2023)](https://arxiv.org/abs/2305.18290)
+* [Constitutional AI: Harmlessness from AI Feedback (Bai et al., 2022)](https://arxiv.org/abs/2212.08073)

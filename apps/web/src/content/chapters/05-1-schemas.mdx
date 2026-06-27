@@ -1,0 +1,105 @@
+---
+slug: "05-1-schemas"
+title: "Tool Schemas & Descriptions: Communicating Constraints"
+navTitle: "Schemas & Descriptions"
+chapterNumber: 5
+lessonNumber: 1
+parentSlug: "05-tools"
+section: "core"
+difficulty: "intermediate"
+estimatedMinutes: 8
+tier: "free"
+prereqs: ["05-tools"]
+characters: ["Atlas"]
+ogImageVariant: "tools"
+suggestedPrompts:
+  - "How does a model read a JSON schema?"
+  - "Why do tool descriptions matter more than tool names?"
+  - "What is tool_choice: required?"
+updatedAt: "2026-06-27"
+authors: ["murugadoss"]
+summary: >
+  How to declare functions to an LLM using JSON schemas, parameter constraints, and persuasive documentation.
+---
+
+To let a model know it has tools available, we must pass a list of **Tool Definitions** along with our prompt in the API request. 
+
+## TL;DR
+
+- Tool definitions are written as JSON schemas.
+- The model reads descriptions to decide *when* and *how* to use a tool.
+- Setting forced tool choices overrides the model's autonomy.
+
+---
+
+## Designing a Tool Schema
+
+A tool definition contains three key parts:
+1. **Name**: The identifier of the function (e.g., `fetch_weather`).
+2. **Description**: Detailed guidance telling the model what the function does and when to select it.
+3. **Parameters**: A JSON schema defining the required variables, types (e.g. string, number, array), and constraints.
+
+Here is an example schema for a search tool:
+
+```json
+{
+  "name": "search_database",
+  "description": "Searches the client records database. Use this whenever the user asks about account status, billing, or sales numbers.",
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "query": {
+        "type": "string",
+        "description": "The search keywords (e.g. client name or invoice number)."
+      },
+      "limit": {
+        "type": "integer",
+        "description": "Maximum number of records to return. Default is 5.",
+        "default": 5
+      }
+    },
+    "required": ["query"]
+  }
+}
+```
+
+---
+
+## Descriptions Matter More Than Names
+
+A common mistake is writing vague descriptions:
+
+* **Vague**: `"Calls the search weather API."`
+* **Clear & Persuasive**: `"Retrieves current weather forecasts for a specific city. Use this whenever the user asks about the forecast, temperature, rain, or outdoor planning. Input city must be spelled fully in English (e.g. 'Paris', not 'par')."`
+
+Because the model chooses tools by reading the schema, a poor description will cause the model to miss when it should call the tool, or populate parameters with incorrect formatting, leading to API crashes.
+
+---
+
+## Controlling Autonomy: Tool Choice
+
+By default, the model is autonomous: it reads the prompt and decides whether to write a standard prose answer, or emit a tool call. You can override this behavior using the `tool_choice` parameter in your API request:
+
+* **`tool_choice: "none"`**: The model is forbidden from using tools; it must respond with plain text.
+* **`tool_choice: "auto"`**: The model decides autonomously (default).
+* **`tool_choice: {"type": "function", "function": {"name": "fetch_weather"}}` (Forced)**: The model is forced to call that specific tool immediately, regardless of what the user asked.
+
+<ELI5Card title="An option menu vs a direct order">
+  * **Auto** is like showing a menu of toppings to a customer. They can choose to add sprinkles, or get plain ice cream.
+  * **Forced** is like handing the customer a bowl of ice cream and dumping sprinkles on it immediately, without asking.
+</ELI5Card>
+
+---
+
+## Remember
+
+<RememberCard>
+  - Models do not explore your code; they select tools strictly by reading the schemas you pass in.
+  - Parameter descriptions should contain formatting examples to prevent invalid values.
+  - Forced tool choice is useful when chaining specific steps in a multi-stage background process.
+</RememberCard>
+
+---
+
+## Read More
+* [JSON Schema Standard Specification](https://json-schema.org/)

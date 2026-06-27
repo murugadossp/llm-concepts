@@ -1,0 +1,95 @@
+---
+slug: "02-1-pretraining"
+title: "Pre-training: Next-Token Prediction at Scale"
+navTitle: "Pre-training"
+chapterNumber: 2
+lessonNumber: 1
+parentSlug: "02-training"
+section: "core"
+difficulty: "intermediate"
+estimatedMinutes: 8
+tier: "free"
+prereqs: ["02-training"]
+characters: ["Tess"]
+ogImageVariant: "training"
+suggestedPrompts:
+  - "How does the loss function grade next-token predictions?"
+  - "What are compute scaling laws?"
+  - "Why does pre-training require so much compute?"
+updatedAt: "2026-06-27"
+authors: ["murugadoss"]
+summary: >
+  How models learn baseline syntax, grammar, facts, and reasoning shortcuts by reading trillions of tokens.
+---
+
+Pre-training is the first and most expensive stage of building a large language model. This is where the model reads massive amounts of text to learn patterns, facts, and logic.
+
+## TL;DR
+
+- Pre-training utilizes self-supervised learning on massive text databases.
+- The loss function evaluates predictions, adjusting internal weights via backpropagation.
+- Compute scaling laws state that model capability depends on compute budget, parameters, and tokens.
+
+---
+
+## The Birth of Weights: Initialization
+
+Before training starts, a model is an empty architecture—a network of equations with empty parameters. All of its billions of parameters (weights) are randomized, usually using Gaussian distributions.
+If you type "Once upon a..." into a newly initialized model, it might guess "refrigerator" or "banana". It has no concept of language or facts.
+
+During pre-training, the model reads billions or trillions of tokens. For every token it reads, it attempts to guess the next token. If its guess is wrong, a mathematical feedback signal updates the weights.
+
+<ELI5Card title="An autocomplete with a grade">
+  Imagine you are learning a foreign language by reading books. For every word you read, you try to predict the next word before turning the page. At first, you guess randomly. But every time you turn the page and see the real word, you correct your mental rules. After reading millions of pages, your guesses become highly accurate.
+</ELI5Card>
+
+---
+
+## The Math: Cross-Entropy Loss
+
+To grade predictions, the model uses a formula called **Cross-Entropy Loss**. 
+
+Suppose the model outputs a probability distribution over its vocabulary for the next word. The true target word has an index $y$, and the model predicted a probability $P(x_y)$ for that word. The loss $L$ for this single step is calculated as:
+
+\[L = -\ln(P(x_y))\]
+
+Where:
+* $P(x_y)$ is the probability assigned to the correct word.
+* $\ln$ is the natural logarithm.
+
+### How the Loss Guides Learning:
+* **If $P(x_y) \approx 1.0$ (High confidence in correct answer)**: The loss is close to $0$. The weights are left alone because the model predicted correctly.
+* **If $P(x_y) \to 0$ (Low confidence in correct answer)**: The loss approaches infinity. A massive correction signal is calculated and sent backward through the network (a process called **backpropagation**). This mathematically adjusts the weights so that next time, the correct token gets a higher probability score.
+
+---
+
+## Compute Scaling Laws
+
+Building a model is a balancing act. In 2022, researchers at DeepMind published the **Chinchilla scaling laws**, which established that for optimal performance, a model's parameter count and its training data volume must scale in equal proportions:
+* For every doubling of the compute budget (FLOPs), you should double the number of parameters $N$ and the number of training tokens $D$ equally.
+* Historically, models were "over-parameterized" (too large for the amount of data they read). Modern engineering focuses on training smaller models (e.g. 8 Billion parameters) for *longer* periods on more data, making them cheaper to run in production.
+
+<CompareTable
+  columns={["Metric", "What it represents", "Engineering tradeoff"]}
+  rows={[
+    ["Parameters (N)", "The count of adjustable weights inside the model.", "More parameters mean more capacity for facts, but require more GPU memory."],
+    ["Dataset Size (D)", "The number of tokens the model reads during training.", "More tokens build stronger intuition, but increase pre-training time."],
+    ["Compute Budget (C)", "Total floating-point calculations performed (FLOPs).", "Sets the upper bound on how large a model can be trained for a given budget."]
+  ]}
+/>
+
+---
+
+## Remember
+
+<RememberCard>
+  - Pre-training uses raw text to learn statistical links between tokens.
+  - Weights start random and are adjusted by minimizing cross-entropy loss.
+  - Compute scaling laws dictate that data size must grow alongside parameter size.
+</RememberCard>
+
+---
+
+## Read More
+* [Chinchilla Scaling Laws Paper (Hoffmann et al., 2022)](https://arxiv.org/abs/2203.15556)
+* [Attention Is All You Need Paper (Vaswani et al., 2017)](https://arxiv.org/abs/1706.03762)

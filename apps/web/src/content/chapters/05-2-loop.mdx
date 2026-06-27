@@ -1,0 +1,76 @@
+---
+slug: "05-2-loop"
+title: "The Execution Loop: Running Client-Side APIs"
+navTitle: "The Execution Loop"
+chapterNumber: 5
+lessonNumber: 2
+parentSlug: "05-tools"
+section: "core"
+difficulty: "intermediate"
+estimatedMinutes: 8
+tier: "free"
+prereqs: ["05-1-schemas"]
+characters: ["Atlas"]
+ogImageVariant: "tools"
+suggestedPrompts:
+  - "How does the tool execution loop handle inputs and outputs?"
+  - "What are parallel tool calls and how do they speed up tasks?"
+  - "Why doesn't the model execute API code itself?"
+updatedAt: "2026-06-27"
+authors: ["murugadoss"]
+summary: >
+  How the orchestration harness coordinates model requests, runs real code, and returns outputs in a circular flow.
+---
+
+A crucial concept to grasp is that **the model does not run the tool code**. The language model is a text generator. The actual execution of the code occurs in your application code (the client or server harness).
+
+## TL;DR
+
+- The orchestration loop coordinates LLM outputs with backend execution code.
+- Parallel tool calling speeds up execution by fanning out independent lookups.
+- The model must receive the tool's result in a specific message role to construct its final answer.
+
+---
+
+## The 4-Step Tool Loop
+
+Every tool invocation follows a circular flow coordinated by your application code:
+
+```
+[User prompt] ──> (1) LLM decides to call tool ──> returns JSON arguments
+                                                         │
+[User gets answer] <── (4) LLM reads result <── (3) App sends back result <── (2) App runs real function code
+```
+
+1. **Model Decides**: The model reads the prompt and schemas, halts normal text output, and returns a specific JSON object detailing the function name and arguments (e.g. `{"name": "fetch_weather", "arguments": {"city": "Boston"}}`).
+2. **App Executes**: Your application code intercept this response, parses the JSON, and runs the real function in your codebase (e.g., calling an external weather API).
+3. **App Feeds Back**: Your code sends a new request back to the model, appending a message with the **`tool` role** containing the raw text response of the function (e.g., `{"temp": "72F", "rain": "0%"}`).
+4. **Model Summarizes**: The model reads this tool result, updates its context representation, and returns a natural language response summarizing the findings: `"The weather in Boston is currently 72°F and sunny."`
+
+---
+
+## Parallel Tool Calling: Scatter-Gather
+
+Modern APIs allow **Parallel Tool Calling**. If a user asks: `"What is the weather in Paris, London, and Tokyo?"`:
+* **Scatter**: The model emits three tool calls in a single response, each with a unique ID.
+* **Execute**: Your application harness spawns three parallel HTTP requests to fetch the weather for all three cities concurrently, rather than waiting for them sequentially.
+* **Gather**: The harness gathers all three results and sends them back to the model as three separate messages. The model reads all of them at once and writes the final summary.
+
+<ELI5Card title="A chef ordering from prep cooks">
+  The master chef does not chop carrots or fetch meat from the fridge. They write three order slips (JSON calls) and shout them to three prep cooks. Once the prep cooks bring back the chopped ingredients (tool results), the chef cooks the final meal.
+</ELI5Card>
+
+---
+
+## Remember
+
+<RememberCard>
+  - You must write the actual execution logic (fetching database rows, calling third-party services) in your code; the model only outputs the instructions.
+  - Intercepting and sanitizing tool parameters in your harness is critical for security.
+  - Parallel calls prevent latency bottlenecks when retrieving multi-source inputs.
+</RememberCard>
+
+---
+
+## Read More
+* [Function Calling Guide - OpenAI Documentation](https://platform.openai.com/docs/guides/function-calling)

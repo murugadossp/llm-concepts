@@ -1,0 +1,102 @@
+---
+slug: "04-4-memory"
+title: "Agent Memory: Short-Term, Long-Term, and Episodic"
+navTitle: "Agent Memory"
+chapterNumber: 4
+lessonNumber: 4
+parentSlug: "04-rag"
+section: "core"
+difficulty: "intermediate"
+estimatedMinutes: 8
+tier: "free"
+prereqs: ["04-3-search"]
+characters: ["Atlas"]
+ogImageVariant: "rag"
+suggestedPrompts:
+  - "What is the difference between context window history and external DB memory?"
+  - "How does episodic memory work for agents?"
+  - "When does memory drift or truncation occur?"
+updatedAt: "2026-06-27"
+authors: ["murugadoss"]
+summary: >
+  How agents organize prompt transcripts, databases, and summaries to retain knowledge across sessions.
+---
+
+When users chat with a virtual assistant or let an autonomous agent perform a task, they expect the system to remember previous interactions. How does an agent retain memory?
+
+## TL;DR
+
+- Short-term memory is held inside the context window as conversation history.
+- Long-term memory is persisted in databases, retrieved semantically as needed.
+- Episodic memory tracks user preferences and session highlights.
+
+---
+
+## The Memory Spectrum
+
+Because large language models are stateless (they do not remember previous API calls), developers must explicitly manage the model's memory in code:
+
+1. **Short-Term Memory (Context Window)**: The exact transcripts of the last few turns of conversation. This is fast and highly detailed, but gets erased as soon as the session ends or when the prompt window overflows (Chapter 1.4).
+2. **Episodic Memory (Session logs)**: The key events or decisions that occurred during a specific task sequence (e.g. "User approved flight booking at 9:00 AM").
+3. **Long-Term Memory (External Database)**: Persisted data stored outside the LLM. This includes user profiles, permanent database records, or vector chunks.
+
+---
+
+## Memory Truncation & Summarization
+
+As conversations grow, developers cannot afford to pass 100 pages of history. We manage this using memory strategies:
+* **Sliding Window**: Keep only the last $N$ messages (e.g. last 10 messages) and discard older turns. Simple, but the agent completely forgets what was discussed early in the call.
+* **Summary Memory**: Pass the conversation history through another LLM call to write a concise bulleted summary: `"User is debugging a Node.js server. They already tried restarting."` This summary is pasted at the top of the prompt, compressing 50 messages into one sentence.
+
+<ELI5Card title="An inbox, a notebook, and a file cabinet">
+  * **Short-Term Memory** is the active mail in your inbox. It is open on your desk.
+  * **Episodic Memory** is the summary list in your notepad tracking what you did today.
+  * **Long-Term Memory** is the filing cabinet in the corner where you store reference manuals and tax sheets.
+</ELI5Card>
+
+---
+
+## Remember
+
+<RememberCard>
+  - Models are stateless; developers must manage and pass memory on every request.
+  - Short-term memory uses context space; it is detailed but temporary.
+  - Summarization helps fit long conversation histories into tight token budgets.
+  - Long-term memories are retrieved from databases using semantic matching.
+</RememberCard>
+
+---
+
+## Read More
+* [Generative Agents: Interactive Simulacra of Human Behavior (Park et al., 2023)](https://arxiv.org/abs/2304.03442)
+
+---
+
+export const memoryQuiz = [
+  {
+    question: "Why do developers need to manually pass conversation history to an LLM API?",
+    options: [
+      "Because the API is slow",
+      "Because large language models are stateless and do not remember past requests",
+      "To increase the cost of API calls",
+      "To check for grammatical errors in history",
+    ],
+    correctIndex: 1,
+    explanation:
+      "Language models do not maintain state between API calls. Every query must contain the necessary history to establish context.",
+  },
+  {
+    question: "What is a main symptom of the 'Lost in the Middle' problem?",
+    options: [
+      "The model generates too fast",
+      "The model forgets facts placed in the middle of a long context window",
+      "The model refuses to answer any questions",
+      "The model stops using tokenizers",
+    ],
+    correctIndex: 1,
+    explanation:
+      "The 'Lost in the Middle' problem refers to a model's tendency to overlook or fail to retrieve information placed in the middle of its prompt context.",
+  },
+];
+
+<Quiz title="Memory & RAG: check your understanding" questions={memoryQuiz} />
