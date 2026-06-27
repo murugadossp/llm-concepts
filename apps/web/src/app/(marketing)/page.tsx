@@ -43,8 +43,8 @@ export default function HomePage() {
           and build a mental model that survives contact with real systems.
         </p>
         <div className="mt-7 flex flex-wrap gap-3">
-          <Link href="/chapters/01-1-tokens" className="lesson-button lesson-button-primary">
-            Start with tokens <ArrowRight className="h-4 w-4" aria-hidden />
+          <Link href="/chapters/01-foundations" className="lesson-button lesson-button-primary">
+            Start learning <ArrowRight className="h-4 w-4" aria-hidden />
           </Link>
           <Link href="/chapters" className="lesson-button">
             Browse chapters

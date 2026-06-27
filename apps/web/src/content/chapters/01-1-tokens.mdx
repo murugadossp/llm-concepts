@@ -53,8 +53,20 @@ When you type a sentence, a large language model does not receive it as a neat r
 For example, the word `happily` might be one token in one tokenizer and two tokens in another: `happi` + `ly`. This is not a bug. Tokenizers reuse common chunks so the model can handle huge vocabularies without memorizing every possible word.
 
 <ELI5Card title="A token is a puzzle piece">
-  If a sentence is a picture, tokens are the puzzle pieces the model is allowed to pick up. Some pieces are large, like a common word. Some are small, like a suffix or punctuation mark.
+  If a sentence is a picture, tokens are the puzzle pieces the model is allowed to pick up. Some pieces are large, like a common word. Some are large, like "the". Some are small, like a single letter or punctuation.
 </ELI5Card>
+
+## Vocabulary Size: The Model's Dictionary
+
+A model's vocabulary size is the number of unique tokens it has learned to recognize. Modern models typically have vocabularies between **32,000 and 250,000 tokens**. 
+* **Large Vocabularies**: Compress text into fewer tokens, which makes processing faster and cheaper, but requires the model to hold a larger embedding matrix (more parameters).
+* **Small Vocabularies**: Require less memory to store, but text gets split into many small fragments, increasing the token count and slowing down generation.
+
+## The Multilingual Tax: Why Non-English Costs More
+
+Most tokenizers are trained predominantly on English text. As a result, they recognize common English words as single tokens, but struggle with other languages. 
+For example, the word "prevention" is 1 token in English. The Spanish translation "prevención" might split into 3 tokens (`prev`, `enci`, `ón`). 
+In languages like Hindi or Japanese, a single word can split into 4–6 tokens. This means non-English users pay a **"multilingual tax"**—using up their context window much faster and paying more money for the same conceptual inputs.
 
 ## Token IDs: Text Becomes Numbers
 
@@ -114,9 +126,14 @@ export const tokenizerCompare = {
 <CompareTable {...tokenizerCompare} />
 
 <DeepDive title="Byte Pair Encoding in one minute">
-  Byte Pair Encoding starts with tiny text units and repeatedly merges pairs that appear together often. Over many merges, common chunks become single tokens.
-
-  The puzzle-piece analogy breaks down because tokenizers are not trying to discover perfect linguistic meaning. They are optimizing a practical compression problem.
+  Byte Pair Encoding starts with individual character bytes (like `l`, `o`, `w`, `e`, `r`) and repeatedly merges the most frequent pairs that appear together in its training documents:
+  
+  1. Suppose `e` and `r` are the most common pair. We merge them: `er`.
+  2. Next, `o` and `w` appear together often. We merge them: `ow`.
+  3. Then, `l` and `ow` are merged to form `low`.
+  4. Finally, `low` and `er` are merged to form `lower`.
+  
+  This loop runs thousands of times until our vocabulary reaches its target size (e.g. 50,000). The puzzle-piece analogy breaks down because tokenizers are not trying to discover perfect linguistic meaning or dictionary boundaries. They are optimizing a practical compression problem.
 </DeepDive>
 
 ## Remember

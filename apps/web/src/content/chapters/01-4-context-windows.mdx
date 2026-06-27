@@ -70,6 +70,24 @@ In a real app, context may contain:
 
 This is why "just paste everything" is rarely the best strategy. Good LLM systems decide what deserves to be in the working page right now.
 
+## Context Decay: "Lost in the Middle"
+
+Even if a model claims to support a massive context window (like 1 Million tokens), it does not pay equal attention to every part of that window.
+Studies have shown that models exhibit **context decay**: they are excellent at recalling facts placed at the very beginning of the prompt (primacy effect) and at the very end of the prompt (recency effect), but tend to ignore or miss facts buried in the **middle** of a large document.
+This phenomenon is known as the **"Lost in the Middle"** problem. If you dump a 300-page book into the context window and ask a question about a sentence on page 150, the model is highly likely to hallucinate or say it doesn't know.
+
+## Token Sizes in the Wild
+
+To develop a solid engineering intuition, it helps to understand what token counts look like in everyday files:
+* **A short prompt** ("Write a joke about cats"): ~6–10 tokens.
+* **A standard paragraph**: ~80–150 tokens.
+* **A single page of double-spaced text**: ~400–600 tokens.
+* **A standard source code file (150 lines)**: ~1,500–2,500 tokens.
+* **A standard novel (e.g. *The Great Gatsby*)**: ~60,000 tokens.
+* **A large codebase or textbook**: ~300,000+ tokens.
+
+When designing agentic architectures, we actively trim history and retrieve only the most relevant snippets to keep the context window small, cheap, and focused.
+
 <DeepDive title="Key-value cache">
   During generation, the model produces one token at a time. The key-value cache stores attention data from earlier tokens so the model does not recompute the whole prefix from scratch for every new token.
 

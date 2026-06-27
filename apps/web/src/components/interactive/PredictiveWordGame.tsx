@@ -93,7 +93,10 @@ export function PredictiveWordGame() {
 
   return (
     <div className="glass my-8 p-5">
-      <div className="flex flex-wrap items-baseline justify-between gap-2 border-b pb-3 mb-4" style={{ borderColor: "var(--border)" }}>
+      <div
+        className="flex flex-wrap items-baseline justify-between gap-2 border-b pb-3 mb-4"
+        style={{ borderColor: "var(--border)" }}
+      >
         <h4 className="text-sm font-semibold" style={{ color: "var(--ink)" }}>
           Interactive Game: Next-Token Prediction
         </h4>
@@ -152,7 +155,10 @@ export function PredictiveWordGame() {
                 onClick={() => handleGuessSelect(opt)}
                 className="rounded-[var(--r-sm)] px-3 py-1.5 text-xs font-medium border transition"
                 style={{
-                  background: userGuess === opt ? "color-mix(in srgb, var(--accent) 15%, var(--surface))" : "var(--surface)",
+                  background:
+                    userGuess === opt
+                      ? "color-mix(in srgb, var(--accent) 15%, var(--surface))"
+                      : "var(--surface)",
                   borderColor: userGuess === opt ? "var(--accent)" : "var(--border)",
                   color: userGuess === opt ? "var(--accent)" : "var(--ink-soft)",
                 }}
@@ -216,13 +222,18 @@ export function PredictiveWordGame() {
           >
             {guessInLogits ? (
               <p style={{ color: "var(--ink)" }}>
-                🎉 <strong>Your guess &apos;{userGuess}&apos; matches one of the LLM&apos;s predictions!</strong> It
-                had a <strong>{(guessInLogits.probability * 100).toFixed(1)}%</strong> probability.
+                🎉{" "}
+                <strong>
+                  Your guess &apos;{userGuess}&apos; matches one of the LLM&apos;s predictions!
+                </strong>{" "}
+                It had a <strong>{(guessInLogits.probability * 100).toFixed(1)}%</strong>{" "}
+                probability.
               </p>
             ) : (
               <p style={{ color: "var(--ink)" }}>
-                🔍 Your guess &apos;{userGuess}&apos; was not in the model&apos;s top 5 predictions (probability
-                &lt; 1%). Real language models compute scores for thousands of words before selecting one.
+                🔍 Your guess &apos;{userGuess}&apos; was not in the model&apos;s top 5 predictions
+                (probability &lt; 1%). Real language models compute scores for thousands of words
+                before selecting one.
               </p>
             )}
           </div>
@@ -240,13 +251,20 @@ export function PredictiveWordGame() {
                     <div className="flex justify-between text-xs font-mono">
                       <span className="flex items-center gap-1 font-semibold">
                         {item.word}
-                        {isSelected && <Check className="h-3.5 w-3.5" style={{ color: "var(--accent)" }} />}
+                        {isSelected && (
+                          <Check className="h-3.5 w-3.5" style={{ color: "var(--accent)" }} />
+                        )}
                       </span>
-                      <span style={{ color: "var(--ink-soft)" }}>{(item.probability * 100).toFixed(1)}%</span>
+                      <span style={{ color: "var(--ink-soft)" }}>
+                        {(item.probability * 100).toFixed(1)}%
+                      </span>
                     </div>
                     <div
                       className="h-2.5 w-full rounded-full overflow-hidden"
-                      style={{ background: "var(--surface-muted)", border: "1px solid var(--border)" }}
+                      style={{
+                        background: "var(--surface-muted)",
+                        border: "1px solid var(--border)",
+                      }}
                     >
                       <div
                         className="h-full rounded-full transition-all duration-500"

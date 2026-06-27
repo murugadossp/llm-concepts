@@ -70,9 +70,36 @@ Stable tasks usually use lower randomness. Brainstorming and creative tasks can 
   The menu analogy breaks down because the model is not choosing from fixed meals. Each generated token changes the next menu.
 </DeepDive>
 
-<DeepDive title="What logits are">
-  Logits are raw scores for every token in the vocabulary. Before the model picks the next token, these scores are converted into probabilities, often with softmax. A higher logit means the model currently considers that token more likely.
-</DeepDive>
+## From Logits to Probabilities: The Softmax Math
+
+Before an LLM picks the next token, the final layer of the network outputs a list of raw, unnormalized scores called **logits** (usually ranging from negative to positive infinity). 
+
+To convert these raw numbers into a tidy list of percentages that sum to 1.0 (100%), the model uses the **Softmax** function. Mathematically, the probability of selecting token $i$ is calculated as:
+
+\[P(x_i) = \frac\{e^\{z_i / T\}\}\{\sum_j e^\{z_j / T\}\}\]
+
+Where:
+* $z_i$ is the raw logit score for token $i$.
+* $T$ is the **Temperature** scaling factor.
+* $e$ is Euler's constant ($\approx 2.718$).
+
+### How Temperature $T$ Controls the Math:
+* **Low Temperature ($T \to 0$)**: The divisor $T$ is very small, which pushes the exponential term $e^\{z_i/T\}$ of the highest-scoring token toward infinity. The highest-scoring token takes up virtually 100% of the probability, making generation completely predictable (greedy decoding).
+* **High Temperature ($T \ge 1.0$)**: The divisor $T$ is large, which shrinks the differences between the exponents. The probability curve flattens out, giving lower-scoring words a much higher relative chance of being rolled.
+
+---
+
+## Developer Cheat Sheet: Sampling Configurations
+
+When writing API requests to models like Gemini, GPT, or Claude, you can adjust these sampling values. Here is a practical cheat sheet:
+
+| Task Type | Temperature | Top-P | Top-K | Best Used For |
+| :--- | :--- | :--- | :--- | :--- |
+| **Strict / Deterministic** | `0.0` | `1.0` | `1` | Code generation, JSON schema validation, math, factual lookup. |
+| **Standard Q&A / Chat** | `0.7` | `0.9` | `40` | Customer support, email drafting, summarizing. |
+| **Creative / Brainstorming** | `1.2` | `0.95` | `80` | Story writing, naming products, advertising taglines. |
+
+---
 
 ## Try It
 

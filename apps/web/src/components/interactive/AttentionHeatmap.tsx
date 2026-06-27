@@ -1,6 +1,6 @@
 "use client";
 
-import { Sparkles, Info } from "lucide-react";
+import { Info, Sparkles } from "lucide-react";
 import { useState } from "react";
 
 type AttentionSentence = {
@@ -78,17 +78,22 @@ export function AttentionHeatmap() {
     }
   }
 
-  const activeWeights = (queryTokenIdx !== null && currentSentence.weights)
-    ? (currentSentence.weights[queryTokenIdx] ?? null)
-    : null;
-  
-  const activeExplanation = (queryTokenIdx !== null && currentSentence.explanation)
-    ? (currentSentence.explanation[queryTokenIdx] ?? "")
-    : "";
+  const activeWeights =
+    queryTokenIdx !== null && currentSentence.weights
+      ? (currentSentence.weights[queryTokenIdx] ?? null)
+      : null;
+
+  const activeExplanation =
+    queryTokenIdx !== null && currentSentence.explanation
+      ? (currentSentence.explanation[queryTokenIdx] ?? "")
+      : "";
 
   return (
     <div className="glass my-8 p-5">
-      <div className="flex flex-wrap items-baseline justify-between gap-2 border-b pb-3 mb-4" style={{ borderColor: "var(--border)" }}>
+      <div
+        className="flex flex-wrap items-baseline justify-between gap-2 border-b pb-3 mb-4"
+        style={{ borderColor: "var(--border)" }}
+      >
         <h4 className="text-sm font-semibold" style={{ color: "var(--ink)" }}>
           Interactive Attention Heatmap
         </h4>
@@ -122,7 +127,10 @@ export function AttentionHeatmap() {
           <p className="text-xs font-semibold mb-2" style={{ color: "var(--ink-soft)" }}>
             Select a highlighted query token (colored outline) to see where its attention goes:
           </p>
-          <div className="flex flex-wrap gap-2 items-center p-4 rounded-[var(--r-md)] border" style={{ background: "var(--surface)", borderColor: "var(--border)" }}>
+          <div
+            className="flex flex-wrap gap-2 items-center p-4 rounded-[var(--r-md)] border"
+            style={{ background: "var(--surface)", borderColor: "var(--border)" }}
+          >
             {currentSentence.tokens.map((token, idx) => {
               const isQueryCandidate = currentSentence.weights && idx in currentSentence.weights;
               const isActiveQuery = idx === queryTokenIdx;
@@ -146,7 +154,11 @@ export function AttentionHeatmap() {
                       : "var(--surface-muted)",
                     color: "var(--ink)",
                   }}
-                  title={isQueryCandidate ? "Click to use as query" : `Receives ${(weight * 100).toFixed(0)}% attention`}
+                  title={
+                    isQueryCandidate
+                      ? "Click to use as query"
+                      : `Receives ${(weight * 100).toFixed(0)}% attention`
+                  }
                 >
                   {token}
                 </button>
@@ -159,18 +171,30 @@ export function AttentionHeatmap() {
         {queryTokenIdx !== null && activeWeights && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <p className="text-xs font-semibold animate-pulse flex items-center gap-1.5" style={{ color: "var(--accent)" }}>
+              <p
+                className="text-xs font-semibold animate-pulse flex items-center gap-1.5"
+                style={{ color: "var(--accent)" }}
+              >
                 <Sparkles className="h-3.5 w-3.5" />
                 Attention Weights for &apos;{currentSentence.tokens[queryTokenIdx]}&apos;:
               </p>
-              <div className="rounded-[var(--r-sm)] p-3 border text-xs space-y-1.5" style={{ background: "var(--surface-muted)", borderColor: "var(--border)" }}>
+              <div
+                className="rounded-[var(--r-sm)] p-3 border text-xs space-y-1.5"
+                style={{ background: "var(--surface-muted)", borderColor: "var(--border)" }}
+              >
                 {currentSentence.tokens.map((token, idx) => {
                   const weight = activeWeights[idx] ?? 0;
                   if (weight < 0.02) return null; // skip tiny ones to save space
                   return (
-                    <div key={`${idx}-${token}-weight`} className="flex justify-between items-center font-mono">
+                    <div
+                      key={`${idx}-${token}-weight`}
+                      className="flex justify-between items-center font-mono"
+                    >
                       <span>{token}</span>
-                      <span className="font-semibold" style={{ color: idx === queryTokenIdx ? "var(--accent)" : "var(--ink)" }}>
+                      <span
+                        className="font-semibold"
+                        style={{ color: idx === queryTokenIdx ? "var(--accent)" : "var(--ink)" }}
+                      >
                         {(weight * 100).toFixed(0)}%
                       </span>
                     </div>
@@ -181,9 +205,14 @@ export function AttentionHeatmap() {
 
             <div
               className="rounded-[var(--r-sm)] p-4 flex flex-col justify-center border text-xs leading-relaxed"
-              style={{ background: "color-mix(in srgb, var(--accent) 5%, var(--surface))", borderColor: "var(--border)" }}
+              style={{
+                background: "color-mix(in srgb, var(--accent) 5%, var(--surface))",
+                borderColor: "var(--border)",
+              }}
             >
-              <h5 className="font-semibold mb-2" style={{ color: "var(--ink)" }}>Why this connection?</h5>
+              <h5 className="font-semibold mb-2" style={{ color: "var(--ink)" }}>
+                Why this connection?
+              </h5>
               <p style={{ color: "var(--ink-soft)" }}>{activeExplanation}</p>
             </div>
           </div>
@@ -196,7 +225,10 @@ export function AttentionHeatmap() {
       >
         <Info className="h-4 w-4 shrink-0 mt-0.5" style={{ color: "var(--accent)" }} />
         <span>
-          <strong>What is happening:</strong> The model projects the sentence into Query, Key, and Value vectors. Softmax weights dictate information transfer. Notice how changing a single final word (&quot;hot&quot; vs &quot;hungry&quot;) completely alters which noun the pronoun &quot;it&quot; attends to.
+          <strong>What is happening:</strong> The model projects the sentence into Query, Key, and
+          Value vectors. Softmax weights dictate information transfer. Notice how changing a single
+          final word (&quot;hot&quot; vs &quot;hungry&quot;) completely alters which noun the
+          pronoun &quot;it&quot; attends to.
         </span>
       </div>
     </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { Sparkles, RefreshCw, Info } from "lucide-react";
+import { Info, RefreshCw, Sparkles } from "lucide-react";
 import { useMemo, useState } from "react";
 
 type CandidateToken = {
@@ -128,7 +128,10 @@ export function SamplingPlayground() {
 
   return (
     <div className="glass my-8 p-5">
-      <div className="flex flex-wrap items-baseline justify-between gap-2 border-b pb-3 mb-4" style={{ borderColor: "var(--border)" }}>
+      <div
+        className="flex flex-wrap items-baseline justify-between gap-2 border-b pb-3 mb-4"
+        style={{ borderColor: "var(--border)" }}
+      >
         <h4 className="text-sm font-semibold" style={{ color: "var(--ink)" }}>
           Interactive Sampling Playground
         </h4>
@@ -152,7 +155,7 @@ export function SamplingPlayground() {
               max="2.0"
               step="0.1"
               value={temperature}
-              onChange={(e) => setTemperature(parseFloat(e.target.value))}
+              onChange={(e) => setTemperature(Number.parseFloat(e.target.value))}
               className="w-full accent-[var(--accent)]"
             />
             <p className="text-[10px]" style={{ color: "var(--ink-mute)" }}>
@@ -172,7 +175,7 @@ export function SamplingPlayground() {
               max="1.0"
               step="0.05"
               value={topP}
-              onChange={(e) => setTopP(parseFloat(e.target.value))}
+              onChange={(e) => setTopP(Number.parseFloat(e.target.value))}
               className="w-full accent-[var(--accent-2)]"
             />
             <p className="text-[10px]" style={{ color: "var(--ink-mute)" }}>
@@ -192,7 +195,7 @@ export function SamplingPlayground() {
               max="6"
               step="1"
               value={topK}
-              onChange={(e) => setTopK(parseInt(e.target.value))}
+              onChange={(e) => setTopK(Number.parseInt(e.target.value))}
               className="w-full accent-[var(--sun)]"
             />
             <p className="text-[10px]" style={{ color: "var(--ink-mute)" }}>
@@ -203,7 +206,9 @@ export function SamplingPlayground() {
 
         {/* Right Candidate list & Output */}
         <div className="space-y-4">
-          <p className="text-xs font-semibold" style={{ color: "var(--ink-soft)" }}>Candidate Token Pool:</p>
+          <p className="text-xs font-semibold" style={{ color: "var(--ink-soft)" }}>
+            Candidate Token Pool:
+          </p>
           <div className="space-y-2">
             {computedCandidates.map((c) => (
               <div
@@ -215,7 +220,10 @@ export function SamplingPlayground() {
                   opacity: c.isActive ? 1.0 : 0.45,
                 }}
               >
-                <span className="font-mono font-semibold" style={{ color: c.isActive ? "var(--ink)" : "var(--ink-mute)" }}>
+                <span
+                  className="font-mono font-semibold"
+                  style={{ color: c.isActive ? "var(--ink)" : "var(--ink-mute)" }}
+                >
                   {c.word}
                 </span>
                 <div className="flex items-center gap-3">
@@ -224,7 +232,10 @@ export function SamplingPlayground() {
                       {(c.finalProb * 100).toFixed(0)}%
                     </span>
                   ) : (
-                    <span className="text-[10px] font-semibold italic" style={{ color: "var(--warn)" }}>
+                    <span
+                      className="text-[10px] font-semibold italic"
+                      style={{ color: "var(--warn)" }}
+                    >
                       {c.reason}
                     </span>
                   )}
@@ -249,15 +260,27 @@ export function SamplingPlayground() {
 
       {/* Generated output box */}
       <div className="mt-5 border-t pt-4" style={{ borderColor: "var(--border)" }}>
-        <div className="flex justify-between items-center mb-2 text-xs font-semibold" style={{ color: "var(--ink-soft)" }}>
+        <div
+          className="flex justify-between items-center mb-2 text-xs font-semibold"
+          style={{ color: "var(--ink-soft)" }}
+        >
           <span>Generated Text Output:</span>
-          <button type="button" onClick={handleClearText} className="flex items-center gap-1 font-semibold hover:opacity-80" style={{ color: "var(--ink-soft)" }}>
+          <button
+            type="button"
+            onClick={handleClearText}
+            className="flex items-center gap-1 font-semibold hover:opacity-80"
+            style={{ color: "var(--ink-soft)" }}
+          >
             <RefreshCw className="h-3 w-3" /> Reset
           </button>
         </div>
         <div
           className="rounded-[var(--r-md)] p-4 font-mono text-sm leading-relaxed min-h-[50px] mb-3"
-          style={{ background: "var(--surface-muted)", border: "1px solid var(--border)", color: "var(--ink)" }}
+          style={{
+            background: "var(--surface-muted)",
+            border: "1px solid var(--border)",
+            color: "var(--ink)",
+          }}
         >
           {generatedText}
           <span className="inline-block w-1.5 h-4 ml-1 bg-current animate-pulse" />
@@ -281,7 +304,10 @@ export function SamplingPlayground() {
       >
         <Info className="h-4 w-4 shrink-0 mt-0.5" style={{ color: "var(--accent)" }} />
         <span>
-          <strong>Try it:</strong> Set temperature to <code>0</code> (greedy) to see how generating is 100% deterministic (it will only pick &quot;the&quot;). Pump temperature to <code>2.0</code> to watch the probabilities flatten out, giving lower-probability words like &quot;dog&quot; a fighting chance!
+          <strong>Try it:</strong> Set temperature to <code>0</code> (greedy) to see how generating
+          is 100% deterministic (it will only pick &quot;the&quot;). Pump temperature to{" "}
+          <code>2.0</code> to watch the probabilities flatten out, giving lower-probability words
+          like &quot;dog&quot; a fighting chance!
         </span>
       </div>
     </div>
