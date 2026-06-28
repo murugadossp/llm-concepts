@@ -25,7 +25,7 @@ summary: >
 
 Attention is the idea that turns a row of token vectors into context-aware representations.
 
-## TL;DR
+## Quick Summary
 
 - Attention lets tokens look at other tokens in the same context.
 - Query, key, and value are the classic ingredients.
@@ -37,11 +37,13 @@ Attention is the idea that turns a row of token vectors into context-aware repre
   <ComicPanel character="Tess" title="Everyone Asks Everyone">
     <SpeechBubble speaker="Tess">Which of you knows what "it" means in this sentence?</SpeechBubble>
     **Visual action:** Tess stands in a row of tokens. She holds up a query card. Other tokens raise key cards in response.
+
     **Teaching point:** Attention lets each token ask which others should influence its meaning right now.
   </ComicPanel>
   <ComicPanel character="Tess" title="The Match Decides">
     <SpeechBubble speaker="Tess">You match — so your meaning shapes mine.</SpeechBubble>
     **Visual action:** A bright connection line forms between "it" and "cat" across the sentence. Tess updates her representation.
+
     **Teaching point:** High-scoring matches transfer more of their value into the querying token's new representation.
   </ComicPanel>
 </ComicStrip>
@@ -63,14 +65,37 @@ Most modern LLMs use a transformer architecture. At a high level, a transformer 
 
 ## Everyone Asks Everyone
 
-Attention lets tokens look at other tokens in the same context. A token does not read only the token before it. It can weigh many earlier tokens and decide which ones matter most for the next representation.
+Self-attention allows tokens in a sequence to dynamically exchange information. Instead of just reading words from left to right, every token inspects all other tokens in the context window and calculates a relevance weight.
 
-In plain English, self-attention asks: "For this token, which other tokens should influence what it means right now?"
+In plain English, self-attention asks: *"For this token, which other tokens in the prompt should influence what I mean right now?"*
 
-The classic attention ingredients are query, key, and value. A query is what a token is looking for. A key is what another token offers for matching. A value is the information that gets passed along if the match matters.
+To calculate this, the transformer converts each token's embedding into three separate vectors:
+1. **Query (Q)**: What the token is looking for (an inquiry).
+2. **Key (K)**: What a token offers to help matches (an index label).
+3. **Value (V)**: The actual content or meaning that is passed along if there is a match.
 
-<ELI5Card title="A classroom of raised hands">
-  Each token asks a question. Other tokens raise hands with clues. The brighter the match, the more that clue influences the token's next version.
+<Callout variant="tip" title="Analogy: The Library Card Catalog">
+  Imagine you are in a library looking for books about **solar energy**.
+  * Your search query is **"solar energy"** (the **Query**).
+  * You walk to the card catalog and check the index labels on the drawers. One label says **"green power"** (the **Key**).
+  * Since your Query matches that Key, you pull out the cards inside the drawer.
+  * The actual books on the shelves that you take home to read are the **Value**.
+  
+  In an LLM, the model multiplies the Query vector of one word with the Key vectors of all other words. The higher the score, the more of the Value vector it copies over to update its own meaning!
+</Callout>
+
+## Multi-Head Attention: Many Perspectives
+
+A model doesn't just run this search once per layer. It runs it multiple times in parallel, which is called **Multi-Head Attention**.
+For example, a model might have 12 or 32 attention "heads." Each head projects the tokens into a different subspace, allowing it to focus on a different type of relationship:
+* **Head 1 (Grammar)**: Focuses on matching verbs with their nouns (e.g. connecting "sat" with "cat").
+* **Head 2 (Pronouns)**: Focuses on resolving pronouns (e.g. connecting "it" with "mat" or "cat").
+* **Head 3 (Sentiment/Tone)**: Focuses on adjectives and tone modifiers.
+
+By combining the outputs of all these heads, the model builds a rich, multi-layered understanding of the sentence simultaneously.
+
+<ELI5Card title="A team of expert readers">
+  Instead of one person reading a book, imagine a team of 12 specialists. One person highlights verbs, another looks for subjects, and a third tracks pronouns. At the end of the page, they merge their notes to get a complete, multi-layered summary.
 </ELI5Card>
 
 ## A Tiny Example
@@ -91,7 +116,14 @@ Real attention patterns are not always this clean. A token can attend to punctua
   Rotary Position Embedding is one common technique. It rotates parts of the query and key vectors based on position, which helps the model compare relative positions during attention.
 </DeepDive>
 
+## Try It
+
+Interact with the attention heatmap below. See how changing a single final word ("hot" vs "hungry") updates what the pronoun "it" attends to!
+
+<AttentionHeatmap />
+
 ## Remember
+
 
 <RememberCard>
   - Attention makes token meaning context-aware.
@@ -99,3 +131,32 @@ Real attention patterns are not always this clean. A token can attend to punctua
   - Attention can blend several sources at once.
   - Position information helps the model understand order.
 </RememberCard>
+
+export const attentionQuiz = [
+  {
+    question: "In query, key, and value, what is the 'query'?",
+    options: [
+      "The information that gets passed along if a match matters",
+      "What another token offers for matching",
+      "What the current token is looking for",
+      "The final output of the transformer",
+    ],
+    correctIndex: 2,
+    explanation:
+      "A query is what a token is looking for; keys are what other tokens offer to match against; values are what gets passed along on a strong match.",
+  },
+  {
+    question: "Why do transformers need positional encoding at all?",
+    options: [
+      "Attention by itself has no built-in sense of word order",
+      "To make the model run faster",
+      "To reduce the vocabulary size",
+      "To convert tokens back into characters",
+    ],
+    correctIndex: 0,
+    explanation:
+      "Without position information, 'dog bites man' and 'man bites dog' would look the same to attention.",
+  },
+];
+
+<Quiz title="Attention: check your understanding" questions={attentionQuiz} />

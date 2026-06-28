@@ -1,0 +1,126 @@
+---
+slug: "05-2-loop"
+title: "The Execution Loop: Running Client-Side APIs"
+navTitle: "The Execution Loop"
+chapterNumber: 5
+lessonNumber: 2
+parentSlug: "05-tools"
+section: "core"
+difficulty: "intermediate"
+estimatedMinutes: 8
+tier: "free"
+prereqs: ["05-1-schemas"]
+characters: ["Atlas"]
+ogImageVariant: "tools"
+suggestedPrompts:
+  - "How does the tool execution loop handle inputs and outputs?"
+  - "What are parallel tool calls and how do they speed up tasks?"
+  - "Why doesn't the model execute API code itself?"
+updatedAt: "2026-06-27"
+authors: ["murugadoss"]
+summary: >
+  How the orchestration harness coordinates model requests, runs real code, and returns outputs in a circular flow.
+---
+
+A crucial concept to grasp is that **the model does not run the tool code**. The language model is a text generator. The actual execution of the code occurs in your application code (the client or server harness).
+
+## Quick Summary
+
+- The orchestration loop coordinates LLM outputs with backend execution code.
+- Parallel tool calling speeds up execution by fanning out independent lookups.
+- The model must receive the tool's result in a specific message role to construct its final answer.
+
+---
+
+## The 4-Step Tool Loop
+
+Every tool invocation follows a circular flow coordinated by your application code:
+
+![Function Calling Execution Loop](/images/ch5-tools/05-2-tool-execution-loop.jpg)
+
+### TypeScript Implementation of the Loop
+Here is a complete code pattern illustrating how your application code intercepts tool calls, executes the local code, and feeds the results back:
+
+```typescript
+// 1. Define the actual local function to execute
+async function fetchWeather(city: string): Promise<string> {
+  const response = await fetch(`https://api.weather.com/v1/forecast?city=${city}`);
+  const data = await response.json();
+  return JSON.stringify(data);
+}
+
+// 2. The orchestration loop managing the LLM state
+async function runChatSession(userMessage: string) {
+  const messages = [{ role: "user", content: userMessage }];
+
+  // Step 1: Send query and tool schema list to the model
+  const firstResponse = await openai.chat.completions.create({
+    model: "gpt-4o",
+    messages: messages,
+    tools: [weatherToolSchemaDefinition]
+  });
+
+  const choice = firstResponse.choices[0].message;
+  
+  // Check if the model wants to call a tool
+  if (choice.tool_calls) {
+    // Append the model's tool call request to the message history
+    messages.push(choice);
+
+    for (const toolCall of choice.tool_calls) {
+      if (toolCall.function.name === "fetch_weather") {
+        const args = JSON.parse(toolCall.function.arguments);
+        
+        // Step 2: Run the real API code on your machine
+        const apiResult = await fetchWeather(args.city);
+
+        // Step 3: Append the tool execution result with the "tool" role
+        messages.push({
+          role: "tool",
+          tool_call_id: toolCall.id,
+          name: toolCall.function.name,
+          content: apiResult
+        });
+      }
+    }
+
+    // Step 4: Send the updated history back to the model for the final response
+    const finalResponse = await openai.chat.completions.create({
+      model: "gpt-4o",
+      messages: messages
+    });
+
+    return finalResponse.choices[0].message.content;
+  }
+
+  return choice.content;
+}
+```
+
+---
+
+## Parallel Tool Calling: Scatter-Gather
+
+Modern APIs allow **Parallel Tool Calling**. If a user asks: `"What is the weather in Paris, London, and Tokyo?"`:
+* **Scatter**: The model emits three tool calls in a single response, each with a unique ID.
+* **Execute**: Your application harness spawns three parallel HTTP requests to fetch the weather for all three cities concurrently, rather than waiting for them sequentially.
+* **Gather**: The harness gathers all three results and sends them back to the model as three separate messages. The model reads all of them at once and writes the final summary.
+
+<ELI5Card title="A chef ordering from prep cooks">
+  The master chef does not chop carrots or fetch meat from the fridge. They write three order slips (JSON calls) and shout them to three prep cooks. Once the prep cooks bring back the chopped ingredients (tool results), the chef cooks the final meal.
+</ELI5Card>
+
+---
+
+## Remember
+
+<RememberCard>
+  - You must write the actual execution logic (fetching database rows, calling third-party services) in your code; the model only outputs the instructions.
+  - Intercepting and sanitizing tool parameters in your harness is critical for security.
+  - Parallel calls prevent latency bottlenecks when retrieving multi-source inputs.
+</RememberCard>
+
+---
+
+## Read More
+* [Function Calling Guide - OpenAI Documentation](https://platform.openai.com/docs/guides/function-calling)

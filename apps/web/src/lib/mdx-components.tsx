@@ -2,6 +2,13 @@ import { ComicPanel } from "@/components/comic/ComicPanel";
 import { ComicStrip } from "@/components/comic/ComicStrip";
 import { PersonaStrip } from "@/components/comic/PersonaStrip";
 import { SpeechBubble } from "@/components/comic/SpeechBubble";
+import { Mermaid } from "@/components/learn/Mermaid";
+import { AttentionHeatmap } from "@/components/interactive/AttentionHeatmap";
+import { ContextBudgetBar } from "@/components/interactive/ContextBudgetBar";
+import { EmbeddingsMap } from "@/components/interactive/EmbeddingsMap";
+import { PipelineDiagram } from "@/components/interactive/PipelineDiagram";
+import { PredictiveWordGame } from "@/components/interactive/PredictiveWordGame";
+import { SamplingPlayground } from "@/components/interactive/SamplingPlayground";
 import { TokenizerDemo } from "@/components/interactive/TokenizerDemo";
 import { Callout } from "@/components/learn/Callout";
 import { Chip } from "@/components/learn/Chip";
@@ -14,6 +21,7 @@ import { FlowDiagram } from "@/components/learn/FlowDiagram";
 import { FreePreview } from "@/components/learn/FreePreview";
 import { Infographic } from "@/components/learn/Infographic";
 import { ProOnly } from "@/components/learn/ProOnly";
+import { Quiz } from "@/components/learn/Quiz";
 import { RememberCard } from "@/components/learn/RememberCard";
 import type { MDXComponents } from "mdx/types";
 
@@ -33,8 +41,15 @@ export const mdxComponents: MDXComponents = {
   CodeBlock,
   CodeTabs,
   TokenizerDemo,
+  PredictiveWordGame,
+  EmbeddingsMap,
+  AttentionHeatmap,
+  ContextBudgetBar,
+  SamplingPlayground,
+  PipelineDiagram,
   FreePreview,
   ProOnly,
+  Quiz,
   h1: (props) => (
     <h1
       className="editorial-title mt-12 scroll-mt-24 text-4xl first:mt-0"
@@ -96,4 +111,24 @@ export const mdxComponents: MDXComponents = {
       {...props}
     />
   ),
+  img: (props) => (
+    <img
+      className="my-8 w-full rounded-xl border"
+      style={{ borderColor: "var(--border)", boxShadow: "var(--shadow-card)" }}
+      {...props}
+    />
+  ),
+  pre: (props: any) => {
+    const child = props.children;
+    if (child && child.props && child.props.className === "language-mermaid") {
+      const chart = child.props.children;
+      return <Mermaid chart={chart} />;
+    }
+    if (child && child.props && child.props.className) {
+      const language = child.props.className.replace("language-", "");
+      const code = child.props.children;
+      return <CodeBlock language={language}>{code}</CodeBlock>;
+    }
+    return <pre {...props} />;
+  },
 };

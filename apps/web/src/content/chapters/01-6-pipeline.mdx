@@ -1,0 +1,149 @@
+---
+slug: "01-6-pipeline"
+title: "Putting It Together: The Transformer Cycle"
+navTitle: "Capstone"
+chapterNumber: 1
+lessonNumber: 6
+parentSlug: "01-foundations"
+section: "foundations"
+difficulty: "beginner"
+estimatedMinutes: 8
+tier: "free"
+prereqs: ["01-0-intro", "01-1-tokens", "01-2-embeddings", "01-3-attention", "01-4-context-windows", "01-5-sampling"]
+characters: ["Tess", "Vector"]
+ogImageVariant: "foundations"
+suggestedPrompts:
+  - "Can you walk through the whole lifecycle of generating a token?"
+  - "Why is generating text an iterative loop?"
+  - "What does each part of the transformer stack contribute?"
+updatedAt: "2026-06-27"
+authors: ["murugadoss"]
+summary: >
+  In this capstone lesson, we trace the full cycle of text generation from raw input to output choice, and test our understanding of the whole module.
+---
+
+Now that you have learned about tokens, embeddings, attention, context, and sampling, it is time to connect all these pieces in a single lifecycle.
+
+## Quick Summary
+
+- Text generation is a closed-loop system: Output token is fed back as input.
+- Tokenizers convert text; embeddings map position; attention mixes meaning; sampling rolls the dice.
+- Every single output token requires running the entire network once.
+
+## Comic Script: The Whole Machine
+
+<ComicStrip>
+  <ComicPanel character="Tess" title="The Great Machine">
+    <SpeechBubble speaker="Tess">So I pass through all these stations just to find a single friend?</SpeechBubble>
+    **Visual action:** Tess enters a pipeline labeled "The Transformer". She passes through embedding space, an attention web, a logits score scale, and a sampling dice roll.
+
+    **Teaching point:** Generation is a multi-step cycle where each concept plays an essential role.
+  </ComicPanel>
+  <ComicPanel character="Vector" title="The Loop Closes">
+    <SpeechBubble speaker="Vector">And once you land, you run back to the beginning to start again!</SpeechBubble>
+    **Visual action:** The selected token lands on a conveyor belt, wraps around to join the prompt, and enters the machine again.
+
+    **Teaching point:** Generative text is loop-based; each word changes the context for the next step.
+  </ComicPanel>
+</ComicStrip>
+
+## The Lifecycle of a Token
+
+Every time a language model generates a single word, it executes a clean, structured cycle:
+
+1. **Input Stage**: The model looks at the active text (system prompt + history + user query).
+2. **Tokenizer Stage**: Raw characters are chopped into token IDs.
+3. **Embedding Stage**: The IDs are looked up as coordinate vectors in meaning-space.
+4. **Attention Stage**: Tokens inspect and mix information with one another, making the representations context-aware.
+5. **Logits Stage**: The final layers score all potential words in the model's vocabulary.
+6. **Sampling Stage**: Creative dials filter candidates and roll the dice to select the next token.
+
+This new token is immediately appended to the input context, and the whole cycle starts over.
+
+## Step-Through the Pipeline
+
+Explore the interactive pipeline simulator below to inspect what happens in each block during a single model iteration:
+
+<PipelineDiagram />
+
+## Remember
+
+<RememberCard>
+  - **Tokens** are the vocabulary chunks the model works with.
+  - **Embeddings** represent tokens geometrically to encode baseline meaning.
+  - **Attention** shares information between tokens to build context-aware vectors.
+  - **Context Windows** set the size limit of the model's active working memory.
+  - **Sampling** dials control randomness and choice selection.
+  - **The Loop** feeds selected tokens back to predict subsequent words.
+</RememberCard>
+
+export const capstoneQuiz = [
+  {
+    question: "Which component is responsible for turning raw text characters into integer IDs?",
+    options: [
+      "The Attention Block",
+      "The Tokenizer",
+      "The Embeddings Matrix",
+      "The Logits Projection",
+    ],
+    correctIndex: 1,
+    explanation:
+      "The tokenizer cuts raw characters into pieces and maps them to numerical IDs in the vocabulary.",
+  },
+  {
+    question: "What does the self-attention layer do to token representations?",
+    options: [
+      "Compresses them to save memory",
+      "Allows tokens to exchange information so their representation becomes context-aware",
+      "Translates them into other languages",
+      "Discards tokens that look like punctuation",
+    ],
+    correctIndex: 1,
+    explanation:
+      "Self-attention allows tokens to query surrounding context, updating their vectors based on neighboring tokens (like matching 'it' to 'cat').",
+  },
+  {
+    question: "If you set temperature to 0, how will the model select tokens?",
+    options: [
+      "It will choose tokens completely at random",
+      "It will always select the token with the highest logit score (greedy choice)",
+      "It will fail to output anything",
+      "It will use maximum Top-P threshold",
+    ],
+    correctIndex: 1,
+    explanation:
+      "A temperature of 0 collapses the probability distribution entirely onto the highest-scoring candidate (greedy decoding).",
+  },
+  {
+    question: "Why is generating a long paragraph computationally expensive?",
+    options: [
+      "The model has to retrain itself on each step",
+      "The entire model pipeline must be run from scratch for every single token generated",
+      "Embeddings have to be recomputed for the entire training set",
+      "The tokenizer runs slower over time",
+    ],
+    correctIndex: 1,
+    explanation:
+      "Because models predict next-tokens autoregressively, the entire transformer network must be evaluated once for each token output.",
+  },
+  {
+    question: "How do embeddings models help search databases in RAG?",
+    options: [
+      "By looking up spelling errors",
+      "By representing documents and queries as vectors so they can be matched by geometric closeness",
+      "By executing prompt instructions",
+      "By formatting JSON schemas",
+    ],
+    correctIndex: 1,
+    explanation:
+      "Embeddings map documents and queries into a semantic vector space where similar concepts are geometrically close, enabling semantic search.",
+  },
+];
+
+<Quiz title="Chapter 1 Capstone: check your understanding" questions={capstoneQuiz} />
+
+## Where This Shows Up Later
+
+* **Chapter 2 (Training)**: We will see how the model learns the weights for embeddings, attention layers, and logits during pre-training and fine-tuning.
+* **Chapter 4 (Memory & RAG)**: We will reuse the concept of embeddings and similarity search to look up documentation.
+* **Chapter 5 (Tools)**: We will see how models output specific JSON schemas to trigger function calls.

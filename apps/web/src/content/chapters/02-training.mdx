@@ -1,0 +1,83 @@
+---
+slug: "02-training"
+title: "Training: From Random Weights to Helpful Assistant"
+navTitle: "Training"
+chapterNumber: 2
+lessonNumber: 0
+section: "core"
+difficulty: "beginner"
+estimatedMinutes: 3
+tier: "free"
+prereqs: ["01-foundations"]
+characters: ["Tess"]
+ogImageVariant: "training"
+suggestedPrompts:
+  - "What is the difference between pre-training and fine-tuning?"
+  - "How does RLHF align a model to be helpful?"
+  - "Why are weights randomized at the start?"
+updatedAt: "2026-06-27"
+authors: ["murugadoss"]
+summary: >
+  How models learn the weights for embeddings, attention layers, and logits during pre-training, fine-tuning, and alignment.
+---
+
+This chapter demystifies how a Large Language Model (<abbr title="Large Language Model">LLM</abbr>) evolves from a random matrix of numbers into a helpful, conversational assistant.
+
+<Callout title="Learning goal">
+  By the end of this module, you should be able to explain the difference between:
+  * **Pre-training**: Next-token prediction at scale to learn grammar and facts.
+  * **Supervised Fine-Tuning (SFT)**: Teaching conversation structure and formatting.
+  * **Alignment & RLHF**: Nudging outputs toward human preferences and safety values.
+  * **Distillation**: Compressing large models into faster student models.
+</Callout>
+
+## Comic Script: Tess's Lifecycle
+
+<ComicStrip>
+  <ComicPanel character="Tess" title="Stage 1: Pre-training">
+    <SpeechBubble speaker="Tess">Wow, I'm reading the entire internet! I guess what word comes next, and I get graded on trillions of examples!</SpeechBubble>
+    **Visual action:** A cartoon of Tess surrounded by towering libraries and glowing connection lines representing training corpora.
+
+    **Teaching point:** Pre-training is next-token prediction at scale to learn grammar and world facts.
+  </ComicPanel>
+  <ComicPanel character="Tess" title="Stage 2: Supervised Fine-Tuning">
+    <SpeechBubble speaker="Tess">Now I'm learning manners. Instead of autocompleting, I'm practicing how to act like a helpful chat assistant!</SpeechBubble>
+    **Visual action:** Tess sits at a desk with a tutor who checks off templates like "Question: How do I cook pasta? Answer: ...".
+
+    **Teaching point:** Supervised Fine-Tuning (SFT) teaches the model the conversational structure and format.
+  </ComicPanel>
+  <ComicPanel character="Tess" title="Stage 3: RLHF & Alignment">
+    <SpeechBubble speaker="Tess">Humans are ranking my answers now. I'm adjusting my internal settings to be helpful, harmless, and honest!</SpeechBubble>
+    **Visual action:** Tess stands before a thumbs-up and thumbs-down voting machine.
+
+    **Teaching point:** Reinforcement Learning from Human Feedback (RLHF) aligns the model output with human preferences.
+  </ComicPanel>
+</ComicStrip>
+
+## The Three-Stage Roadmap
+
+To go from a raw mathematical formula to the assistant in your chat bar, models pass through three distinct phases:
+
+1. **Pre-training**: Next-token prediction at planetary scale. The model learns grammar, syntax, facts, and reasoning shortcuts by reading trillions of tokens. This stage is extremely expensive, costing millions of dollars in compute power.
+2. **Supervised Fine-Tuning (<abbr title="Supervised Fine-Tuning">SFT</abbr>)**: Feeding the model high-quality demonstration data of prompts and ideal responses. This forces the model to transition from a generic text completion engine into a conversational assistant.
+3. **Reinforcement Learning from Human Feedback (<abbr title="Reinforcement Learning from Human Feedback">RLHF</abbr>)**: Tuning the final responses by letting humans rank candidate answers. This teaches the model to align with safe, helpful guidelines.
+
+<RememberCard>
+  - Pre-training builds the base representation (world facts, reasoning).
+  - Fine-tuning formats that representation into a structured chatbot.
+  - RLHF aligns the tone, safety, and helpfulness boundaries.
+</RememberCard>
+
+## Start the Lessons
+
+0. **Training Overview** (This page)
+1. **Pre-training**: Next-token prediction at scale.
+2. **Fine-tuning**: Teaching formats and adapters.
+3. **RLHF & Alignment**: Aligning outputs with human values.
+4. **Distillation**: Compressing large models into compact ones.
+
+---
+
+## Where This Shows Up Later
+
+The weights learned during training are the mathematical variables that define token embeddings (Chapter 1.2), attention matrices (Chapter 1.3), and logit mapping layers (Chapter 1.5). In Chapter 4, we will look at how to supplement this baked-in training knowledge with external runtime information using <abbr title="Retrieval-Augmented Generation">RAG</abbr>.

@@ -1,0 +1,109 @@
+---
+slug: "02-4-distillation"
+title: "Distillation: Compressing Large Models into Compact Ones"
+navTitle: "Distillation"
+chapterNumber: 2
+lessonNumber: 4
+parentSlug: "02-training"
+section: "core"
+difficulty: "intermediate"
+estimatedMinutes: 8
+tier: "free"
+prereqs: ["02-3-rlhf"]
+characters: ["Tess"]
+ogImageVariant: "training"
+suggestedPrompts:
+  - "How does teacher-student distillation work?"
+  - "Why does a distilled 7B model run faster than a 70B model?"
+  - "What are the limits of model distillation?"
+updatedAt: "2026-06-27"
+authors: ["murugadoss"]
+summary: >
+  Compressing model capacity from massive teacher networks into fast student models, and narrow-task fine-tuning tradeoffs.
+---
+
+Massive frontier models (with hundreds of billions or trillions of parameters) have incredible capabilities, but they are slow and expensive to run in production. Model distillation is the process of transferring that capability into smaller, faster models.
+
+## Quick Summary
+
+- Distillation transfers knowledge from a large "teacher" model to a smaller "student" model.
+- The student learns by matching the raw probability distributions (logits) of the teacher.
+- A targeted, fine-tuned 8B model can match or exceed a generic 70B model on narrow tasks.
+
+---
+
+## The Teacher-Student Framework
+
+In knowledge distillation, we have two models:
+1. **The Teacher**: A large, highly capable model (e.g. 405 Billion parameters) that has already been trained.
+2. **The Student**: A small model (e.g. 8 Billion parameters) that we want to train.
+
+Instead of training the student only on binary right/wrong labels, we train it to replicate the **entire output probability distribution** of the teacher. 
+
+For example, when asked a question, the teacher might output:
+* `"Paris"`: 85%
+* `"France"`: 10%
+* `"Europe"`: 4%
+* `"Banana"`: 0.0001%
+
+The student model gets trained to match these exact percentages. This is known as **soft target matching**. Because the percentages convey the teacher's internal structure (knowing that "France" is a close alternative to "Paris", but "Banana" is completely wrong), the student learns much faster and more deeply than it would from reading raw text alone.
+
+<ELI5Card title="An apprentice copying the master's notebook">
+  Instead of studying a giant, confusing library from scratch, an apprentice sits next to a master craftsman. For every problem, the apprentice watches not only what the master decides, but also how close they were to other options. This speeds up learning dramatically.
+</ELI5Card>
+
+---
+
+## Task Matchups: Big vs Small Models
+
+Why do we care so much about small models? In real-world engineering, speed (latency) and hosting cost are critical constraints:
+
+* **Vanilla 70B Model**: Knows a broad set of facts, translates 50 languages, and writes poetry. But it is slow and requires multiple high-end GPUs.
+* **Fine-Tuned 8B Model**: Frozen on everything else, but trained deeply on one specific task (e.g., converting emails to JSON schemas). On that specific task, it will often beat the 70B model while running 10x faster and at a fraction of the cost.
+
+---
+
+## Remember
+
+<RememberCard>
+  - Distillation uses a large model's logits to guide a smaller model's training.
+  - Soft target matching preserves the semantic relationships between wrong options.
+  - Fine-tuning smaller models for narrow tasks is a key cost-reduction strategy.
+</RememberCard>
+
+---
+
+## Read More
+* [Distilling the Knowledge in a Neural Network (Hinton et al., 2015)](https://arxiv.org/abs/1503.02531)
+* [MiniLLM: Knowledge Distillation for Autoregressive Language Models (Gu et al., 2023)](https://arxiv.org/abs/2306.08543)
+
+---
+
+export const trainingQuiz = [
+  {
+    question: "Which training phase is responsible for teaching a model the format of conversation turns?",
+    options: [
+      "Pre-training",
+      "Supervised Fine-Tuning (SFT)",
+      "Distillation",
+      "Backpropagation",
+    ],
+    correctIndex: 1,
+    explanation:
+      "Supervised Fine-Tuning (SFT) formats a model's behavior by training it on structured question-and-answer pairs.",
+  },
+  {
+    question: "What is the primary advantage of DPO over PPO in model alignment?",
+    options: [
+      "DPO requires more GPU memory",
+      "DPO bypasses the training of a separate reward model, updating weights directly on preference pairs",
+      "DPO increases the parameters of the base model",
+      "DPO does not use any training data",
+    ],
+    correctIndex: 1,
+    explanation:
+      "Direct Preference Optimization (DPO) mathematically simplifies reinforcement learning by directly updating the policy weights based on preference pairs without requiring an auxiliary reward model.",
+  },
+];
+
+<Quiz title="Training: check your understanding" questions={trainingQuiz} />

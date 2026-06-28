@@ -25,11 +25,28 @@ summary: >
 
 The model does not write a whole answer in one motion. It predicts one token, then another, then another.
 
-## TL;DR
+## Quick Summary
 
 - Logits are raw scores for possible next tokens.
 - Temperature changes how sharp or adventurous the choice can be.
 - Top-p and top-k limit the candidate set before the next token is chosen.
+
+## Comic: Tess Explores the Menu
+
+<ComicStrip>
+  <ComicPanel character="Tess" title="The Greedy Customer">
+    <SpeechBubble speaker="Tess">Give me the absolute most popular item, every single time!</SpeechBubble>
+    **Visual action:** Tess stands at a restaurant counter. The chef offers "Pizza" (90% popular) and "Salad" (10% popular). Tess takes Pizza.
+
+    **Teaching point:** Temperature = 0 is "greedy decoding" — the model always selects the highest-probability option, making outputs entirely predictable.
+  </ComicPanel>
+  <ComicPanel character="Tess" title="The Adventurous Foodie">
+    <SpeechBubble speaker="Tess">Let's flatten the ratings. Give me a surprise recommendation!</SpeechBubble>
+    **Visual action:** The chef shuffles the menu card. Now "Pizza" drops to 30%, and other items like "Spaghetti" or "Soup" rise to 25%. Tess rolls a die to choose.
+
+    **Teaching point:** Higher temperature flattens the distribution, giving less likely options a chance to be chosen.
+  </ComicPanel>
+</ComicStrip>
 
 ## From Scores To Text
 
@@ -55,9 +72,42 @@ Stable tasks usually use lower randomness. Brainstorming and creative tasks can 
   The menu analogy breaks down because the model is not choosing from fixed meals. Each generated token changes the next menu.
 </DeepDive>
 
-<DeepDive title="What logits are">
-  Logits are raw scores for every token in the vocabulary. Before the model picks the next token, these scores are converted into probabilities, often with softmax. A higher logit means the model currently considers that token more likely.
-</DeepDive>
+## From Logits to Probabilities: The Softmax Math
+
+Before an LLM picks the next token, the final layer of the network outputs a list of raw, unnormalized scores called **logits** (usually ranging from negative to positive infinity). 
+
+To convert these raw numbers into a tidy list of percentages that sum to 1.0 (100%), the model uses the **Softmax** function. Mathematically, the probability of selecting token $i$ is calculated as:
+
+$$P(x_i) = \frac{e^{z_i / T}}{\sum_j e^{z_j / T}}$$
+
+Where:
+* $z_i$ is the raw logit score for token $i$.
+* $T$ is the **Temperature** scaling factor.
+* $e$ is Euler's constant ($\approx 2.718$).
+
+### How Temperature $T$ Controls the Math:
+* **Low Temperature ($T \to 0$)**: The divisor $T$ is very small, which pushes the exponential term $e^{z_i/T}$ of the highest-scoring token toward infinity. The highest-scoring token takes up virtually 100% of the probability, making generation completely predictable (greedy decoding).
+* **High Temperature ($T \ge 1.0$)**: The divisor $T$ is large, which shrinks the differences between the exponents. The probability curve flattens out, giving lower-scoring words a much higher relative chance of being rolled.
+
+---
+
+## Developer Cheat Sheet: Sampling Configurations
+
+When writing API requests to models like Gemini, GPT, or Claude, you can adjust these sampling values. Here is a practical cheat sheet:
+
+| Task Type | Temperature | Top-P | Top-K | Best Used For |
+| :--- | :--- | :--- | :--- | :--- |
+| **Strict / Deterministic** | `0.0` | `1.0` | `1` | Code generation, JSON schema validation, math, factual lookup. |
+| **Standard Q&A / Chat** | `0.7` | `0.9` | `40` | Customer support, email drafting, summarizing. |
+| **Creative / Brainstorming** | `1.2` | `0.95` | `80` | Story writing, naming products, advertising taglines. |
+
+---
+
+## Try It
+
+Tune the temperature, Top-P, and Top-K settings below to see how they reshape candidate probabilities and generate next words.
+
+<SamplingPlayground />
 
 ## Remember
 
@@ -67,3 +117,32 @@ Stable tasks usually use lower randomness. Brainstorming and creative tasks can 
   - Top-p and top-k filter the token menu.
   - Different early choices can steer the rest of the answer.
 </RememberCard>
+
+export const samplingQuiz = [
+  {
+    question: "What does raising the temperature do?",
+    options: [
+      "Always picks the single most likely token",
+      "Flattens the probability distribution so lower-probability tokens get more room",
+      "Increases the context window size",
+      "Removes punctuation from the output",
+    ],
+    correctIndex: 1,
+    explanation:
+      "Low temperature sharpens the distribution toward the top choice; higher temperature spreads probability across more candidates.",
+  },
+  {
+    question: "What's the difference between top-k and top-p sampling?",
+    options: [
+      "They are two names for the same setting",
+      "Top-k keeps a fixed number of candidates; top-p keeps the smallest set whose probabilities add up to a threshold",
+      "Top-k only works on short prompts",
+      "Top-p disables randomness entirely",
+    ],
+    correctIndex: 1,
+    explanation:
+      "Top-k filters by a fixed count of tokens; top-p (nucleus sampling) filters by cumulative probability, so the candidate set size can vary.",
+  },
+];
+
+<Quiz title="Sampling: check your understanding" questions={samplingQuiz} />

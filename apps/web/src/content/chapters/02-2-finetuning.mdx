@@ -1,0 +1,90 @@
+---
+slug: "02-2-finetuning"
+title: "Fine-Tuning: Teaching Formats and Adapters"
+navTitle: "Fine-Tuning"
+chapterNumber: 2
+lessonNumber: 2
+parentSlug: "02-training"
+section: "core"
+difficulty: "intermediate"
+estimatedMinutes: 8
+tier: "free"
+prereqs: ["02-1-pretraining"]
+characters: ["Tess"]
+ogImageVariant: "training"
+suggestedPrompts:
+  - "How does supervised fine-tuning differ from pre-training?"
+  - "What is LoRA and how does it save GPU memory?"
+  - "When should I fine-tune instead of using RAG?"
+updatedAt: "2026-06-27"
+authors: ["murugadoss"]
+summary: >
+  Formatting pre-trained models into conversational agents, and using adapters like LoRA for efficient training.
+---
+
+Once a model is pre-trained, it is an expert at autocompleting text, but it is a poor assistant. It does not know that it should answer questions, follow chat turns, or stop generating when a response is finished.
+
+## Quick Summary
+
+- Supervised Fine-Tuning (SFT) formats a model's completion behavior into a chat structure.
+- Parameter-Efficient Fine-Tuning (PEFT) like LoRA reduces memory requirements by only training tiny adapter layers.
+- Fine-tuning changes behavior and tone, whereas RAG (Chapter 4) provides runtime facts.
+
+---
+
+## Supervised Fine-Tuning (SFT)
+
+Supervised Fine-Tuning (<abbr title="Supervised Fine-Tuning">SFT</abbr>) is the step that turns a generic autocomplete model into a helpful chatbot.
+Instead of reading raw books and code files, the model is trained on a curated dataset of questions and ideal answers:
+
+```
+[System]: You are a helpful programming assistant.
+[User]: Write a bubble sort function in Python.
+[Assistant]: Here is the function: ...
+```
+
+By training on thousands of these conversations, the model learns formatting rules:
+* It learns to output conversational responses when prompted.
+* It learns when to stop speaking (emitting a special `<|end_of_turn|>` or `<|im_end|>` token).
+* It adopts a specific tone, such as "polite assistant."
+
+---
+
+## Parameter-Efficient Fine-Tuning (PEFT) & LoRA
+
+Fine-tuning every single weight in a model with 70 Billion parameters requires enormous GPU memory, because backpropagation must calculate update gradients for all parameters.
+
+To make this cheaper, researchers developed **Parameter-Efficient Fine-Tuning (<abbr title="Parameter-Efficient Fine-Tuning">PEFT</abbr>)**. The most popular method is **LoRA (Low-Rank Adaptation)**:
+* **Freeze the Base Model**: We do not touch the base model's billions of weights.
+* **Inject Tiny Adapters**: We insert small mathematical matrices alongside the attention layers.
+* **Train Only the Adapters**: During training, we only update the weights inside these tiny matrices. 
+
+![Low-Rank Adaptation (LoRA) Weight Bypass](/images/ch2-training/02-2-lora-matrix-bypass.jpg)
+
+### LoRA Hyperparameters: Rank and Alpha
+When configuring LoRA, developers adjust two critical values:
+1. **Rank ($r$)**: The inner dimension of the adapter matrices (typically 8 or 16). A lower rank forces the adapter to learn only the most essential changes, keeping trainable parameter counts under $1\%$.
+2. **Alpha ($\alpha$)**: A scaling factor (typically 16 or 32) that controls the adapter's influence: $$\text{Weight} = \frac{\alpha}{r}$$.
+
+### QLoRA: Quantized LoRA
+Building on LoRA, **QLoRA** compresses the frozen base model weights into a specialized **4-bit NormalFloat (NF4)** representation. This drops the memory requirement for a 7B model from 16GB down to just ~5GB, allowing developers to fine-tune high-quality models on a single consumer-grade desktop GPU while computing adapter gradients in full 16-bit precision.
+
+<ELI5Card title="Writing sticky notes instead of rewriting the book">
+  Imagine you have a massive, printed cookbook. Instead of printing a brand new version of the book to add three recipes, you write the new recipes on small sticky notes and stick them on the margins of the existing pages. The printed book is frozen (base model), and only the sticky notes (LoRA adapters) are edited.
+</ELI5Card>
+
+---
+
+## Remember
+
+<RememberCard>
+  - SFT trains the model on structured conversation templates.
+  - LoRA freezes the base model and trains tiny side matrices, reducing GPU costs.
+  - Fine-tuning adjusts style, tone, and formatting; it is not the primary way to inject factual information.
+</RememberCard>
+
+---
+
+## Read More
+* [LoRA: Low-Rank Adaptation of Large Language Models (Hu et al., 2021)](https://arxiv.org/abs/2106.09685)
+* [QLoRA: Efficient Finetuning of Quantized LLMs (Dettmers et al., 2023)](https://arxiv.org/abs/2305.14314)

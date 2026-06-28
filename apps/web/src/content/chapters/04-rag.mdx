@@ -1,0 +1,85 @@
+---
+slug: "04-rag"
+title: "Memory & RAG: Powering LLMs with External Knowledge"
+navTitle: "Memory & RAG"
+chapterNumber: 4
+lessonNumber: 0
+section: "core"
+difficulty: "intermediate"
+estimatedMinutes: 4
+tier: "free"
+prereqs: ["01-foundations", "02-training"]
+characters: ["Atlas", "Vector"]
+ogImageVariant: "rag"
+suggestedPrompts:
+  - "How does RAG solve the model knowledge cutoff problem?"
+  - "What is the difference between short-term context and long-term memory?"
+  - "How are vector databases used to search documents?"
+updatedAt: "2026-06-27"
+authors: ["murugadoss"]
+summary: >
+  How models read information they were never trained on by combining embedding-based searches with prompt context.
+---
+
+This chapter explores how language models leverage external memory and databases to answer questions about proprietary files, private codebases, or real-time news.
+
+<Callout title="Learning goal">
+  By the end of this module, you should be able to explain:
+  * **Retrieval-Augmented Generation (RAG)**: Bypassing cutoffs by prompting with retrieved facts.
+  * **Chunking**: Splitting large documents into semantically coherent blocks.
+  * **Vector DBs**: Storing coordinates and measuring similarity (Cosine/L2/Dot Product).
+  * **Hybrid Search**: Combining keyword search (BM25) with semantic vector match.
+  * **Agent Memory**: The difference between short-term prompt context and long-term DB archives.
+</Callout>
+
+## Comic Script: Atlas and the sales records
+
+<ComicStrip>
+  <ComicPanel character="Atlas" title="The May Cutoff">
+    <SpeechBubble speaker="Atlas">I need to check yesterday's sales numbers... but my training cutoff was in May! I have no idea what happened yesterday.</SpeechBubble>
+    **Visual action:** Atlas stands in front of a computer screen displaying a "404 Not Found" for current records, holding a calendar marked June.
+
+    **Teaching point:** Models are frozen in time once trained. They cannot recall events past their cutoff date unless supplemented at runtime.
+  </ComicPanel>
+  <ComicPanel character="Atlas" title="Consulting the Librarian">
+    <SpeechBubble speaker="Atlas">Ah! If I check this library card index, I can fetch the exact book pages containing yesterday's sales spreadsheet and read them directly!</SpeechBubble>
+    **Visual action:** Atlas walks to a vector database (represented as a card catalog) and retrieves a folder labeled "June Sales Figures".
+
+    **Teaching point:** Retrieval systems look up relevant information by embedding the question and searching a database of document vectors.
+  </ComicPanel>
+  <ComicPanel character="Atlas" title="Reading the context">
+    <SpeechBubble speaker="Atlas">Now that I've pasted the sales document directly onto my desk, I can write a perfect report! no guessing required.</SpeechBubble>
+    **Visual action:** Atlas sits at a desk with the retrieved sales papers, writing a detailed summary with a checkmark.
+
+    **Teaching point:** RAG works by feeding the model retrieved snippets inside the prompt, preventing factual hallucinations.
+  </ComicPanel>
+</ComicStrip>
+
+## Core Roadmap
+
+To build a retrieval-augmented system, we break the problem into four areas:
+
+1. **Knowledge Cutoffs & Prompts**: Why static pre-trained weights need external facts at runtime.
+2. **Chunking & Vector DBs**: How long books are split into snippets and indexed in databases.
+3. **Hybrid Search & Re-ranking**: Combining classic word matches with vector angles, and sorting results.
+4. **Agent Memory Types**: How agents use local context, databases, and user summaries to behave consistently.
+
+<RememberCard>
+  - Training weights = static, baked-in memory.
+  - RAG = runtime lookup, dynamic memory.
+  - Vector DBs = semantic filing cabinets indexable by Cosine Similarity.
+</RememberCard>
+
+## Start the Lessons
+
+0. **Memory & RAG Overview** (This page)
+1. **Knowledge Cutoffs**: Prompting with retrieved facts.
+2. **Chunking & Vector DBs**: Preparing text for similarity search.
+3. **Hybrid Search & Re-ranking**: Optimizing retrieval accuracy.
+4. **Agent Memory Types**: Short-term vs long-term storage.
+
+---
+
+## Where This Shows Up Later
+
+Retrieval-Augmented Generation builds directly on the **Embeddings (Chapter 1.2)** and **Context Windows (Chapter 1.4)** concepts. In Chapter 5, we will see how agents use tools to fetch this data dynamically, and in Chapter 6, we will implement these tools inside autonomous agent execution loops.

@@ -25,7 +25,7 @@ summary: >
 
 Token IDs are only lookup numbers. Embeddings are where the model starts to represent meaning.
 
-## TL;DR
+## Quick Summary
 
 - An embedding is a list of numbers for a token.
 - Similar contexts tend to produce vectors that point in similar directions.
@@ -37,16 +37,16 @@ Token IDs are only lookup numbers. Embeddings are where the model starts to repr
   <ComicPanel character="Vector" title="Tess Meets Vector">
     <SpeechBubble speaker="Vector">This is where your meaning starts.</SpeechBubble>
     **Visual action:** A soft glass map called "Embedding Space" with hills labeled royalty, animals, actions, and weather. Vector hands Tess a coordinate card covered in tiny numbers.
+
     **Teaching point:** Embeddings place tokens in a geometric space where distance carries useful signal.
   </ComicPanel>
   <ComicPanel character="Tess" title="The Meaning Map">
     <SpeechBubble speaker="Tess">So "king" and "queen" are neighbors on this map?</SpeechBubble>
     **Visual action:** Tess walks toward a cluster of glowing pins labeled with royalty words. Animal tokens glow in a separate region.
+
     **Teaching point:** Tokens used in similar contexts tend to have embeddings that point in similar directions.
   </ComicPanel>
 </ComicStrip>
-
-## Coordinates For Meaning
 
 An embedding is a list of numbers that represents a token inside the model. You can think of it as coordinates on a map, except the real map has hundreds or thousands of dimensions instead of two.
 
@@ -55,6 +55,26 @@ Tokens used in similar contexts tend to have embeddings that point in similar di
 <ELI5Card title="Meaning becomes a location">
   Imagine every token gets a pin on a giant map. Tokens about royalty gather in one area. Animal tokens gather somewhere else. The map is not drawn by a person. The model learns it from text.
 </ELI5Card>
+
+## Vectors in Detail: Numbers and Arrows
+
+At a code level, a single token embedding is simply a one-dimensional array of decimal numbers (a vector). For example, in OpenAI's standard text-embedding model, a vector contains **1,536 dimensions** (numbers), looking like this:
+
+`[0.00248, -0.01539, 0.00892, ..., -0.03401]`
+
+Each number represents the token's coordinate along a specific dimension of meaning. We can't easily draw 1536 dimensions, but we can visualize them as **arrows in space**:
+* **Direction**: The direction the arrow points indicates the token's conceptual properties (e.g. animacy, tense, category).
+* **Length (Magnitude)**: Usually normalized to a length of 1 so that we only compare the *angle* between words.
+
+## Cosine Similarity: Measuring the Angle
+
+When developers search by meaning (e.g., in vector databases), they use a metric called **Cosine Similarity** to compare two vectors. 
+Cosine similarity measures the cosine of the angle between the two arrows:
+* **Similarity = 1 (Angle = 0°)**: The arrows point in the exact same direction. The concepts are semantically identical (e.g., "puppy" and "dog").
+* **Similarity = 0 (Angle = 90°)**: The arrows are perpendicular. The concepts are completely unrelated (e.g., "dog" and "refrigerator").
+* **Similarity = -1 (Angle = 180°)**: The arrows point in opposite directions. The concepts are semantic opposites.
+
+This mathematical angle is the foundation of semantic search!
 
 ## Why This Matters In Apps
 
@@ -68,7 +88,14 @@ That is the bridge from this lesson to RAG later in the course: if meaning can b
   In a transformer, the initial embedding is only the starting point. Each layer updates the token representation using context from surrounding tokens.
 </DeepDive>
 
+## Try It
+
+Explore the interactive embedding space below. Select different words to calculate their semantic similarity, or trigger the vector algebra formula to see how `King − Man + Woman` lands on `Queen`.
+
+<EmbeddingsMap />
+
 ## Remember
+
 
 <RememberCard>
   - Token IDs point to learned embeddings.
@@ -76,3 +103,32 @@ That is the bridge from this lesson to RAG later in the course: if meaning can b
   - Similarity in vector space can support semantic search.
   - Context can update a token's representation later in the model.
 </RememberCard>
+
+export const embeddingsQuiz = [
+  {
+    question: "What is an embedding, in plain terms?",
+    options: [
+      "A dictionary definition attached to a token",
+      "A learned list of numbers representing a token in many dimensions",
+      "A picture of the token",
+      "The token's position in the sentence",
+    ],
+    correctIndex: 1,
+    explanation:
+      "An embedding is a vector — coordinates in a high-dimensional meaning-space — learned from how the token is used in text.",
+  },
+  {
+    question: "Where does the 'map' metaphor for embeddings break down?",
+    options: [
+      "Real embedding dimensions usually don't have one clean, human-readable meaning each",
+      "Embeddings never have any geometric structure at all",
+      "Embeddings only exist in retrieval systems, not inside the model",
+      "Tokens with similar embeddings are always opposites",
+    ],
+    correctIndex: 0,
+    explanation:
+      "Meaning is distributed across many numbers rather than living on one labeled axis like 'royalty' or 'gender'.",
+  },
+];
+
+<Quiz title="Embeddings: check your understanding" questions={embeddingsQuiz} />
