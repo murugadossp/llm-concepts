@@ -78,14 +78,7 @@ To understand how an LLM makes these predictions, we need to introduce three key
 ### The Autoregressive Generation Loop
 This diagram illustrates how the model iteratively predicts and builds its own output, token by token:
 
-```mermaid
-graph TD
-  Prompt["Input Prompt:<br/>'The sky is'"] --> LLM["LLM (Text Predictor)"]
-  LLM -->|Outputs Probability Pool| Pool["'blue' (85%)<br/>'grey' (10%)<br/>'cloudy' (3%)"]
-  Pool -->|Select 'blue'| Select["Chosen Token:<br/>'blue'"]
-  Select -->|Append to Prompt| Append["New Sequence:<br/>'The sky is blue'"]
-  Append -->|Loop Back as Input| LLM
-```
+![Autoregressive LLM Generation Loop](/images/autoregressive_loop_infographic.jpg)
 
 <ELI5Card title="Parameters are like dials on a radio">
   Imagine a giant radio with 100 billion dials. If you turn them randomly, all you hear is static. But if you spend weeks tuning them to match the broadcasting signal, you suddenly get crystal-clear music. In an LLM, training is the process of adjusting those billions of dials so the math outputs coherent language instead of random words.

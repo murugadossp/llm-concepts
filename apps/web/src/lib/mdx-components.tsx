@@ -111,6 +111,13 @@ export const mdxComponents: MDXComponents = {
       {...props}
     />
   ),
+  img: (props) => (
+    <img
+      className="my-8 w-full rounded-xl border"
+      style={{ borderColor: "var(--border)", boxShadow: "var(--shadow-card)" }}
+      {...props}
+    />
+  ),
   pre: (props: any) => {
     const child = props.children;
     if (child && child.props && child.props.className === "language-mermaid") {
