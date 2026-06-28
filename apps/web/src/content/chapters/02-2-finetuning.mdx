@@ -59,15 +59,7 @@ To make this cheaper, researchers developed **Parameter-Efficient Fine-Tuning (<
 * **Inject Tiny Adapters**: We insert small mathematical matrices alongside the attention layers.
 * **Train Only the Adapters**: During training, we only update the weights inside these tiny matrices. 
 
-```mermaid
-graph LR
-  X["Input Activation (X)"] --> BaseW["Frozen Base Weights<br/>W0 (d x k)"]
-  X --> AdapterA["Adapter Matrix A<br/>(d x r)"]
-  AdapterA --> AdapterB["Adapter Matrix B<br/>(r x k)"]
-  BaseW --> Sum["Sum:<br/>Y = X*W0 + X*&Delta;W"]
-  AdapterB --> Sum
-  Sum --> Y["Output Activation (Y)"]
-```
+![Low-Rank Adaptation (LoRA) Weight Bypass](/images/ch2-training/02-2-lora-matrix-bypass.jpg)
 
 ### LoRA Hyperparameters: Rank and Alpha
 When configuring LoRA, developers adjust two critical values:

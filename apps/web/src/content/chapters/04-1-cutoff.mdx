@@ -46,16 +46,7 @@ Updating a model's weights to learn new facts by fine-tuning is extremely diffic
 
 Rather than trying to force the model to memorize the entire universe, we switch the model from a **closed-book exam** to an **open-book exam** using a three-step pipeline:
 
-```mermaid
-graph TD
-  User["User Query:<br/>'What were yesterday's sales?'"] --> Embed["Query Embedding<br/>Generator"]
-  Embed -->|Vector Coordinates| VDB[("Vector Database<br/>(Pgvector, Pinecone)")]
-  VDB -->|Retrieve Top Chunks| Ranker["Context Compiler /<br/>Re-ranker"]
-  Ranker -->|Context: 'Yesterday sales: $42,000'| PromptBuilder["Augmented Prompt<br/>Assembler"]
-  User --> PromptBuilder
-  PromptBuilder -->|Augmented Prompt| LLM["LLM (Text Generator)"]
-  LLM -->|Generates Answer| Answer["User Output:<br/>'Yesterday's sales were $42,000'"]
-```
+![RAG Retrieval Pipeline](/images/ch4-rag/04-1-rag-pipeline.jpg)
 
 The steps inside this loop are:
 1. **Retrieve**: We embed the user's query and perform a similarity search in a vector database to find the most relevant document chunks.

@@ -62,24 +62,7 @@ Where:
 
 PPO is notoriously complex to implement. It requires hosting four separate models in GPU memory simultaneously: the active policy, the frozen reference, the reward model, and the value critic model.
 
-```mermaid
-graph TD
-  subgraph PPO Loop
-    PPO_P[Prompt] --> PPO_M["Active Policy<br/>Model"] & PPO_Ref["Reference<br/>Model"]
-    PPO_M --> PPO_Out["Generated<br/>Response"]
-    PPO_Out --> PPO_RM["Reward Model<br/>Network"]
-    PPO_RM --> PPO_S[Score Output]
-    PPO_S --> PPO_Update["PPO Update<br/>Algorithm"]
-    PPO_Update -->|Updates Weights| PPO_M
-    PPO_Ref -->|KL Penalty| PPO_Update
-  end
-
-  subgraph DPO Loop
-    DPO_P[Prompt] --> DPO_Pair["Choose / Reject<br/>Pair"]
-    DPO_Pair --> DPO_Loss["DPO Classification<br/>Loss"]
-    DPO_Loss -->|Direct Update| DPO_Model["Active Policy<br/>Model"]
-  end
-```
+![PPO vs DPO Training Loops](/images/ch2-training/02-3-ppo-vs-dpo-loops.jpg)
 
 In 2023, researchers introduced **Direct Preference Optimization (<abbr title="Direct Preference Optimization">DPO</abbr>)**:
 * DPO mathematically demonstrates that the active language model can act as its own reward model.

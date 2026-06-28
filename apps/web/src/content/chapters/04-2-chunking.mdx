@@ -67,13 +67,7 @@ Once text is chunked, each chunk is passed through an **Embedding Model** (Chapt
 
 Unlike traditional databases that look up indexes by ID or exact text matching, vector databases index coordinates. Because performing a brute-force linear search ($O(N)$ comparisons) across millions of high-dimensional vectors is too slow, databases use specialized indexing structures:
 
-```mermaid
-graph TD
-  subgraph HNSW Layered Graph
-    L2["Layer 2 (Express Highway:<br/>Sparse Nodes & Long Links)"] --> L1["Layer 1 (Local Roads:<br/>Medium Density)"]
-    L1 --> L0["Layer 0 (Base Layer:<br/>All Vector Coordinates)"]
-  end
-```
+![Hierarchical Navigable Small World (HNSW) Routing](/images/ch4-rag/04-2-hnsw-graph-routing.jpg)
 
 * **HNSW (Hierarchical Navigable Small World)**:
   * Creates a multi-layered graph resembling a skip-list.

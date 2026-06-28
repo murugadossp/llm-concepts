@@ -62,15 +62,7 @@ Where $r_m(d)$ is the rank of document $d$ in retriever $m$, and $k$ is a consta
 
 Comparing a user query to thousands of document vectors is fast because we compare pre-computed vectors. However, this is a coarse approximation. To get maximum accuracy, we use a **two-stage retrieval funnel**:
 
-```mermaid
-graph TD
-  Query["User Query"] --> BM25["Lexical Search<br/>(BM25)"] & Vec["Semantic Search<br/>(Vector Embeddings)"]
-  BM25 -->|Top 50 Chunks| Merge["RRF Rank Fusion<br/>Merger"]
-  Vec -->|Top 50 Chunks| Merge
-  Merge -->|Top 50 Candidates| Cross["Cross-Encoder /<br/>Re-Ranker"]
-  Cross -->|Concatenated Match| Sort["Sorted Top 5<br/>Best Chunks"]
-  Sort --> Prompt["Inject into<br/>Prompt Context"]
-```
+![Two-Stage RAG Retrieval Funnel](/images/ch4-rag/04-3-search-rerank-funnel.jpg)
 
 ### How They Compare:
 * **Bi-Encoders (Coarse retrieval)**:

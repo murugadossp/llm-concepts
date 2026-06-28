@@ -36,25 +36,7 @@ A crucial concept to grasp is that **the model does not run the tool code**. The
 
 Every tool invocation follows a circular flow coordinated by your application code:
 
-```mermaid
-sequenceDiagram
-  autonumber
-  actor User
-  participant App as App / Orchestrator
-  participant LLM as LLM (Text Predictor)
-  participant API as Local Function / External API
-
-  User->>App: "What is the weather in Boston?"
-  App->>LLM: Send Prompt + [Tool Schema Definitions]
-  Note over LLM: Decides tool is needed.<br/>Halts plain text output.
-  LLM-->>App: Return JSON request: call_123 (fetch_weather, city: "Boston")
-  App->>API: Execute local function fetch_weather("Boston")
-  API-->>App: Return function raw output string: "72F, Sunny"
-  App->>LLM: Send original prompt + call_123 request + call_123 result ("72F, Sunny")
-  Note over LLM: Compiles final conversational answer<br/>using the retrieved results.
-  LLM-->>App: Return final response: "The weather in Boston is 72°F and sunny."
-  App-->>User: "The weather in Boston is 72°F and sunny."
-```
+![Function Calling Execution Loop](/images/ch5-tools/05-2-tool-execution-loop.jpg)
 
 ### TypeScript Implementation of the Loop
 Here is a complete code pattern illustrating how your application code intercepts tool calls, executes the local code, and feeds the results back:

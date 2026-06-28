@@ -39,16 +39,7 @@ If you type "Once upon a..." into a newly initialized model, it might guess "ref
 
 During pre-training, the model reads billions or trillions of tokens. For every token it reads, it attempts to guess the next token. If its guess is wrong, a mathematical feedback signal updates the weights.
 
-```mermaid
-graph TD
-  A["Input Context:<br/>'Once upon a ___'"] --> B["Embedding & Attention Layers<br/>(Weights W)"]
-  B --> C["Model Logit Output<br/>(Probabilities)"]
-  C --> D{"Compute Loss:<br/>L = -ln(P_target)"}
-  D -->|Loss > 0| E["Backpropagation:<br/>Compute Gradients"]
-  E --> F["Adjust Weights:<br/>W_new = W - &eta; * Gradient"]
-  F --> A
-  D -->|Loss &approx; 0| G["Continue to Next Token"]
-```
+![LLM Pre-training Feedback Loop](/images/ch2-training/02-1-pretraining-loop.jpg)
 
 <ELI5Card title="An autocomplete with a grade">
   Imagine you are learning a foreign language by reading books. For every word you read, you try to predict the next word before turning the page. At first, you guess randomly. But every time you turn the page and see the real word, you correct your mental rules. After reading millions of pages, your guesses become highly accurate.
